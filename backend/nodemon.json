@@ -2,5 +2,7 @@
   "watch": ["src"],
   "ext": ".ts,.js",
   "ignore": [],
-  "exec": "tsx ./src/main.ts"
+  "exec": "tsx ./src/main.ts",
+  "delay": "2000",
+  "throttle": "2000"
 }

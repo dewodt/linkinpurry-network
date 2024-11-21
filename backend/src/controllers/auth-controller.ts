@@ -25,21 +25,18 @@ export class AuthController implements IAuthController {
   // Dependency
   constructor(@inject(AuthService.Key) private readonly authService: AuthService) {}
 
-  signIn(req: any, res: any): void {
+  async signIn(req: any, res: any): Promise<void> {
     // Implement the signIn method
-    logger.info(this.authService.signIn('email', 'password'));
     res.send('signIn');
   }
 
-  signOut(req: any, res: any): void {
+  async signOut(req: any, res: any): Promise<void> {
     // Implement the signOut method
-    // logger.info(this.authService.signUp('email', 'password'));
     res.send('signOut');
   }
 
-  signUp(req: any, res: any): void {
+  async signUp(req: any, res: any): Promise<void> {
     // Implement the signUp method
-    logger.info(this.authService.signUp('email', 'password'));
     res.send('signUp');
   }
 }

@@ -29,7 +29,8 @@ services:
     env_file:
       - ./backend/.env.docker
     volumes:
-      - ./backend:/app
+      - ./backend:/app # Mount the backend folder to the container
+      - /app/node_modules # Prevent the node_modules folder from being mounted
     ports:
       - "3000:3000"
     depends_on:
