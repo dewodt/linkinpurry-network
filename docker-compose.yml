@@ -1,7 +1,62 @@
 services:
-  backend:
-  frontend:
-  db:
-    image: postgres:latest
-  redis:
-    image: redis:latest
+  # Database
+  linkinpurry-db:
+    container_name: linkinpurry-db
+    image: postgres:17
+    env_file:
+      - ./backend/.env.docker
+    ports:
+      - "5436:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # - ./backend/src/infrastructures/database/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - linkinpurry-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h ${POSTGRES_HOST} -p ${POSTGRES_PORT}",
+        ]
+
+  # Development (with hot reload)
+  linkinpurry-be-dev:
+    container_name: linkinpurry-be-dev
+    build:
+      context: .
+      target: development
+      dockerfile: ./backend/Dockerfile.run
+    env_file:
+      - ./backend/.env.docker
+    volumes:
+      - ./backend:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - linkinpurry-db
+    networks:
+      - linkinpurry-network
+
+  # Production (no hot reload)
+  linkinpurry-be-prod:
+    container_name: linkinpurry-be-prod
+    build:
+      context: .
+      target: production
+      dockerfile: ./backend/Dockerfile.run
+    env_file:
+      - ./backend/.env.docker
+    ports:
+      - "3000:3000"
+    depends_on:
+      - linkinpurry-db
+    networks:
+      - linkinpurry-network
+
+volumes:
+  db-data:
+    name: linkinpurry-db-data
+
+networks:
+  linkinpurry-network:
+    driver: bridge

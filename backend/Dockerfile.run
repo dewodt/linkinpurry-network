@@ -1,0 +1,19 @@
+# Base
+FROM node:20-alpine as base
+WORKDIR /app
+COPY ./backend/package*.json ./
+RUN npm install
+COPY ./backend/ ./
+RUN npx prisma generate
+
+
+# For development (nodemon)
+FROM base as development
+CMD ["npm" , "run", "dev"]
+
+
+# For production (run compiled ts (.js) files)
+FROM base as production
+# RUN npm run build 
+# use tsc
+CMD ["npm", "run", "start"]

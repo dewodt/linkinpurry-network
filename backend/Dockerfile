@@ -1,3 +1,5 @@
+# I think from the specs we shouldn't modify much of this file
+
 FROM node:20-alpine
 
 RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
@@ -16,4 +18,5 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["node", "index.js"]
+# Start app
+CMD ["npm", "run", "start"]
