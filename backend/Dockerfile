@@ -1,3 +1,4 @@
+# DOCKER FILE FOR STRESS TEST BACKEND
 # I think from the specs we shouldn't modify much of this file
 
 FROM node:20-alpine

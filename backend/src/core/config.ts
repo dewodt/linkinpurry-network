@@ -1,13 +1,18 @@
 import { log } from 'console';
 import * as dotenv from 'dotenv';
+import { injectable } from 'inversify';
 import * as z from 'zod';
 
-// Config interface
+/**
+ * Interface definition
+ */
 export interface IConfig {
   get(key: keyof z.infer<typeof ConfigSchema>): string;
 }
 
-// Config validation schema
+/**
+ * Configuration schema
+ */
 export const ConfigSchema = z.object({
   // App
   PORT: z
@@ -31,8 +36,14 @@ export const ConfigSchema = z.object({
   // Add more environment variables here
 });
 
-// Config class
+/**
+ * Configuration implementation
+ */
+@injectable()
 export class Config implements IConfig {
+  // IoC Key
+  static readonly Key = Symbol.for('Config');
+
   // Store environment variables
   private env: z.infer<typeof ConfigSchema>;
 

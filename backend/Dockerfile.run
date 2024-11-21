@@ -1,3 +1,5 @@
+# DOCKER FILE FOR RUNNING THE BACKEND
+
 # Base
 FROM node:20-alpine as base
 WORKDIR /app
