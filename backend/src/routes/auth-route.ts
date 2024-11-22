@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { inject, injectable } from 'inversify';
 
 import { AuthController, type IAuthController } from '@/controllers/auth-controller';
-import type { GlobalContextVariable } from '@/core/app';
+import type { IGlobalContext } from '@/core/app';
 
 import { type IRoute } from './route';
 
@@ -29,7 +29,7 @@ export class AuthRoute implements IAuthRoute {
    * @returns void
    * @override
    */
-  register(app: Hono<{ Variables: GlobalContextVariable }>) {
+  register(app: Hono<IGlobalContext>) {
     // Sign in
     app.post('/api/login', this.authController.login);
 

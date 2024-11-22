@@ -6,7 +6,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { Container } from 'inversify';
 import 'reflect-metadata';
 
-import type { CustomJWTPayload } from '@/dto/auth-dto';
+import type { JWTPayload } from '@/dto/auth-dto';
 import { Database } from '@/infrastructures/database/database';
 import { AuthRoute } from '@/routes/auth-route';
 import { type IRoute } from '@/routes/route';
@@ -16,17 +16,19 @@ import { DependencyContainer } from './container';
 import { logger } from './logger';
 
 /**
- * Global context variable
+ * Global Hono Generic Config
  */
-export type GlobalContextVariable = {
-  user: CustomJWTPayload;
-};
+export interface IGlobalContext {
+  Variables: {
+    user: JWTPayload; // typing not null / undefined, ensured by middleware
+  };
+}
 
 /**
  * Application class
  */
 export class App {
-  private app: Hono<{ Variables: GlobalContextVariable }>;
+  private app: Hono<IGlobalContext>;
   private container: Container;
 
   constructor() {
