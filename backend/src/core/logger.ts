@@ -6,6 +6,7 @@ import winston from 'winston';
  */
 class Logger {
   private static instance: Logger;
+
   private logger: winston.Logger;
 
   private readonly levels = {
@@ -68,25 +69,27 @@ class Logger {
     });
   }
 
-  public error(message: string): void {
-    this.logger.error(message);
+  public error(message: string, ...rest: string[]): void {
+    this.logger.error(message, ...rest);
   }
 
-  public warn(message: string): void {
-    this.logger.warn(message);
+  public warn(message: string, ...rest: string[]): void {
+    this.logger.warn(message, ...rest);
   }
 
-  public info(message: string): void {
-    this.logger.info(message);
+  public info(message: string, ...rest: string[]): void {
+    this.logger.info(message, ...rest);
   }
 
-  public http(message: string): void {
-    this.logger.http(message);
+  public http(message: string, ...rest: string[]): void {
+    this.logger.http(message, ...rest);
   }
 
-  public debug(message: string): void {
-    this.logger.debug(message);
+  public debug(message: string, ...rest: string[]): void {
+    this.logger.debug(message, ...rest);
   }
 }
 
 export const logger = Logger.getInstance();
+
+console.log(logger);

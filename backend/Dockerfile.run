@@ -16,6 +16,4 @@ CMD ["npm" , "run", "dev"]
 
 # For production (run compiled ts (.js) files)
 FROM base as production
-# RUN npm run build 
-# use tsc
 CMD ["npm", "run", "start"]

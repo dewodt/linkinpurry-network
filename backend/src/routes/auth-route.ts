@@ -1,9 +1,10 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import { inject, injectable } from 'inversify';
 
-import { AuthController, IAuthController } from '@/controllers/auth-controller';
+import { AuthController, type IAuthController } from '@/controllers/auth-controller';
+import type { GlobalContextVariable } from '@/core/app';
 
-import { IRoute } from './route';
+import { type IRoute } from './route';
 
 /**
  * Interface definition
@@ -28,11 +29,11 @@ export class AuthRoute implements IAuthRoute {
    * @returns void
    * @override
    */
-  register(r: Router) {
+  register(app: Hono<{ Variables: GlobalContextVariable }>) {
     // Sign in
-    r.post('/api/login', this.authController.login);
+    app.post('/api/login', this.authController.login);
 
     // Sign up
-    r.post('/api/register', this.authController.register);
+    app.post('/api/register', this.authController.register);
   }
 }

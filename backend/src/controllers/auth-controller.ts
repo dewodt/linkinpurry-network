@@ -1,7 +1,7 @@
-import express, { RequestHandler } from 'express';
+import type { Context } from 'hono';
 import { inject, injectable } from 'inversify';
 
-import { IController } from '@/controllers/controller';
+import { type ControllerFunction, type IController } from '@/controllers/controller';
 import { logger } from '@/core/logger';
 import { AuthService } from '@/services/auth-service';
 
@@ -9,9 +9,9 @@ import { AuthService } from '@/services/auth-service';
  * Interface definition
  */
 export interface IAuthController extends IController {
-  login: RequestHandler;
-  logout: RequestHandler;
-  register: RequestHandler;
+  login: ControllerFunction;
+  logout: ControllerFunction;
+  register: ControllerFunction;
 }
 
 /**
@@ -31,7 +31,11 @@ export class AuthController implements IAuthController {
    * @param req
    * @param res
    */
-  async login(req: express.Request, res: express.Response): Promise<void> {}
+  login: ControllerFunction = async (c) => {
+    return c.json({
+      message: 'Login',
+    });
+  };
 
   /**
    * Logout controller
@@ -39,13 +43,21 @@ export class AuthController implements IAuthController {
    * @param req
    * @param res
    */
-  async logout(req: express.Request, res: express.Response): Promise<void> {}
+  logout: ControllerFunction = async (c) => {
+    return c.json({
+      message: 'Logout',
+    });
+  };
 
   /**
-   *
+   * Register
    *
    * @param req
    * @param res
    */
-  async register(req: express.Request, res: express.Response): Promise<void> {}
+  register: ControllerFunction = async (c) => {
+    return c.json({
+      message: 'Register',
+    });
+  };
 }

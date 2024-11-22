@@ -5,20 +5,14 @@ import * as z from 'zod';
 import { logger } from './logger';
 
 /**
- * Interface definition
- */
-export interface IConfig {
-  get(key: keyof z.infer<typeof ConfigSchema>): string;
-}
-
-/**
  * Configuration schema
  */
 export const ConfigSchema = z.object({
   // App
-  PORT: z
-    .string({ message: 'PORT must be a string' })
-    .min(1, { message: 'PORT must not be empty' }),
+  PORT: z.coerce
+    .number({ message: 'PORT must be a number' })
+    .min(1, { message: 'PORT must be greater than 0' })
+    .max(65535, { message: 'PORT must be less than 65536' }),
   JWT_SECRET: z
     .string({ message: 'JWT_SECRET must be a string' })
     .min(1, { message: 'JWT_SECRET must not be empty' }),
@@ -41,10 +35,15 @@ export const ConfigSchema = z.object({
 });
 
 /**
+ * Configurations key & value type
+ */
+export type IConfigSchema = z.infer<typeof ConfigSchema>;
+
+/**
  * Configuration implementation
  */
 @injectable()
-export class Config implements IConfig {
+export class Config {
   // IoC Key
   static readonly Key = Symbol.for('Config');
 
@@ -65,12 +64,12 @@ export class Config implements IConfig {
       this.env = ConfigSchema.parse(rawEnv);
     } catch (error) {
       logger.error(`Config validation error ${error}`);
-      throw error;
+      process.exit(1);
     }
   }
 
   // Getters
-  get(key: keyof z.infer<typeof ConfigSchema>): string {
+  get<K extends keyof IConfigSchema>(key: K): IConfigSchema[K] {
     return this.env[key];
   }
 }

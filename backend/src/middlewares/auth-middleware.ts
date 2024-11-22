@@ -1,15 +1,16 @@
-import express, { RequestHandler } from 'express';
+import { type Context } from 'hono';
+import { getCookie } from 'hono/cookie';
 import { inject, injectable } from 'inversify';
 
-import { AuthService, IAuthService } from '@/services/auth-service';
+import { AuthService } from '@/services/auth-service';
 
-import { IMiddleware } from './middleware';
+import { type IMiddleware, type MiddlewareFunction } from './middleware';
 
 /**
  * Interface definition
  */
 export interface IAuthMiddleware extends IMiddleware {
-  authorize: RequestHandler;
+  authorize: MiddlewareFunction;
 }
 
 /**
@@ -21,41 +22,40 @@ export class AuthMiddleware implements IAuthMiddleware {
   static readonly Key = Symbol.for('AuthMiddleware');
 
   // Dependency injected
-  constructor(@inject(AuthService.Key) private authService: IAuthService) {}
+  constructor(@inject(AuthService.Key) private authService: AuthService) {}
 
   /**
    * Run method
    */
-  async authorize(req: express.Request, res: express.Response, next: express.NextFunction) {
+  authorize: MiddlewareFunction = async (c, next) => {
     // Get token
-    const resolvedToken = this.getTokenFromCookie(req) || this.getTokenFromBearerToken(req);
+    const resolvedToken = this.getTokenFromCookie(c) || this.getTokenFromBearerToken(c) || null;
 
     // if no token
     if (!resolvedToken) {
-      res.status(401).json({ message: 'Unauthorized' });
-      return;
+      return c.json({ message: 'Unauthorized' }, 401);
     }
 
     // Verify token
     const jwtPayload = await this.authService.verifyToken(resolvedToken);
     if (!jwtPayload) {
-      res.status(401).json({ message: 'Unauthorized' });
-      return;
+      return c.json({ message: 'Unauthorized' }, 401);
     }
 
     // Attach user to request
-    req.user = jwtPayload;
+    c.set('user', jwtPayload);
 
-    // Continue
     next();
-  }
+  };
 
   /**
    * Get token from headers bearer token
    */
-  private getTokenFromBearerToken(req: express.Request): string | null {
-    if (req.headers && req.headers.authorization) {
-      const parts = req.headers.authorization.split(' ');
+  private getTokenFromBearerToken(c: Context): string | null {
+    const authorization = c.req.header('Authorization');
+
+    if (authorization) {
+      const parts = authorization.split(' ');
 
       if (parts.length === 2 && /^Bearer$/i.test(parts[0])) {
         return parts[1];
@@ -68,11 +68,9 @@ export class AuthMiddleware implements IAuthMiddleware {
   /**
    * Get token from cookie
    */
-  private getTokenFromCookie(req: express.Request): string | null {
-    if (req.cookies && req.cookies['auth-token']) {
-      return req.cookies['auth-token'];
-    }
+  private getTokenFromCookie(c: Context): string | null {
+    const authToken = getCookie(c, 'auth-token');
 
-    return null;
+    return authToken || null;
   }
 }

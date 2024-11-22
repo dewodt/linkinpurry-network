@@ -1,10 +1,10 @@
 import { Container } from 'inversify';
 
-import { AuthController, IAuthController } from '@/controllers/auth-controller';
+import { AuthController } from '@/controllers/auth-controller';
 import { Database } from '@/infrastructures/database/database';
-import { AuthMiddleware, IAuthMiddleware } from '@/middlewares/auth-middleware';
-import { AuthRoute, IAuthRoute } from '@/routes/auth-route';
-import { AuthService, IAuthService } from '@/services/auth-service';
+import { AuthMiddleware } from '@/middlewares/auth-middleware';
+import { AuthRoute } from '@/routes/auth-route';
+import { AuthService } from '@/services/auth-service';
 
 import { Config } from './config';
 
@@ -16,6 +16,9 @@ export class DependencyContainer {
     this.registerDependencies();
   }
 
+  /**
+   * Register dependencies
+   */
   private registerDependencies(): void {
     // Core
     this.container.bind<Config>(Config.Key).to(Config).inSingletonScope();
@@ -25,13 +28,13 @@ export class DependencyContainer {
     this.container.bind<AuthService>(AuthService.Key).to(AuthService).inSingletonScope();
 
     // Middleware
-    this.container.bind<IAuthMiddleware>(AuthMiddleware.Key).to(AuthMiddleware).inSingletonScope();
+    this.container.bind<AuthMiddleware>(AuthMiddleware.Key).to(AuthMiddleware).inSingletonScope();
 
     // Controllers
-    this.container.bind<IAuthController>(AuthController.Key).to(AuthController).inSingletonScope();
+    this.container.bind<AuthController>(AuthController.Key).to(AuthController).inSingletonScope();
 
     // Routes
-    this.container.bind<IAuthRoute>(AuthRoute.Key).to(AuthRoute).inSingletonScope();
+    this.container.bind<AuthRoute>(AuthRoute.Key).to(AuthRoute).inSingletonScope();
   }
 
   public getContainer(): Container {

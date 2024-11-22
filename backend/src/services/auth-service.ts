@@ -1,21 +1,27 @@
+import { compare } from 'bcrypt';
+import { decode, sign, verify } from 'hono/jwt';
 import { inject, injectable } from 'inversify';
-import jwt from 'jsonwebtoken';
 
 import { Config } from '@/core/config';
+import { CustomException, ExceptionFactory } from '@/core/custom-exception';
 import { logger } from '@/core/logger';
-import { ILoginRequestDto, IRegisterRequestDto, JWTClaim } from '@/dto/auth-dto';
+import {
+  type CustomJWTPayload,
+  type ILoginRequestDto,
+  type IRegisterRequestDto,
+} from '@/dto/auth-dto';
 import { Database } from '@/infrastructures/database/database';
 
-import { IService } from './service';
+import { type IService } from './service';
 
 /**
  * Interface definition
  */
 export interface IAuthService extends IService {
-  verifyToken(token: string): Promise<JWTClaim | null>;
-  generateToken(payload: JWTClaim): Promise<string | null>;
   login(body: ILoginRequestDto): Promise<string>;
   register(body: IRegisterRequestDto): Promise<void>;
+  verifyToken(token: string): Promise<CustomJWTPayload | null>;
+  generateToken(payload: CustomJWTPayload): Promise<string | null>;
 }
 
 /**
@@ -26,9 +32,6 @@ export class AuthService implements IAuthService {
   // IoC Key
   static readonly Key = Symbol.for('AuthService');
 
-  // Constants for Auth
-  private readonly TTL = 60 * 60; // 1 hour
-
   // Inject dependencies
   constructor(
     @inject(Config.Key) private config: Config,
@@ -36,67 +39,12 @@ export class AuthService implements IAuthService {
   ) {}
 
   /**
-   * Verify token method
-   * @param token
-   * @returns boolean
-   */
-  async verifyToken(token: string): Promise<JWTClaim | null> {
-    const jwtSecret = this.config.get('JWT_SECRET');
-
-    try {
-      // HMAC algorithm
-      const verifyPromise = () =>
-        new Promise<JWTClaim>((resolve, reject) => {
-          jwt.verify(token, jwtSecret, (err, decoded) => {
-            if (err) {
-              reject(err);
-            }
-            resolve(decoded as JWTClaim);
-          });
-        });
-
-      const jwtPayload = await verifyPromise();
-
-      return jwtPayload;
-    } catch (error) {
-      return null;
-    }
-  }
-
-  /**
-   * Generate token method
-   * @param payload
-   * @throws Error (must be caught by the caller)
-   * @returns token string
-   */
-  async generateToken(payload: JWTClaim): Promise<string | null> {
-    const jwtSecret = this.config.get('JWT_SECRET');
-
-    try {
-      const signPromise = () =>
-        new Promise<string>((resolve, reject) => {
-          jwt.sign(payload, jwtSecret, { expiresIn: this.TTL }, (err, token) => {
-            if (err) {
-              reject(err);
-            }
-            resolve(token as string);
-          });
-        });
-
-      const token = await signPromise();
-
-      return token;
-    } catch (error) {
-      return null;
-    }
-  }
-
-  /**
    *  Login method
    *
    * @param email
    * @param password
    * @returns token string
+   * @throws CustomException
    */
   async login(body: ILoginRequestDto): Promise<string> {
     const prisma = this.database.getPrisma();
@@ -110,9 +58,28 @@ export class AuthService implements IAuthService {
 
     // Check if user exists
     if (!user) {
+      throw ExceptionFactory.badRequest('Invalid credentials');
     }
 
-    return 'signIn';
+    // Check if password is correct
+    const result = await compare(body.password, user.password);
+    if (!result) {
+      throw ExceptionFactory.badRequest('Invalid credentials');
+    }
+
+    // Generate token
+    const jwtPayload: CustomJWTPayload = {
+      userId: user.id,
+      email: user.email,
+      iat: Date.now(),
+      exp: Date.now() + 3600 * 1000, // 1 hour
+    };
+    const token = await this.generateToken(jwtPayload);
+    if (!token) {
+      throw ExceptionFactory.internalServerError('Failed to generate token');
+    }
+
+    return token;
   }
 
   /**
@@ -122,6 +89,46 @@ export class AuthService implements IAuthService {
    * @returns void
    */
   async register(body: IRegisterRequestDto): Promise<void> {
-    // Implement the signUp method
+    const prisma = this.database.getPrisma();
+
+    const newUser = await prisma.user.create({
+      data: {},
+    });
+  }
+
+  /**
+   * Verify token method
+   * @param token
+   * @returns boolean
+   */
+  async verifyToken(token: string): Promise<CustomJWTPayload | null> {
+    const jwtSecret = this.config.get('JWT_SECRET');
+
+    try {
+      // HMAC algorithm
+      const jwtPayload = (await verify(token, jwtSecret, 'HS256')) as CustomJWTPayload;
+
+      return jwtPayload;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Generate token method
+   * @param payload
+   * @throws Error (must be caught by the caller)
+   * @returns token string
+   */
+  async generateToken(payload: CustomJWTPayload): Promise<string | null> {
+    const jwtSecret = this.config.get('JWT_SECRET');
+
+    try {
+      const token = await sign(payload, jwtSecret, 'HS256');
+
+      return token;
+    } catch (error) {
+      return null;
+    }
   }
 }

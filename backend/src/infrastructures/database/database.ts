@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { injectable } from 'inversify';
 
+import { logger } from '@/core/logger';
+
 @injectable()
 export class Database {
   // IoC key
@@ -26,7 +28,9 @@ export class Database {
    * @returns void
    */
   public async connect(): Promise<void> {
+    logger.info('Connecting to database');
     await this.prisma.$connect();
+    logger.info('Connected to database');
   }
 
   /**
@@ -34,6 +38,8 @@ export class Database {
    * @returns void
    */
   public async disconnect(): Promise<void> {
+    logger.info('Disconnecting from database');
     await this.prisma.$disconnect();
+    logger.info('Disconnected from database');
   }
 }

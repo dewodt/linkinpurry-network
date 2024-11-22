@@ -1,13 +1,12 @@
+import type { JWTPayload } from 'hono/utils/jwt/types';
 import * as z from 'zod';
 
 /**
- * JWT Payload
+ * JWT Claim
  */
-export interface JWTClaim {
+export interface CustomJWTPayload extends JWTPayload {
   userId: string;
   email: string;
-  iat: number; // Issued at (UNIX timestamp)
-  exp: number; // Expiration (TTL)
 }
 
 /**

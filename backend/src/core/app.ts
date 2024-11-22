@@ -1,28 +1,36 @@
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import express from 'express';
-import helmet from 'helmet';
+import { serve } from '@hono/node-server';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { logger as honoLogger } from 'hono/logger';
+import { secureHeaders } from 'hono/secure-headers';
 import { Container } from 'inversify';
 import 'reflect-metadata';
 
+import type { CustomJWTPayload } from '@/dto/auth-dto';
 import { Database } from '@/infrastructures/database/database';
 import { AuthRoute } from '@/routes/auth-route';
-import { IRoute } from '@/routes/route';
+import { type IRoute } from '@/routes/route';
 
 import { Config } from './config';
 import { DependencyContainer } from './container';
 import { logger } from './logger';
 
 /**
+ * Global context variable
+ */
+export type GlobalContextVariable = {
+  user: CustomJWTPayload;
+};
+
+/**
  * Application class
  */
 export class App {
-  private app: express.Application;
+  private app: Hono<{ Variables: GlobalContextVariable }>;
   private container: Container;
 
   constructor() {
-    // Initialize state
-    this.app = express();
+    this.app = new Hono();
     this.container = new DependencyContainer().getContainer();
 
     // Setup
@@ -34,55 +42,54 @@ export class App {
    * Register middlewares and routes
    */
   private setup(): void {
-    // Connect to database
-
-    // Global middlewares
-    this.app.use(cookieParser());
+    // Cors
     this.app.use(cors());
-    this.app.use(express.json());
-    this.app.use(helmet());
 
-    // Request logger
-    this.app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-      logger.info(`${req.method} ${req.path}`);
-      next();
+    // Helmet
+    this.app.use(secureHeaders());
+
+    // Request / Response logger
+    this.app.use(honoLogger((str: string, ...rest) => logger.info(str, ...rest)));
+
+    // Global error handler
+    this.app.use(async (c, next) => {
+      await next();
+      if (c.error) {
+        return c.json({ error: c.error.message }, 500);
+      }
     });
 
-    // Error handler
-    this.app.use(
-      (err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-        logger.error(err.stack || err.message);
-        res.status(500).send('Something broke!');
-      }
-    );
-
-    // Routes
+    // Register routes
     const routeKeys: symbol[] = [AuthRoute.Key];
     const routes: IRoute[] = routeKeys.map((key: symbol) => this.container.get<IRoute>(key));
     routes.forEach((route: IRoute) => route.register(this.app));
   }
 
+  /**
+   * Start server
+   */
   public listen(): void {
     // Connect to database
     const database = this.container.get<Database>(Database.Key);
-    logger.info('Connecting to database');
     database.connect();
-    logger.info('Connected to database');
 
-    // Get config
+    // Get config & port
     const config = this.container.get<Config>(Config.Key);
+    const port = config.get('PORT');
 
     // Start server
-    this.app.listen(config.get('PORT'), () => {
-      logger.info(`Server is running on http://localhost:${config.get('PORT')}`);
+    serve({
+      fetch: this.app.fetch,
+      port,
     });
   }
 
+  /**
+   * Cleanup
+   */
   public async cleanup(): Promise<void> {
     // Disconnect from database
-    logger.info('Disconnecting from database');
     const database = this.container.get<Database>(Database.Key);
-    logger.info('Disconnected from database');
     await database.disconnect();
   }
 }

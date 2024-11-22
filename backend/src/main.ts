@@ -1,4 +1,4 @@
-import { App } from './core/app';
+import { App } from './core/app.js';
 import { logger } from './core/logger';
 
 async function startServer() {
