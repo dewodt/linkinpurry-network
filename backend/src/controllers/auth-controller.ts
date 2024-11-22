@@ -1,17 +1,17 @@
+import express, { RequestHandler } from 'express';
 import { inject, injectable } from 'inversify';
 
+import { IController } from '@/controllers/controller';
 import { logger } from '@/core/logger';
 import { AuthService } from '@/services/auth-service';
-
-import { IController } from './controller';
 
 /**
  * Interface definition
  */
 export interface IAuthController extends IController {
-  signIn(req: any, res: any): void;
-  signOut(req: any, res: any): void;
-  signUp(req: any, res: any): void;
+  login: RequestHandler;
+  logout: RequestHandler;
+  register: RequestHandler;
 }
 
 /**
@@ -25,18 +25,27 @@ export class AuthController implements IAuthController {
   // Dependency
   constructor(@inject(AuthService.Key) private readonly authService: AuthService) {}
 
-  async signIn(req: any, res: any): Promise<void> {
-    // Implement the signIn method
-    res.send('signIn');
-  }
+  /**
+   * Login controller
+   *
+   * @param req
+   * @param res
+   */
+  async login(req: express.Request, res: express.Response): Promise<void> {}
 
-  async signOut(req: any, res: any): Promise<void> {
-    // Implement the signOut method
-    res.send('signOut');
-  }
+  /**
+   * Logout controller
+   *
+   * @param req
+   * @param res
+   */
+  async logout(req: express.Request, res: express.Response): Promise<void> {}
 
-  async signUp(req: any, res: any): Promise<void> {
-    // Implement the signUp method
-    res.send('signUp');
-  }
+  /**
+   *
+   *
+   * @param req
+   * @param res
+   */
+  async register(req: express.Request, res: express.Response): Promise<void> {}
 }

@@ -30,9 +30,9 @@ export class AuthRoute implements IAuthRoute {
    */
   register(r: Router) {
     // Sign in
-    r.post('/auth/sign-in', this.authController.signIn);
+    r.post('/api/login', this.authController.login);
 
     // Sign up
-    r.post('/auth/sign-up', this.authController.signUp);
+    r.post('/api/register', this.authController.register);
   }
 }

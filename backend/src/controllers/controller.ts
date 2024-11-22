@@ -1,4 +1,4 @@
 /**
- * Controllerb ase interface
+ * Controller ase interface
  */
 export interface IController {}

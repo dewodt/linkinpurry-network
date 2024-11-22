@@ -1,7 +1,8 @@
-import { log } from 'console';
 import * as dotenv from 'dotenv';
 import { injectable } from 'inversify';
 import * as z from 'zod';
+
+import { logger } from './logger';
 
 /**
  * Interface definition
@@ -18,6 +19,9 @@ export const ConfigSchema = z.object({
   PORT: z
     .string({ message: 'PORT must be a string' })
     .min(1, { message: 'PORT must not be empty' }),
+  JWT_SECRET: z
+    .string({ message: 'JWT_SECRET must be a string' })
+    .min(1, { message: 'JWT_SECRET must not be empty' }),
 
   // Database
   POSTGRES_USER: z
@@ -51,22 +55,16 @@ export class Config implements IConfig {
   constructor() {
     dotenv.config();
 
-    const rawEnv = {
-      // App
-      PORT: process.env.PORT,
-
-      // Database
-      POSTGRES_USER: process.env.POSTGRES_USER,
-      POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
-      POSTGRES_DB: process.env.POSTGRES_DB,
-      POSTGRES_HOST: process.env.POSTGRES_HOST,
-    };
+    const rawEnv: { [key: string]: unknown } = {};
+    Array.from(Object.keys(ConfigSchema.shape)).forEach((key) => {
+      rawEnv[key] = process.env[key];
+    });
 
     // Try to parse, if fail throw ZodError
     try {
       this.env = ConfigSchema.parse(rawEnv);
     } catch (error) {
-      log(error);
+      logger.error(`Config validation error ${error}`);
       throw error;
     }
   }

@@ -22,7 +22,7 @@ export class DependencyContainer {
     this.container.bind<Database>(Database.Key).to(Database).inSingletonScope();
 
     // Services
-    this.container.bind<IAuthService>(AuthService.Key).to(AuthService).inSingletonScope();
+    this.container.bind<AuthService>(AuthService.Key).to(AuthService).inSingletonScope();
 
     // Middleware
     this.container.bind<IAuthMiddleware>(AuthMiddleware.Key).to(AuthMiddleware).inSingletonScope();

@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
@@ -36,6 +37,7 @@ export class App {
     // Connect to database
 
     // Global middlewares
+    this.app.use(cookieParser());
     this.app.use(cors());
     this.app.use(express.json());
     this.app.use(helmet());
