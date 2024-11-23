@@ -37,11 +37,42 @@ export class AuthRoute implements IRoute {
    * @returns void
    * @override
    */
-  register(app: OpenAPIHono<IGlobalContext>): void {
-    /**
-     * Login route
-     */
-    app.openapi(this.createLoginRoute(), async (c) => {
+  registerRoutes(app: OpenAPIHono<IGlobalContext>): void {
+    // Login
+    this.login(app);
+
+    // Register
+    this.register(app);
+
+    // Logout
+    this.logout(app);
+  }
+
+  /**
+   * Login route
+   *
+   * @param app
+   */
+  private login(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const loginRoute = createRoute({
+      tags: ['auth'],
+      method: 'post',
+      path: '/api/login',
+      request: {
+        body: OpenApiRequestFactory.jsonBody('Login Request Body', LoginRequestDto),
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessData('Login successfull', LoginResponseDto),
+        400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while logging in'
+        ),
+      },
+    });
+
+    // Register route
+    app.openapi(loginRoute, async (c) => {
       // Get validated body
       const body = await c.req.json<ILoginRequestDto>();
 
@@ -72,11 +103,33 @@ export class AuthRoute implements IRoute {
         return c.json(responseDto, 500);
       }
     });
+  }
 
-    /**
-     * Register route (automatically login)
-     */
-    app.openapi(this.createRegisterRoute(), async (c) => {
+  /**
+   * Register route
+   */
+  private register(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const registerRoute = createRoute({
+      tags: ['auth'],
+      method: 'post',
+      path: '/api/register',
+      request: {
+        body: OpenApiRequestFactory.jsonBody('Register Request Body', RegisterRequestDto),
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessData('Register successfull', RegisterResponseDto),
+        400: OpenApiResponseFactory.jsonBadRequest(
+          'Invalid fields | Username already exists | Email already exists'
+        ),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while registering'
+        ),
+      },
+    });
+
+    // Register route
+    app.openapi(registerRoute, async (c) => {
       // Get validated body
       const body = await c.req.json<IRegisterRequestDto>();
 
@@ -113,11 +166,28 @@ export class AuthRoute implements IRoute {
         return c.json(responseDto, 500);
       }
     });
+  }
 
-    /**
-     * Logout route
-     */
-    app.openapi(this.createLogoutRoute(), async (c) => {
+  /**
+   * Logout route
+   */
+  private logout(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const logoutRoute = createRoute({
+      tags: ['auth'],
+      method: 'post',
+      path: '/api/logout',
+      request: {},
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccess('Logout successfull'),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while logging out'
+        ),
+      },
+    });
+
+    // Register route
+    app.openapi(logoutRoute, async (c) => {
       try {
         // Delete cookie
         deleteCookie(c, 'auth-token');
@@ -129,68 +199,6 @@ export class AuthRoute implements IRoute {
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
         return c.json(responseDto, 500);
       }
-    });
-  }
-
-  /**
-   * login route definition
-   */
-  private createLoginRoute() {
-    return createRoute({
-      tags: ['auth'],
-      method: 'post',
-      path: '/api/login',
-      request: {
-        body: OpenApiRequestFactory.jsonBody('Login Request Body', LoginRequestDto),
-      },
-      responses: {
-        200: OpenApiResponseFactory.jsonSuccessData('Login successfull', LoginResponseDto),
-        400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
-        500: OpenApiResponseFactory.jsonInternalServerError(
-          'Unexpected error occurred while logging in'
-        ),
-      },
-    });
-  }
-
-  /**
-   * Register route definition
-   */
-  private createRegisterRoute() {
-    return createRoute({
-      tags: ['auth'],
-      method: 'post',
-      path: '/api/register',
-      request: {
-        body: OpenApiRequestFactory.jsonBody('Register Request Body', RegisterRequestDto),
-      },
-      responses: {
-        200: OpenApiResponseFactory.jsonSuccessData('Register successfull', RegisterResponseDto),
-        400: OpenApiResponseFactory.jsonBadRequest(
-          'Invalid fields | Username already exists | Email already exists'
-        ),
-        500: OpenApiResponseFactory.jsonInternalServerError(
-          'Unexpected error occurred while registering'
-        ),
-      },
-    });
-  }
-
-  /**
-   * Logout route definition
-   */
-  private createLogoutRoute() {
-    return createRoute({
-      tags: ['auth'],
-      method: 'post',
-      path: '/api/logout',
-      request: {},
-      responses: {
-        200: OpenApiResponseFactory.jsonSuccess('Logout successfull'),
-        500: OpenApiResponseFactory.jsonInternalServerError(
-          'Unexpected error occurred while logging out'
-        ),
-      },
     });
   }
 }

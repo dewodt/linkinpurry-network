@@ -100,7 +100,7 @@ export class App {
 
     // Register all routers
     const routeKeys = [AuthRoute.Key];
-    routeKeys.forEach((key) => this.container.get<IRoute>(key).register(this.app));
+    routeKeys.forEach((key) => this.container.get<IRoute>(key).registerRoutes(this.app));
 
     // Docs swagger UI (public route)
     this.app.doc('/api/docs', {
