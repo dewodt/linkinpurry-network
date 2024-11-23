@@ -1,6 +1,5 @@
 import { Container } from 'inversify';
 
-import { AuthController } from '@/controllers/auth-controller';
 import { Database } from '@/infrastructures/database/database';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { AuthRoute } from '@/routes/auth-route';
@@ -26,15 +25,14 @@ export class DependencyContainer {
 
     // Services
     this.container.bind<AuthService>(AuthService.Key).to(AuthService).inSingletonScope();
+    // Add more
 
     // Middleware
     this.container.bind<AuthMiddleware>(AuthMiddleware.Key).to(AuthMiddleware).inSingletonScope();
 
-    // Controllers
-    this.container.bind<AuthController>(AuthController.Key).to(AuthController).inSingletonScope();
-
     // Routes
     this.container.bind<AuthRoute>(AuthRoute.Key).to(AuthRoute).inSingletonScope();
+    // Add more
   }
 
   public getContainer(): Container {

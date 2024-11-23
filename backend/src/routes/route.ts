@@ -1,10 +1,7 @@
-import type { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
 
 import type { IGlobalContext } from '@/core/app';
 
-/**
- * Base interface for routes
- */
 export interface IRoute {
-  register(app: Hono<IGlobalContext>): void;
+  register(app: OpenAPIHono<IGlobalContext>): void;
 }

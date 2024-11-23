@@ -2,7 +2,7 @@
   "name": "backend",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --watch-delay 2000 src/main.ts",
+    "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@hono/swagger-ui": "^0.4.1",
+    "@hono/zod-openapi": "^0.18.0",
     "@prisma/client": "^5.22.0",
     "bcrypt": "^5.1.1",
     "hono": "^4.6.11",

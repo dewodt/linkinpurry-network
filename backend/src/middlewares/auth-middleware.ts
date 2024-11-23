@@ -2,19 +2,20 @@ import { type Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { inject, injectable } from 'inversify';
 
+import { ResponseDtoFactory } from '@/dto/common';
 import { AuthService } from '@/services/auth-service';
 
-import { type IMiddleware, type MiddlewareFunction } from './middleware';
+import type { MiddlewareFunction } from './middleware';
 
 /**
- * Interface definition
+ * Auth Middleware interface definition
  */
-export interface IAuthMiddleware extends IMiddleware {
+export interface IAuthMiddleware {
   authorize: MiddlewareFunction;
 }
 
 /**
- * Middleware implementation
+ * Auth Middleware implementation
  */
 @injectable()
 export class AuthMiddleware implements IAuthMiddleware {
@@ -25,7 +26,7 @@ export class AuthMiddleware implements IAuthMiddleware {
   constructor(@inject(AuthService.Key) private authService: AuthService) {}
 
   /**
-   * Run method
+   * Authorize middleware
    */
   authorize: MiddlewareFunction = async (c, next) => {
     // Get token
@@ -33,19 +34,21 @@ export class AuthMiddleware implements IAuthMiddleware {
 
     // if no token
     if (!resolvedToken) {
-      return c.json({ message: 'Unauthorized' }, 401);
+      const errorResponse = ResponseDtoFactory.createErrorResponseDto('Unathorized');
+      return c.json(errorResponse, 401);
     }
 
     // Verify token
     const jwtPayload = await this.authService.verifyToken(resolvedToken);
     if (!jwtPayload) {
-      return c.json({ message: 'Unauthorized' }, 401);
+      const errorResponse = ResponseDtoFactory.createErrorResponseDto('Unathorized');
+      return c.json(errorResponse, 401);
     }
 
     // Attach user to request
     c.set('user', jwtPayload);
 
-    next();
+    await next();
   };
 
   /**

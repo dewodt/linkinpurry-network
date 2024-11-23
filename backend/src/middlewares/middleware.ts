@@ -1,16 +1,11 @@
 import type { Context, Next } from 'hono';
 
-import type { GlobalContextVariable } from '@/core/app';
-
-/**
- * Base interface for all middlewares
- */
-export interface IMiddleware {}
+import type { IGlobalContext } from '@/core/app';
 
 /**
  * Base type for Middleware functions
  */
 export type MiddlewareFunction = (
-  c: Context<{ Variables: GlobalContextVariable }>,
+  c: Context<IGlobalContext>,
   next: Next
 ) => Promise<void | Response>;

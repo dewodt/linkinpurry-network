@@ -1,6 +1,6 @@
+import { z } from '@hono/zod-openapi';
 import * as dotenv from 'dotenv';
 import { injectable } from 'inversify';
-import * as z from 'zod';
 
 import { logger } from './logger';
 
@@ -9,6 +9,9 @@ import { logger } from './logger';
  */
 export const ConfigSchema = z.object({
   // App
+  CORS_ORIGIN: z.string({ message: 'CORS_ORIGIN must be a string' }).min(1, {
+    message: 'CORS_ORIGIN must not be empty',
+  }),
   PORT: z.coerce
     .number({ message: 'PORT must be a number' })
     .min(1, { message: 'PORT must be greater than 0' })
