@@ -19,7 +19,7 @@ services:
           "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h ${POSTGRES_HOST} -p ${POSTGRES_PORT}",
         ]
 
-  # Development (with hot reload)
+  # BE Development (with hot reload)
   linkinpurry-be-dev:
     container_name: linkinpurry-be-dev
     build:
@@ -38,7 +38,7 @@ services:
     networks:
       - linkinpurry-network
 
-  # Production (no hot reload)
+  # BE Production (no hot reload)
   linkinpurry-be-prod:
     container_name: linkinpurry-be-prod
     build:
@@ -51,6 +51,37 @@ services:
       - "3000:3000"
     depends_on:
       - linkinpurry-db
+    networks:
+      - linkinpurry-network
+
+  # BE development (with hot reload)
+  linkinpurry-fe-dev:
+    container_name: linkinpurry-fe-dev
+    build:
+      context: .
+      target: development
+      dockerfile: ./frontend/Dockerfile
+    env_file:
+      - ./frontend/.env.docker
+    volumes:
+      - ./frontend:/app # Mount the frontend folder to the container
+      - /app/node_modules # Prevent the node_modules folder from being mounted
+    ports:
+      - "5173:5173"
+    networks:
+      - linkinpurry-network
+
+  # BE production (no hot reload)
+  linkinpurry-fe-prod:
+    container_name: linkinpurry-fe-prod
+    build:
+      context: .
+      target: production
+      dockerfile: ./frontend/Dockerfile
+    env_file:
+      - ./frontend/.env.docker
+    ports:
+      - "5173:5173"
     networks:
       - linkinpurry-network
 

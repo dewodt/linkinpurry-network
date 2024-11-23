@@ -3,7 +3,7 @@ import { deleteCookie, setCookie } from 'hono/cookie';
 import { inject, injectable } from 'inversify';
 
 import type { IGlobalContext } from '@/core/app';
-import { BadRequestException, ExceptionFactory } from '@/core/exception';
+import { BadRequestException } from '@/core/exception';
 import { logger } from '@/core/logger';
 import {
   type ILoginRequestDto,

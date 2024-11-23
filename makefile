@@ -18,6 +18,12 @@ be-dev:
 be-prod:
 	docker compose --env-file ./backend/.env.docker up --build linkinpurry-be-prod
 
+fe-dev:
+	docker compose --env-file ./frontend/.env.docker up --build linkinpurry-fe-dev
+
+fe-prod:
+	docker compose --env-file ./frontend/.env.docker up --build linkinpurry-fe-prod
+
 stop:
 	docker compose --env-file ./backend/.env.docker down
 
