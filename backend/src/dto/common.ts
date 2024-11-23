@@ -199,63 +199,64 @@ export class ResponseDtoFactory {
  * Factory for creating response DTOs using Zod (for openapi)
  */
 export class OpenApiResponseFactory {
-  static jsonBadRequest() {
+  static jsonBadRequest(description: string = 'Bad Request') {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodErrorResponseDto,
         },
       },
-      description: 'Bad Request',
     };
   }
 
-  static jsonUnauthorized() {
+  static jsonUnauthorized(description: string = 'Unauthorized') {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodErrorResponseDto,
         },
       },
-      description: 'Unauthorized',
     };
   }
 
-  static jsonForbidden() {
+  static jsonForbidden(description: string = 'Forbidden') {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodErrorResponseDto,
         },
       },
-      description: 'Forbidden',
     };
   }
 
-  static jsonNotFound() {
+  static jsonNotFound(description: string = 'Not Found') {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodErrorResponseDto,
         },
       },
-      description: 'Not Found',
     };
   }
 
-  static jsonInternalServerError() {
+  static jsonInternalServerError(description: string = 'Internal Server Error') {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodErrorResponseDto,
         },
       },
-      description: 'Internal Server Error',
     };
   }
 
-  static jsonSuccess() {
+  static jsonSuccess(description: string) {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodBaseResponseDto.extend({
@@ -270,12 +271,12 @@ export class OpenApiResponseFactory {
           }),
         },
       },
-      description: 'Success',
     };
   }
 
-  static jsonSuccessData<T extends ZodType>(data: T) {
+  static jsonSuccessData<T extends ZodType>(description: string, data: T) {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodBaseResponseDto.extend({
@@ -287,12 +288,12 @@ export class OpenApiResponseFactory {
           }),
         },
       },
-      description: 'Success',
     };
   }
 
-  static jsonSuccessPagePagination<T extends ZodType>(data: T) {
+  static jsonSuccessPagePagination<T extends ZodType>(description: string, data: T) {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodBaseResponseDto.extend({
@@ -305,12 +306,12 @@ export class OpenApiResponseFactory {
           }),
         },
       },
-      description: 'Success',
     };
   }
 
-  static jsonSuccessOffsetPagination<T extends ZodType>(data: T) {
+  static jsonSuccessOffsetPagination<T extends ZodType>(description: string, data: T) {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodBaseResponseDto.extend({
@@ -323,12 +324,12 @@ export class OpenApiResponseFactory {
           }),
         },
       },
-      description: 'Success',
     };
   }
 
-  static jsonSuccessCursorPagination<T extends ZodType>(data: T) {
+  static jsonSuccessCursorPagination<T extends ZodType>(description: string, data: T) {
     return {
+      description,
       content: {
         'application/json': {
           schema: zodBaseResponseDto.extend({
@@ -341,7 +342,20 @@ export class OpenApiResponseFactory {
           }),
         },
       },
-      description: 'Success',
+    };
+  }
+}
+
+export class OpenApiRequestFactory {
+  static jsonBody<T extends ZodType>(description: string, schema: T) {
+    return {
+      required: true,
+      description,
+      content: {
+        'application/json': {
+          schema,
+        },
+      },
     };
   }
 }

@@ -1,12 +1,18 @@
 import { Prisma } from '@prisma/client';
 import { compare, hash } from 'bcrypt';
 import { sign, verify } from 'hono/jwt';
+import type { CookieOptions } from 'hono/utils/cookie';
 import { inject, injectable } from 'inversify';
 
 import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
-import { type ILoginRequestDto, type IRegisterRequestDto, type JWTPayload } from '@/dto/auth-dto';
+import {
+  type ILoginRequestDto,
+  type IRegisterRequestDto,
+  type JWTPayload,
+  type RawJWTPayload,
+} from '@/dto/auth-dto';
 import { Database } from '@/infrastructures/database/database';
 
 import { type IService } from './service';
@@ -49,7 +55,7 @@ export class AuthService implements IAuthService {
     // Find user by identifier (username or email)
     const user = await prisma.user.findFirst({
       where: {
-        OR: [{ username: body.identifier, email: body.identifier }],
+        OR: [{ username: body.identifier }, { email: body.identifier }],
       },
     });
 
@@ -88,6 +94,32 @@ export class AuthService implements IAuthService {
   async register(body: IRegisterRequestDto) {
     const prisma = this.database.getPrisma();
 
+    // Validate if username exists
+    const usernameExists = await prisma.user.findFirst({
+      where: {
+        username: body.username,
+      },
+    });
+    if (usernameExists) {
+      throw ExceptionFactory.badRequest('Username already exists', [
+        { field: 'username', message: 'Username already exists' },
+      ]);
+    }
+
+    // Validate if email exists
+    const emailExists = await prisma.user.findFirst({
+      where: {
+        email: body.email,
+      },
+    });
+    if (emailExists) {
+      throw ExceptionFactory.badRequest('Email already exists', [
+        { field: 'email', message: 'Email already exists' },
+      ]);
+    }
+
+    // NOTE: use bcrypt@5.0.1 for node-alpine
+    // https://github.com/kelektiv/node.bcrypt.js/issues/1006
     const hashedPassword = await hash(body.password, 10);
 
     try {
@@ -103,12 +135,7 @@ export class AuthService implements IAuthService {
       return newUser;
     } catch (error) {
       // Unique constraint on email
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        console.log(error.meta);
-        throw ExceptionFactory.badRequest('Email already exists');
-      }
-
-      // Other errors
+      if (error instanceof Error) logger.error(error.message);
       throw ExceptionFactory.internalServerError('Failed to create user');
     }
   }
@@ -123,9 +150,16 @@ export class AuthService implements IAuthService {
 
     try {
       // HMAC algorithm
-      const jwtPayload = (await verify(token, jwtSecret, 'HS256')) as JWTPayload;
+      const jwtPayload = (await verify(token, jwtSecret, 'HS256')) as RawJWTPayload;
 
-      return jwtPayload;
+      const parsedJwtPayload: JWTPayload = {
+        userId: BigInt(jwtPayload.userId),
+        email: jwtPayload.email,
+        iat: jwtPayload.iat,
+        exp: jwtPayload.exp,
+      };
+
+      return parsedJwtPayload;
     } catch (error) {
       return null;
     }
@@ -141,11 +175,33 @@ export class AuthService implements IAuthService {
     const jwtSecret = this.config.get('JWT_SECRET');
 
     try {
-      const token = await sign(payload, jwtSecret, 'HS256');
+      const rawJwtPayload: RawJWTPayload = {
+        userId: payload.userId.toString(),
+        email: payload.email,
+        iat: payload.iat,
+        exp: payload.exp,
+      };
+
+      const token = await sign(rawJwtPayload, jwtSecret, 'HS256');
 
       return token;
     } catch (error) {
+      logger.error(`Failed to generate token: ${error}`);
       return null;
     }
+  }
+
+  /**
+   * Generate cookie setting
+   */
+  generateCookieOptions(): CookieOptions {
+    return {
+      path: '/',
+      domain: this.config.get('FE_DOMAIN'),
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none', // spa with different domain
+      maxAge: 60 * 60, // 1 hour
+    };
   }
 }

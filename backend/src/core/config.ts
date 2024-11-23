@@ -9,9 +9,12 @@ import { logger } from './logger';
  */
 export const ConfigSchema = z.object({
   // App
-  CORS_ORIGIN: z.string({ message: 'CORS_ORIGIN must be a string' }).min(1, {
-    message: 'CORS_ORIGIN must not be empty',
-  }),
+  FE_URL: z
+    .string({ message: 'FE_URL must be a string' })
+    .min(1, { message: 'FE_URL must not be empty' }),
+  FE_DOMAIN: z
+    .string({ message: 'FE_DOMAIN must be a string' })
+    .min(1, { message: 'FE_DOMAIN must not be empty' }),
   PORT: z.coerce
     .number({ message: 'PORT must be a number' })
     .min(1, { message: 'PORT must be greater than 0' })

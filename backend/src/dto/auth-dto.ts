@@ -2,10 +2,15 @@ import { z } from '@hono/zod-openapi';
 import { type JWTPayload as BaseJwtPayload } from 'hono/utils/jwt/types';
 
 /**
- * JWT Claim
+ * JWT Claim (parsed payload)
  */
 export interface JWTPayload extends BaseJwtPayload {
   userId: bigint;
+  email: string;
+}
+
+export interface RawJWTPayload extends BaseJwtPayload {
+  userId: string;
   email: string;
 }
 
@@ -75,7 +80,7 @@ export const RegisterRequestDto = z.object({
       example: 'Dewo',
     }),
   password: z
-    .string({ message: 'Password must not be empty' })
+    .string({ message: 'Password is required' })
     .min(8, { message: 'Password must be at least 8 characters long' })
     .max(20, { message: 'Password must be at most 20 characters long' })
     .regex(new RegExp('^(?=.*[a-z])'), {

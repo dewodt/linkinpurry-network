@@ -23,7 +23,7 @@ import { logger } from './logger';
  */
 export interface IGlobalContext {
   Variables: {
-    user: JWTPayload; // typing not null / undefined, ensured by middleware
+    user?: JWTPayload;
   };
 }
 
@@ -38,7 +38,7 @@ export class App {
   private database: Database;
 
   constructor() {
-    this.app = new OpenAPIHono({
+    this.app = new OpenAPIHono<IGlobalContext>({
       defaultHook: (result, c) => {
         if (!result.success) {
           const errorFields = Utils.getErrorFieldsFromZodParseResult(result.error);
@@ -67,7 +67,7 @@ export class App {
     // Cors
     this.app.use(
       cors({
-        origin: this.config.get('CORS_ORIGIN'),
+        origin: this.config.get('FE_URL'),
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         allowHeaders: [
           'Content-Type',
