@@ -1,4 +1,5 @@
 import { z } from '@hono/zod-openapi';
+import { error } from 'console';
 import type { ZodObject, ZodRawShape, ZodType } from 'zod';
 
 /**
@@ -7,7 +8,7 @@ import type { ZodObject, ZodRawShape, ZodType } from 'zod';
 const zodBaseResponseDto = z.object({
   message: z.string().openapi({
     description: 'Response message',
-    example: '<response_message>',
+    example: 'Success', // base message is success, extend to override for error
   }),
 });
 
@@ -111,11 +112,11 @@ export type SuccessCursorPaginationResponseDto<T> = SuccessPaginationResponseDto
 const zodErrorFieldDto = z.object({
   field: z.string().openapi({
     description: 'Field name',
-    example: '<field_name>',
+    example: 'foo',
   }),
   message: z.string().openapi({
     description: 'Error message',
-    example: '<field_message>',
+    example: 'foo is required',
   }),
 });
 
@@ -204,7 +205,12 @@ export class OpenApiResponseFactory {
       description,
       content: {
         'application/json': {
-          schema: zodErrorResponseDto,
+          schema: zodErrorResponseDto.extend({
+            message: z.string().openapi({
+              description: 'Error message',
+              example: 'Bad Request',
+            }),
+          }),
         },
       },
     };
@@ -215,7 +221,13 @@ export class OpenApiResponseFactory {
       description,
       content: {
         'application/json': {
-          schema: zodErrorResponseDto,
+          schema: zodErrorResponseDto.extend({
+            message: z.string().openapi({
+              description: 'Error message',
+              example: 'Unauthorized',
+            }),
+            errorFields: z.literal(undefined),
+          }),
         },
       },
     };
@@ -226,7 +238,13 @@ export class OpenApiResponseFactory {
       description,
       content: {
         'application/json': {
-          schema: zodErrorResponseDto,
+          schema: zodErrorResponseDto.extend({
+            message: z.string().openapi({
+              description: 'Error message',
+              example: 'Forbidden',
+            }),
+            errorFields: z.literal(undefined),
+          }),
         },
       },
     };
@@ -237,7 +255,13 @@ export class OpenApiResponseFactory {
       description,
       content: {
         'application/json': {
-          schema: zodErrorResponseDto,
+          schema: zodErrorResponseDto.extend({
+            message: z.string().openapi({
+              description: 'Error message',
+              example: 'Not Found',
+            }),
+            errorFields: z.literal(undefined),
+          }),
         },
       },
     };
@@ -248,7 +272,13 @@ export class OpenApiResponseFactory {
       description,
       content: {
         'application/json': {
-          schema: zodErrorResponseDto,
+          schema: zodErrorResponseDto.extend({
+            message: z.string().openapi({
+              description: 'Error message',
+              example: 'Internal Server Error',
+            }),
+            errorFields: z.literal(undefined),
+          }),
         },
       },
     };
