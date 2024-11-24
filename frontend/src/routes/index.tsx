@@ -11,7 +11,7 @@ function HomeComponent() {
     <div className="p-2">
       <h3>Welcome Home!</h3>
 
-      <Input placeholder="lol" className="text-red-500 <style_mobile2> sm:text-blue-500 md:text-green-500 lg:text-orange-500" />
+      <Input placeholder="lol" />
     </div>
   );
 }

@@ -29,10 +29,14 @@ function RootComponent() {
         >
           About
         </Link>
-        <Button variant="destructive">Tes!</Button>
+        <Button>Tes!</Button>
       </div>
       <hr />
+
+      {/* Children */}
       <Outlet />
+
+      {/* Devtools */}
       <TanStackRouterDevtools position="bottom-right" />
     </>
   );

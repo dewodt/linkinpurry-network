@@ -8,7 +8,7 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'plugin:@tanstack/eslint-plugin-query/recommended', // Added for React Query best practices
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'coverage'],
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'vite.config.ts', 'postcss.config.js', 'tailwind.config.js', 'node_modules', 'coverage'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
