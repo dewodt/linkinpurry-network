@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { compare, hash } from 'bcrypt';
 import { sign, verify } from 'hono/jwt';
 import type { CookieOptions } from 'hono/utils/cookie';
@@ -8,8 +8,8 @@ import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import {
-  type ILoginRequestDto,
-  type IRegisterRequestDto,
+  type ILoginRequestBodyDto,
+  type IRegisterRequestBodyDto,
   type JWTPayload,
   type RawJWTPayload,
 } from '@/dto/auth-dto';
@@ -21,8 +21,8 @@ import { type IService } from './service';
  * Interface definition
  */
 export interface IAuthService extends IService {
-  login(body: ILoginRequestDto): Promise<string>;
-  register(body: IRegisterRequestDto): Promise<any>;
+  login(body: ILoginRequestBodyDto): Promise<string>;
+  register(body: IRegisterRequestBodyDto): Promise<any>;
   verifyToken(token: string): Promise<JWTPayload | null>;
   generateToken(payload: JWTPayload): Promise<string | null>;
 }
@@ -49,36 +49,60 @@ export class AuthService implements IAuthService {
    * @returns token string
    * @throws CustomException
    */
-  async login(body: ILoginRequestDto): Promise<string> {
+  async login(body: ILoginRequestBodyDto): Promise<string> {
     const prisma = this.database.getPrisma();
 
     // Find user by identifier (username or email)
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [{ username: body.identifier }, { email: body.identifier }],
-      },
-    });
+    let user: Prisma.UserGetPayload<{
+      select: { id: boolean; email: boolean; passwordHash: boolean };
+    }> | null = null;
+
+    try {
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [{ username: body.identifier }, { email: body.identifier }],
+        },
+        select: {
+          id: true,
+          email: true,
+          passwordHash: true,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to login');
+    }
 
     // Check if user exists
-    if (!user) {
-      throw ExceptionFactory.badRequest('Invalid credentials');
+    if (!user) throw ExceptionFactory.badRequest('Invalid credentials');
+
+    let cmpResult: boolean = false;
+
+    try {
+      // Check if password is correct
+      cmpResult = await compare(body.password, user.passwordHash);
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to login');
     }
 
-    // Check if password is correct
-    const result = await compare(body.password, user.passwordHash);
-    if (!result) {
-      throw ExceptionFactory.badRequest('Invalid credentials');
-    }
+    if (!cmpResult) throw ExceptionFactory.badRequest('Invalid credentials');
 
-    // Generate token
-    const jwtPayload: JWTPayload = {
-      userId: user.id,
-      email: user.email,
-      iat: Date.now(),
-      exp: Date.now() + 3600 * 1000, // 1 hour
-    };
-    const token = await this.generateToken(jwtPayload);
-    if (!token) {
+    let token: string | null = null;
+    try {
+      // Generate token
+      const jwtPayload: JWTPayload = {
+        userId: user.id,
+        email: user.email,
+        iat: Date.now(),
+        exp: Date.now() + 3600 * 1000, // 1 hour
+      };
+      token = await this.generateToken(jwtPayload);
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
       throw ExceptionFactory.internalServerError('Failed to generate token');
     }
 
@@ -91,38 +115,56 @@ export class AuthService implements IAuthService {
    * @param body
    * @returns void
    */
-  async register(body: IRegisterRequestDto) {
+  async register(body: IRegisterRequestBodyDto) {
     const prisma = this.database.getPrisma();
 
     // Validate if username exists
-    const usernameExists = await prisma.user.findFirst({
-      where: {
-        username: body.username,
-      },
-    });
-    if (usernameExists) {
+    let usernameExists = false;
+    try {
+      const user = await prisma.user.findFirst({
+        where: {
+          username: body.username,
+        },
+      });
+
+      if (user) usernameExists = true;
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to create user');
+    }
+
+    if (usernameExists)
       throw ExceptionFactory.badRequest('Username already exists', [
         { field: 'username', message: 'Username already exists' },
       ]);
-    }
 
     // Validate if email exists
-    const emailExists = await prisma.user.findFirst({
-      where: {
-        email: body.email,
-      },
-    });
-    if (emailExists) {
+    let emailExists = false;
+    try {
+      const user = await prisma.user.findFirst({
+        where: {
+          email: body.email,
+        },
+      });
+
+      if (user) emailExists = true;
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to create user');
+    }
+
+    if (emailExists)
       throw ExceptionFactory.badRequest('Email already exists', [
         { field: 'email', message: 'Email already exists' },
       ]);
-    }
-
-    // NOTE: use bcrypt@5.0.1 for node-alpine
-    // https://github.com/kelektiv/node.bcrypt.js/issues/1006
-    const hashedPassword = await hash(body.password, 10);
 
     try {
+      // NOTE: use bcrypt@5.0.1 for node-alpine
+      // https://github.com/kelektiv/node.bcrypt.js/issues/1006
+      const hashedPassword = await hash(body.password, 10);
+
       const newUser = await prisma.user.create({
         data: {
           email: body.email,
@@ -134,8 +176,8 @@ export class AuthService implements IAuthService {
 
       return newUser;
     } catch (error) {
-      // Unique constraint on email
       if (error instanceof Error) logger.error(error.message);
+
       throw ExceptionFactory.internalServerError('Failed to create user');
     }
   }
@@ -144,8 +186,9 @@ export class AuthService implements IAuthService {
    * Verify token method
    * @param token
    * @returns boolean
+   * @throws Error
    */
-  async verifyToken(token: string): Promise<JWTPayload | null> {
+  async verifyToken(token: string): Promise<JWTPayload> {
     const jwtSecret = this.config.get('JWT_SECRET');
 
     try {
@@ -161,7 +204,7 @@ export class AuthService implements IAuthService {
 
       return parsedJwtPayload;
     } catch (error) {
-      return null;
+      throw error;
     }
   }
 
@@ -171,7 +214,7 @@ export class AuthService implements IAuthService {
    * @throws Error (must be caught by the caller)
    * @returns token string
    */
-  async generateToken(payload: JWTPayload): Promise<string | null> {
+  async generateToken(payload: JWTPayload): Promise<string> {
     const jwtSecret = this.config.get('JWT_SECRET');
 
     try {
@@ -186,8 +229,7 @@ export class AuthService implements IAuthService {
 
       return token;
     } catch (error) {
-      logger.error(`Failed to generate token: ${error}`);
-      return null;
+      throw error;
     }
   }
 

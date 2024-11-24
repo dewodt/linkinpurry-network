@@ -2,6 +2,7 @@ import { type Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { inject, injectable } from 'inversify';
 
+import type { JWTPayload } from '@/dto/auth-dto';
 import { ResponseDtoFactory } from '@/dto/common';
 import { AuthService } from '@/services/auth-service';
 
@@ -39,9 +40,12 @@ export class AuthMiddleware implements IAuthMiddleware {
     }
 
     // Verify token
-    const jwtPayload = await this.authService.verifyToken(resolvedToken);
-    if (!jwtPayload) {
+    let jwtPayload: JWTPayload | null = null;
+    try {
+      jwtPayload = await this.authService.verifyToken(resolvedToken);
+    } catch (error) {
       const errorResponse = ResponseDtoFactory.createErrorResponseDto('Unathorized');
+
       return c.json(errorResponse, 401);
     }
 

@@ -6,14 +6,14 @@ import type { IGlobalContext } from '@/core/app';
 import { BadRequestException } from '@/core/exception';
 import { logger } from '@/core/logger';
 import {
-  type ILoginRequestDto,
-  type ILoginResponseDto,
-  type IRegisterRequestDto,
-  type IRegisterResponseDto,
-  LoginRequestDto,
-  LoginResponseDto,
-  RegisterRequestDto,
-  RegisterResponseDto,
+  type ILoginRequestBodyDto,
+  type ILoginResponseBodyDto,
+  type IRegisterRequestBodyDto,
+  type IRegisterResponseBodyDto,
+  LoginRequestBodyDto,
+  LoginResponseBodyDto,
+  RegisterRequestBodyDto,
+  RegisterResponseBodyDto,
 } from '@/dto/auth-dto';
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import { AuthService } from '@/services/auth-service';
@@ -60,10 +60,10 @@ export class AuthRoute implements IRoute {
       method: 'post',
       path: '/api/login',
       request: {
-        body: OpenApiRequestFactory.jsonBody('Login Request Body', LoginRequestDto),
+        body: OpenApiRequestFactory.jsonBody('Login Request Body', LoginRequestBodyDto),
       },
       responses: {
-        200: OpenApiResponseFactory.jsonSuccessData('Login successfull', LoginResponseDto),
+        200: OpenApiResponseFactory.jsonSuccessData('Login successfull', LoginResponseBodyDto),
         400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
         500: OpenApiResponseFactory.jsonInternalServerError(
           'Unexpected error occurred while logging in'
@@ -74,14 +74,14 @@ export class AuthRoute implements IRoute {
     // Register route
     app.openapi(loginRoute, async (c) => {
       // Get validated body
-      const body = await c.req.json<ILoginRequestDto>();
+      const body = await c.req.json<ILoginRequestBodyDto>();
 
       try {
         // Call service
         const token = await this.authService.login(body);
 
         // Map response to dto
-        const responseData: ILoginResponseDto = { token };
+        const responseData: ILoginResponseBodyDto = { token };
         const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
           'Login success',
           responseData
@@ -98,7 +98,6 @@ export class AuthRoute implements IRoute {
         }
 
         // Internal server error
-        if (e instanceof Error) logger.error(e.message);
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
         return c.json(responseDto, 500);
       }
@@ -115,10 +114,13 @@ export class AuthRoute implements IRoute {
       method: 'post',
       path: '/api/register',
       request: {
-        body: OpenApiRequestFactory.jsonBody('Register Request Body', RegisterRequestDto),
+        body: OpenApiRequestFactory.jsonBody('Register Request Body', RegisterRequestBodyDto),
       },
       responses: {
-        200: OpenApiResponseFactory.jsonSuccessData('Register successfull', RegisterResponseDto),
+        200: OpenApiResponseFactory.jsonSuccessData(
+          'Register successfull',
+          RegisterResponseBodyDto
+        ),
         400: OpenApiResponseFactory.jsonBadRequest(
           'Invalid fields | Username already exists | Email already exists'
         ),
@@ -131,7 +133,7 @@ export class AuthRoute implements IRoute {
     // Register route
     app.openapi(registerRoute, async (c) => {
       // Get validated body
-      const body = await c.req.json<IRegisterRequestDto>();
+      const body = await c.req.json<IRegisterRequestBodyDto>();
 
       try {
         // Call service
@@ -144,7 +146,7 @@ export class AuthRoute implements IRoute {
         });
 
         // Map response to dto
-        const responseData: IRegisterResponseDto = { token };
+        const responseData: IRegisterResponseBodyDto = { token };
         const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
           'Register success',
           responseData
@@ -161,7 +163,6 @@ export class AuthRoute implements IRoute {
         }
 
         // Internal server error
-        if (e instanceof Error) logger.error(e.message);
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
         return c.json(responseDto, 500);
       }
@@ -197,6 +198,7 @@ export class AuthRoute implements IRoute {
         // Internal server error
         if (e instanceof Error) logger.error(e.message);
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+
         return c.json(responseDto, 500);
       }
     });

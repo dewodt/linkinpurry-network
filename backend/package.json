@@ -4,10 +4,10 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts",
-    "lint": "eslint ./src",
-    "lint:fix": "eslint ./src --fix",
-    "format": "prettier --check ./src",
-    "format:fix": "prettier --write ./src",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --check",
+    "format:fix": "prettier --write",
     "prepare": "cd .. && husky backend/.husky",
     "lint-staged": "lint-staged"
   },

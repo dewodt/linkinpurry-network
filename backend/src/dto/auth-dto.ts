@@ -19,7 +19,7 @@ export interface RawJWTPayload extends BaseJwtPayload {
  */
 
 // Request
-export const LoginRequestDto = z.object({
+export const LoginRequestBodyDto = z.object({
   identifier: z
     .string({ message: 'Identifier is required' }) // handle null or undefined
     .min(1, { message: 'Identifier is required' })
@@ -36,10 +36,10 @@ export const LoginRequestDto = z.object({
     }), // handle empty string
 });
 
-export interface ILoginRequestDto extends z.infer<typeof LoginRequestDto> {}
+export interface ILoginRequestBodyDto extends z.infer<typeof LoginRequestBodyDto> {}
 
 // Response
-export const LoginResponseDto = z.object({
+export const LoginResponseBodyDto = z.object({
   token: z.string().openapi({
     description: 'JWT token for authentication',
     example:
@@ -47,13 +47,13 @@ export const LoginResponseDto = z.object({
   }),
 });
 
-export interface ILoginResponseDto extends z.infer<typeof LoginResponseDto> {}
+export interface ILoginResponseBodyDto extends z.infer<typeof LoginResponseBodyDto> {}
 
 /**
  * Register DTO
  */
 // Request
-export const RegisterRequestDto = z.object({
+export const RegisterRequestBodyDto = z.object({
   username: z
     .string({ message: 'Username is required' }) // handle null or undefined
     .min(1, { message: 'Username is required' }) // handle empty string
@@ -101,10 +101,10 @@ export const RegisterRequestDto = z.object({
     }),
 });
 
-export interface IRegisterRequestDto extends z.infer<typeof RegisterRequestDto> {}
+export interface IRegisterRequestBodyDto extends z.infer<typeof RegisterRequestBodyDto> {}
 
 // Response
-export const RegisterResponseDto = z.object({
+export const RegisterResponseBodyDto = z.object({
   token: z.string().openapi({
     description: 'JWT token for authentication',
     example:
@@ -112,4 +112,4 @@ export const RegisterResponseDto = z.object({
   }),
 });
 
-export interface IRegisterResponseDto extends z.infer<typeof RegisterResponseDto> {}
+export interface IRegisterResponseBodyDto extends z.infer<typeof RegisterResponseBodyDto> {}
