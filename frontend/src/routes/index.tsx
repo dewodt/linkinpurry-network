@@ -1,5 +1,7 @@
-import * as React from 'react';
 import { createFileRoute } from '@tanstack/react-router';
+
+import * as React from 'react';
+
 import { Input } from '@/components/ui/input';
 
 export const Route = createFileRoute('/')({
@@ -8,10 +10,10 @@ export const Route = createFileRoute('/')({
 
 function HomeComponent() {
   return (
-    <div className="p-2">
+    <main className="flex min-h-[200vh] flex-auto">
       <h3>Welcome Home!</h3>
 
       <Input placeholder="lol" />
-    </div>
+    </main>
   );
 }

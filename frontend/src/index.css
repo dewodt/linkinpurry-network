@@ -63,7 +63,18 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+
+    display: flex;
+    flex: auto;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+  }
+
+  #app {
+    display: flex;
+    flex: auto;
   }
 }

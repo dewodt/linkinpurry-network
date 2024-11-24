@@ -1,7 +1,9 @@
-import * as React from 'react';
-import { Link, Outlet, createRootRoute } from '@tanstack/react-router';
+import { Outlet, createRootRoute } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
-import { Button } from '@/components/ui/button';
+
+import * as React from 'react';
+
+import RootLayout from '@/layouts/root-layout';
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -10,33 +12,24 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <>
-      <div className="p-2 flex gap-2 text-lg">
-        <Link
-          to="/"
-          className="text-red"
-          activeProps={{
-            className: 'font-bold',
-          }}
-          activeOptions={{ exact: true }}
-        >
-          Home
-        </Link>{' '}
-        <Link
-          to="/about"
-          activeProps={{
-            className: 'font-bold',
-          }}
-        >
-          About
-        </Link>
-        <Button>Tes!</Button>
-      </div>
-      <hr />
+      {/* Root layouting */}
+      <RootLayout>
+        <Outlet />
+      </RootLayout>
 
-      {/* Children */}
-      <Outlet />
+      {/* Devtools (development mode only) */}
+      <DevTools />
+    </>
+  );
+}
 
-      {/* Devtools */}
+function DevTools() {
+  const isDev = process.env.NODE_ENV === 'development';
+
+  if (!isDev) return <></>;
+
+  return (
+    <>
       <TanStackRouterDevtools position="bottom-right" />
     </>
   );

@@ -4,5 +4,9 @@
   "singleQuote": true,
   "trailingComma": "all",
   "semi": true,
-  "arrowParens": "avoid"
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "importOrderBuiltinModulesToTop": true,
+  "importOrder": ["^react$", "^next(.*)$", "^@/(.*)$", "^[./]"],
+  "plugins": ["@trivago/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"]
 }
