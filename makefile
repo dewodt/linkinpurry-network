@@ -30,4 +30,5 @@ stop:
 reset:
 	docker compose --env-file ./backend/.env.docker down
 	docker volume rm linkinpurry-db-data
+	docker volume rm linkinpurry-upload-data
 
