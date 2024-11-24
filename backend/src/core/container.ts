@@ -4,6 +4,7 @@ import { Database } from '@/infrastructures/database/database';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { AuthRoute } from '@/routes/auth-route';
 import { AuthService } from '@/services/auth-service';
+import { UploadService } from '@/services/upload-service';
 
 import { Config } from './config';
 
@@ -22,6 +23,7 @@ export class DependencyContainer {
     // Core
     this.container.bind<Config>(Config.Key).to(Config).inSingletonScope();
     this.container.bind<Database>(Database.Key).to(Database).inSingletonScope();
+    this.container.bind<UploadService>(UploadService.Key).to(UploadService).inSingletonScope();
 
     // Services
     this.container.bind<AuthService>(AuthService.Key).to(AuthService).inSingletonScope();
