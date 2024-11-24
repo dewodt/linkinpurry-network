@@ -11,4 +11,5 @@ CMD ["npm" , "run", "dev"]
 
 # For production
 FROM base as production
+RUN npm run build
 CMD ["npm", "run", "start"]

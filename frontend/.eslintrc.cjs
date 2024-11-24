@@ -13,6 +13,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
+    tsconfigRootDir: __dirname,
     project: ['./tsconfig.json'], // Required for TypeScript rules
     ecmaFeatures: {
       jsx: true,
@@ -45,7 +46,7 @@ module.exports = {
         varsIgnorePattern: '^_',
       },
     ],
-    '@typescript-eslint/no-non-null-assertion': 'warn',
+    // '@typescript-eslint/no-non-null-assertion': 'warn',
 
     // React Query
     '@tanstack/query/exhaustive-deps': 'error',
