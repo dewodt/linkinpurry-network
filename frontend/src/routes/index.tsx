@@ -120,7 +120,7 @@ function HomeComponent() {
                       <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <CardTitle className="text-xl/none">{testimonial.name}</CardTitle>
                     <CardDescription className="text-base">{testimonial.role}</CardDescription>
                   </div>

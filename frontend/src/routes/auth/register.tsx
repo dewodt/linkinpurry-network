@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
 
+// @ts-expect-error - babel resolver
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';

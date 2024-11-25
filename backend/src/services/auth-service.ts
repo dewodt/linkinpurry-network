@@ -75,7 +75,11 @@ export class AuthService implements IAuthService {
     }
 
     // Check if user exists
-    if (!user) throw ExceptionFactory.badRequest('Invalid credentials');
+    if (!user)
+      throw ExceptionFactory.badRequest('Invalid credentials', [
+        { field: 'identifier', message: 'Invalid credentials' },
+        { field: 'password', message: 'Invalid credentials' },
+      ]);
 
     let cmpResult: boolean = false;
 
@@ -88,7 +92,11 @@ export class AuthService implements IAuthService {
       throw ExceptionFactory.internalServerError('Failed to login');
     }
 
-    if (!cmpResult) throw ExceptionFactory.badRequest('Invalid credentials');
+    if (!cmpResult)
+      throw ExceptionFactory.badRequest('Invalid credentials', [
+        { field: 'identifier', message: 'Invalid credentials' },
+        { field: 'password', message: 'Invalid credentials' },
+      ]);
 
     let token: string | null = null;
     try {

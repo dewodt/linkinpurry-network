@@ -49,6 +49,8 @@ module.exports = {
     '@typescript-eslint/no-unsafe-assignment': 'off',
     '@typescript-eslint/no-unsafe-member-access': 'off', // Add this line
     '@typescript-eslint/no-empty-object-type': 'off',
+    '@typescript-eslint/no-misused-promises': 'off',
+
     // '@typescript-eslint/no-non-null-assertion': 'warn',
 
     // React Query
