@@ -1,5 +1,5 @@
 import { type Context } from 'hono';
-import { getCookie } from 'hono/cookie';
+import { deleteCookie, getCookie } from 'hono/cookie';
 import { inject, injectable } from 'inversify';
 
 import type { JWTPayload } from '@/dto/auth-dto';
@@ -12,7 +12,7 @@ import type { MiddlewareFunction } from './middleware';
  * Auth Middleware interface definition
  */
 export interface IAuthMiddleware {
-  authorize: MiddlewareFunction;
+  authorize({ isPublic }: { isPublic: boolean }): MiddlewareFunction;
 }
 
 /**
@@ -29,31 +29,41 @@ export class AuthMiddleware implements IAuthMiddleware {
   /**
    * Authorize middleware
    */
-  authorize: MiddlewareFunction = async (c, next) => {
-    // Get token
-    const resolvedToken = this.getTokenFromCookie(c) || this.getTokenFromBearerToken(c) || null;
+  authorize({ isPublic }: { isPublic: boolean } = { isPublic: true }): MiddlewareFunction {
+    return async (c, next) => {
+      // Get token
+      const resolvedToken = this.getTokenFromCookie(c) || this.getTokenFromBearerToken(c) || null;
 
-    // if no token
-    if (!resolvedToken) {
-      const errorResponse = ResponseDtoFactory.createErrorResponseDto('Unathorized');
-      return c.json(errorResponse, 401);
-    }
+      // if no token
+      if (!isPublic && !resolvedToken) {
+        const errorResponse = ResponseDtoFactory.createErrorResponseDto('Unathorized');
+        return c.json(errorResponse, 401);
+      }
 
-    // Verify token
-    let jwtPayload: JWTPayload | null = null;
-    try {
-      jwtPayload = await this.authService.verifyToken(resolvedToken);
-    } catch (error) {
-      const errorResponse = ResponseDtoFactory.createErrorResponseDto('Unathorized');
+      // Verify token
+      if (resolvedToken) {
+        let jwtPayload: JWTPayload | null = null;
 
-      return c.json(errorResponse, 401);
-    }
+        try {
+          jwtPayload = await this.authService.verifyToken(resolvedToken);
 
-    // Attach user to request
-    c.set('user', jwtPayload);
+          // Attach user to request
+          c.set('user', jwtPayload);
+        } catch (error) {
+          // Remove token from cookie (if exists)
+          deleteCookie(c, 'auth-token');
 
-    await next();
-  };
+          // If token is not public and not verified
+          if (!isPublic) {
+            const errorResponse = ResponseDtoFactory.createErrorResponseDto('Unathorized');
+            return c.json(errorResponse, 401);
+          }
+        }
+      }
+
+      await next();
+    };
+  }
 
   /**
    * Get token from headers bearer token

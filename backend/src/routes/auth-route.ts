@@ -6,14 +6,12 @@ import type { IGlobalContext } from '@/core/app';
 import { BadRequestException } from '@/core/exception';
 import { logger } from '@/core/logger';
 import {
-  type ILoginRequestBodyDto,
   type ILoginResponseBodyDto,
-  type IRegisterRequestBodyDto,
   type IRegisterResponseBodyDto,
-  LoginRequestBodyDto,
-  LoginResponseBodyDto,
-  RegisterRequestBodyDto,
-  RegisterResponseBodyDto,
+  loginRequestBodyDto,
+  loginResponseBodyDto,
+  registerRequestBodyDto,
+  registerResponseBodyDto,
 } from '@/dto/auth-dto';
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import { AuthService } from '@/services/auth-service';
@@ -60,10 +58,10 @@ export class AuthRoute implements IRoute {
       method: 'post',
       path: '/api/login',
       request: {
-        body: OpenApiRequestFactory.jsonBody('Login Request Body', LoginRequestBodyDto),
+        body: OpenApiRequestFactory.jsonBody('Login Request Body', loginRequestBodyDto),
       },
       responses: {
-        200: OpenApiResponseFactory.jsonSuccessData('Login successfull', LoginResponseBodyDto),
+        200: OpenApiResponseFactory.jsonSuccessData('Login successfull', loginResponseBodyDto),
         400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
         500: OpenApiResponseFactory.jsonInternalServerError(
           'Unexpected error occurred while logging in'
@@ -74,7 +72,7 @@ export class AuthRoute implements IRoute {
     // Register route
     app.openapi(loginRoute, async (c) => {
       // Get validated body
-      const body = await c.req.json<ILoginRequestBodyDto>();
+      const body = c.req.valid('json');
 
       try {
         // Call service
@@ -114,12 +112,12 @@ export class AuthRoute implements IRoute {
       method: 'post',
       path: '/api/register',
       request: {
-        body: OpenApiRequestFactory.jsonBody('Register Request Body', RegisterRequestBodyDto),
+        body: OpenApiRequestFactory.jsonBody('Register Request Body', registerRequestBodyDto),
       },
       responses: {
         200: OpenApiResponseFactory.jsonSuccessData(
           'Register successfull',
-          RegisterResponseBodyDto
+          registerResponseBodyDto
         ),
         400: OpenApiResponseFactory.jsonBadRequest(
           'Invalid fields | Username already exists | Email already exists'
@@ -133,7 +131,7 @@ export class AuthRoute implements IRoute {
     // Register route
     app.openapi(registerRoute, async (c) => {
       // Get validated body
-      const body = await c.req.json<IRegisterRequestBodyDto>();
+      const body = c.req.valid('json');
 
       try {
         // Call service

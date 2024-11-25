@@ -26,15 +26,19 @@ fe-prod:
 
 stop-be-dev:
 	docker stop linkinpurry-be-dev
+	docker rm linkinpurry-be-dev
 
 stop-be-prod:
 	docker stop linkinpurry-be-prod
+	docker rm linkinpurry-be-prod
 
 stop-fe-dev:
 	docker stop linkinpurry-fe-dev
+	docker rm linkinpurry-fe-dev
 
 stop-fe-prod:
 	docker stop linkinpurry-fe-prod
+	docker rm linkinpurry-fe-prod
 
 stop:
 	docker compose --env-file ./backend/.env.docker down

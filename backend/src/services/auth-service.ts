@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { compare, hash } from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { sign, verify } from 'hono/jwt';
 import type { CookieOptions } from 'hono/utils/cookie';
 import { inject, injectable } from 'inversify';
@@ -81,7 +81,7 @@ export class AuthService implements IAuthService {
 
     try {
       // Check if password is correct
-      cmpResult = await compare(body.password, user.passwordHash);
+      cmpResult = await bcrypt.compare(body.password, user.passwordHash);
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
 
@@ -96,9 +96,10 @@ export class AuthService implements IAuthService {
       const jwtPayload: JWTPayload = {
         userId: user.id,
         email: user.email,
-        iat: Date.now(),
-        exp: Date.now() + 3600 * 1000, // 1 hour
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
       };
+
       token = await this.generateToken(jwtPayload);
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
@@ -125,6 +126,9 @@ export class AuthService implements IAuthService {
         where: {
           username: body.username,
         },
+        select: {
+          id: true,
+        },
       });
 
       if (user) usernameExists = true;
@@ -146,6 +150,9 @@ export class AuthService implements IAuthService {
         where: {
           email: body.email,
         },
+        select: {
+          id: true,
+        },
       });
 
       if (user) emailExists = true;
@@ -163,7 +170,7 @@ export class AuthService implements IAuthService {
     try {
       // NOTE: use bcrypt@5.0.1 for node-alpine
       // https://github.com/kelektiv/node.bcrypt.js/issues/1006
-      const hashedPassword = await hash(body.password, 10);
+      const hashedPassword = await bcrypt.hash(body.password, 10);
 
       const newUser = await prisma.user.create({
         data: {
@@ -200,6 +207,7 @@ export class AuthService implements IAuthService {
         email: jwtPayload.email,
         iat: jwtPayload.iat,
         exp: jwtPayload.exp,
+        nbf: jwtPayload.nbf,
       };
 
       return parsedJwtPayload;
@@ -223,6 +231,7 @@ export class AuthService implements IAuthService {
         email: payload.email,
         iat: payload.iat,
         exp: payload.exp,
+        nbf: payload.nbf,
       };
 
       const token = await sign(rawJwtPayload, jwtSecret, 'HS256');

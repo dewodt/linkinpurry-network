@@ -1,42 +1,55 @@
-import { Container } from 'inversify';
+import { Container, ContainerModule } from 'inversify';
 
 import { Database } from '@/infrastructures/database/database';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { AuthRoute } from '@/routes/auth-route';
+import { UserRoute } from '@/routes/user-route';
 import { AuthService } from '@/services/auth-service';
 import { UploadService } from '@/services/upload-service';
+import { UserService } from '@/services/user-service';
 
 import { Config } from './config';
 
 export class DependencyContainer {
   private container: Container;
 
+  private coreModule: ContainerModule;
+  private authModule: ContainerModule;
+  private userModule: ContainerModule;
+
   constructor() {
+    // Initialize container
     this.container = new Container();
-    this.registerDependencies();
+
+    // Core module
+    this.coreModule = new ContainerModule((bind) => {
+      bind(Config.Key).to(Config).inSingletonScope();
+      bind(Database.Key).to(Database).inSingletonScope();
+      bind(UploadService.Key).to(UploadService).inSingletonScope();
+    });
+
+    // Auth module
+    this.authModule = new ContainerModule((bind) => {
+      bind(AuthMiddleware.Key).to(AuthMiddleware).inSingletonScope();
+      bind(AuthService.Key).to(AuthService).inSingletonScope();
+      bind(AuthRoute.Key).to(AuthRoute).inSingletonScope();
+    });
+
+    // User module
+    this.userModule = new ContainerModule((bind) => {
+      bind(UserService.Key).to(UserService).inSingletonScope();
+      bind(UserRoute.Key).to(UserRoute).inSingletonScope();
+    });
+
+    // Load modules
+    this.container.load(this.coreModule);
+    this.container.load(this.authModule);
+    this.container.load(this.userModule);
   }
 
   /**
-   * Register dependencies
+   * @returns Containers
    */
-  private registerDependencies(): void {
-    // Core
-    this.container.bind<Config>(Config.Key).to(Config).inSingletonScope();
-    this.container.bind<Database>(Database.Key).to(Database).inSingletonScope();
-    this.container.bind<UploadService>(UploadService.Key).to(UploadService).inSingletonScope();
-
-    // Services
-    this.container.bind<AuthService>(AuthService.Key).to(AuthService).inSingletonScope();
-    // Add more
-
-    // Middleware
-    this.container.bind<AuthMiddleware>(AuthMiddleware.Key).to(AuthMiddleware).inSingletonScope();
-
-    // Routes
-    this.container.bind<AuthRoute>(AuthRoute.Key).to(AuthRoute).inSingletonScope();
-    // Add more
-  }
-
   public getContainer(): Container {
     return this.container;
   }

@@ -29,16 +29,36 @@ import { AVATAR_MAX_SIZE } from '@/utils/constants';
  *    - (same as previous) +
  *    - crud email, profile photo, workHistory, skill,
  */
+
 // Request
 export const getProfileRequestParamsDto = z.object({
-  userId: z.coerce.bigint({ message: 'userId must be type of big int' }).openapi({
-    description: 'User ID',
-    example: 1n,
-  }),
+  // cannot use coerce + bigint in zod + openapi, must manually transform + refine
+  userId: z
+    .string({ message: 'userId must be type of string' })
+    .transform((v) => BigInt(v))
+    .refine((v) => !Number.isNaN(v) && v > 0, { message: 'userId must be type of big int' })
+    // @ts-ignore
+    .openapi({
+      type: 'bigint',
+      param: {
+        name: 'userId',
+        in: 'path',
+        required: true,
+        description: 'User ID to get the profile',
+        example: 7,
+      },
+    }),
 });
+
+export interface IGetProfileRequestParamsDto extends z.infer<typeof getProfileRequestParamsDto> {}
 
 // Response
 export const getProfileResponseBodyDto = z.object({
+  // level 1
+  username: z.string().openapi({
+    description: 'Username of the user',
+    example: 'dewodt',
+  }),
   name: z.string().openapi({
     description: 'Name of the user',
     example: 'John Doe',
@@ -51,9 +71,11 @@ export const getProfileResponseBodyDto = z.object({
     description: 'Number of connections the user has',
     example: 10,
   }),
-  //
+  // level 2
   work_history: z
     .string()
+    .nullable() // no work history (null)
+    .optional() // not authorized to see
     .openapi({
       description: 'Work history of the user (in rich text)',
       example: `
@@ -62,56 +84,49 @@ export const getProfileResponseBodyDto = z.object({
         <li>Backend Developer at Company B</li>
       </ul>
     `,
-    })
-    .optional(), // optional depending on authorization
-  //
+    }), // optional depending on authorization
+  // level 3
   skills: z
     .string()
+    .nullable() // no skills (null)
+    .optional() // not authorized to see
     .openapi({
       description: 'Skills of the user (rich text)',
       example: 'JavaScript, TypeScript, Node.js',
-    })
-    .optional(), // optional depending on authorization,
-  // TODO: ADD FEE DTO SCHEMA
+    }), // optional depending on authorization,
   relevant_posts: z
     .array(
       z.object({
-        id: z.coerce.bigint().openapi({
-          description: 'Post ID',
-          example: 1n,
-        }),
-        createdAt: z.date().openapi({
-          description: 'Post created date',
-          example: '2021-09-01T00:00:00.000Z',
-        }),
-        content: z.string().openapi({
-          description: 'Post content',
-          example: 'Hello, world!',
-        }),
+        id: z.bigint(),
+        createdAt: z.date(),
+        content: z.string(),
       })
     )
-    .optional() // optional depending on authorization
+    .optional() // not authorized to see
+    // @ts-ignore
     .openapi({
       description: 'Relevant posts of the user',
       example: [
         {
-          id: 1n,
+          id: 1,
           createdAt: new Date('2021-09-01T00:00:00.000Z'),
           content: 'Hello, world! 1',
         },
         {
-          id: 2n,
+          id: 2,
           createdAt: new Date('2021-09-02T00:00:00.000Z'),
           content: 'Hello, world! 2',
         },
         {
-          id: 3n,
+          id: 3,
           createdAt: new Date('2021-09-03T00:00:00.000Z'),
           content: 'Hello, world! 3',
         },
       ],
     }),
 });
+
+export interface IGetProfileResponseBodyDto extends z.infer<typeof getProfileResponseBodyDto> {}
 
 /**
  * U
@@ -120,6 +135,14 @@ export const getProfileResponseBodyDto = z.object({
 // Request
 export const updateProfileRequestBodyDto = z.object({
   // TODO: Email changable or no?
+  username: z
+    .string({ message: 'Username is required' })
+    .min(1, { message: 'Username is required' })
+    .max(255, { message: 'Username maximum length is 255' })
+    .openapi({
+      description: 'Username of the user',
+      example: 'dewodt',
+    }),
   name: z
     .string({ message: 'Name is required' })
     .min(1, { message: 'Name is required' })
