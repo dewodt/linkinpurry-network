@@ -80,7 +80,7 @@ export const Navbar = () => {
                 placeholder="Search for people"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 bg-muted pl-10 text-sm lg:text-base"
+                className="h-9 bg-muted pl-9 text-sm"
               />
             </form>
           </search>

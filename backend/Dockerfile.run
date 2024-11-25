@@ -11,9 +11,11 @@ RUN npx prisma generate
 
 # For development (nodemon)
 FROM base as development
+ENV NODE_ENV=development
 CMD ["npm" , "run", "dev"]
 
 
 # For production (run compiled ts (.js) files)
 FROM base as production
+RUN npm run build
 CMD ["npm", "run", "start"]
