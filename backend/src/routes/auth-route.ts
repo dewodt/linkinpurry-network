@@ -57,6 +57,8 @@ export class AuthRoute implements IRoute {
       tags: ['auth'],
       method: 'post',
       path: '/api/login',
+      summary: 'Login user',
+      description: 'API endpoint for logging in',
       request: {
         body: OpenApiRequestFactory.jsonBody('Login Request Body', loginRequestBodyDto),
       },
@@ -111,6 +113,8 @@ export class AuthRoute implements IRoute {
       tags: ['auth'],
       method: 'post',
       path: '/api/register',
+      summary: 'Register user',
+      description: 'API endpoint for registering',
       request: {
         body: OpenApiRequestFactory.jsonBody('Register Request Body', registerRequestBodyDto),
       },
@@ -176,6 +180,8 @@ export class AuthRoute implements IRoute {
       tags: ['auth'],
       method: 'post',
       path: '/api/logout',
+      summary: 'Logout user',
+      description: 'API endpoint for logging out',
       request: {},
       responses: {
         200: OpenApiResponseFactory.jsonSuccess('Logout successfull'),

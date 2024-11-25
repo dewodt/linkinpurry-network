@@ -1,4 +1,5 @@
 import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
@@ -98,6 +99,9 @@ export class App {
         return c.json({ error: c.error.message }, 500);
       }
     });
+
+    // Server static (public) files
+    this.app.use('/bucket/*', serveStatic({ root: './public' }));
 
     // Register all routers
     const routeKeys = [AuthRoute.Key, UserRoute.Key];
