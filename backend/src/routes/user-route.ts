@@ -2,13 +2,15 @@ import { type OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { inject, injectable } from 'inversify';
 
 import type { IGlobalContext } from '@/core/app';
-import { NotFoundException } from '@/core/exception';
-import { loginRequestBodyDto, loginResponseBodyDto } from '@/dto/auth-dto';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@/core/exception';
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import {
   type IGetProfileResponseBodyDto,
-  getProfileRequestParamsDto,
+  type IUpdateProfileResponseBodyDto,
   getProfileResponseBodyDto,
+  updateProfileRequestBodyDto,
+  updateProfileResponseBodyDto,
+  userIdRequestParamsDto,
 } from '@/dto/user-dto';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { UserService } from '@/services/user-service';
@@ -37,6 +39,7 @@ export class UserRoute implements IRoute {
     this.getProfile(app);
 
     // Update user profile
+    this.updateProfile(app);
   }
 
   /**
@@ -50,8 +53,10 @@ export class UserRoute implements IRoute {
       tags: ['user'],
       method: 'get',
       path: '/api/profile/{userId}',
+      summary: 'Get user profile',
+      description: 'API endpoint for getting user profile',
       request: {
-        params: getProfileRequestParamsDto,
+        params: userIdRequestParamsDto,
       },
       responses: {
         200: OpenApiResponseFactory.jsonSuccessData(
@@ -76,17 +81,21 @@ export class UserRoute implements IRoute {
 
       try {
         // Get user profile
-        const profile = await this.userService.getProfile(userId, currentUserId);
+        const { profile, isConnected } = await this.userService.getProfile(currentUserId, userId);
 
         // Map to dto
         const responseData: IGetProfileResponseBodyDto = {
+          // level 1
           username: profile.username,
           name: profile.name || 'N/A',
           profile_photo: profile.profilePhotoPath,
           connection_count: profile._count.sentConnections,
+          is_connected: isConnected,
+          // level 2
+          work_history: profile.workHistory,
+          // level 3 & 4
           relevant_posts: profile.feeds,
           skills: profile.skills,
-          work_history: profile.workHistory,
         };
 
         const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
@@ -101,6 +110,88 @@ export class UserRoute implements IRoute {
         if (e instanceof NotFoundException) {
           return c.json(e.toResponseDto(), 404);
         }
+
+        // Internal server error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
+
+  /**
+   * Update user profile
+   *
+   * @param app
+   */
+  private updateProfile(app: OpenAPIHono<IGlobalContext>) {
+    const updateProfileRoute = createRoute({
+      tags: ['user'],
+      method: 'put',
+      path: '/api/profile/{userId}',
+      summary: 'Update user profile',
+      description: 'API endpoint for updating user profile',
+      request: {
+        params: userIdRequestParamsDto,
+        body: OpenApiRequestFactory.formDataBody(
+          'Update Profile Request Body',
+          updateProfileRequestBodyDto
+        ),
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessData(
+          'Profile updated successfully',
+          updateProfileResponseBodyDto
+        ),
+        400: OpenApiResponseFactory.jsonBadRequest(
+          'Invalid input fields | username already exists'
+        ),
+        403: OpenApiResponseFactory.jsonForbidden('Forbidden to update other user profile'),
+        404: OpenApiResponseFactory.jsonNotFound('User profile not found'),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'An error occurred while updating user profile'
+        ),
+      },
+    });
+
+    // Register route
+    app.use(
+      updateProfileRoute.getRoutingPath(),
+      this.authMiddleware.authorize({ isPublic: false })
+    );
+    app.openapi(updateProfileRoute, async (c) => {
+      // Get validated params
+      const { userId } = c.req.valid('param');
+
+      // Get validated body
+      const body = c.req.valid('form');
+
+      // Get current user ID
+      const currentUserId = c.var.user?.userId as bigint; // ensured by auth middleware
+
+      try {
+        // Update user profile
+        const updatedUser = await this.userService.updateProfile(currentUserId, userId, body);
+
+        // Map to dto
+        const responseData: IUpdateProfileResponseBodyDto = {
+          username: updatedUser.username,
+          name: updatedUser.name || 'N/A',
+          profile_photo: updatedUser.profilePhotoPath,
+          work_history: updatedUser.workHistory,
+          skills: updatedUser.skills,
+        };
+
+        // Return response
+        const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          'Profile updated successfully',
+          responseData
+        );
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof BadRequestException) return c.json(e.toResponseDto(), 400);
+        else if (e instanceof ForbiddenException) return c.json(e.toResponseDto(), 403);
+        else if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
 
         // Internal server error
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');

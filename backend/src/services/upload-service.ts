@@ -1,11 +1,12 @@
 import fs from 'fs/promises';
 import { injectable } from 'inversify';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 import type { IService } from './service';
 
 export interface IUploadService extends IService {
-  uploadFile(file: File): Promise<string>;
+  uploadFile(directoryFromBucket: string, file: File): Promise<string>;
   deleteFile(pathFromPublic: string): Promise<void>;
 }
 
@@ -24,20 +25,27 @@ export class UploadService implements IUploadService {
    * @returns
    * @throws Error
    */
-  async uploadFile(file: File): Promise<string> {
+  async uploadFile(pathFromBucket: string, file: File): Promise<string> {
     try {
+      // Get current file directory
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+
       // Generate file name (random id + original filename with _ instead of special characters)
-      const fileName = `${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      const fileName = `${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9.]|\.(?=.*\.)/g, '_')}`;
+      const pathFromPublic = path.join('/bucket/', pathFromBucket, fileName);
 
-      const pathFromPublic = path.join('/avatar/', fileName);
-
-      const targetPath = path.join(__dirname, '../public/', pathFromPublic);
+      const targetDirectory = path.join(__dirname, '../../public/bucket/', pathFromBucket);
+      const targetPath = path.join(targetDirectory, fileName);
 
       // Convert to buffer
       const buffer = await file.arrayBuffer();
 
+      // Make directory if not exists
+      await fs.mkdir(targetDirectory, { recursive: true });
+
       // Save to storage
-      fs.writeFile(targetPath, Buffer.from(buffer));
+      await fs.writeFile(targetPath, Buffer.from(buffer));
 
       return pathFromPublic;
     } catch (error) {
@@ -48,13 +56,16 @@ export class UploadService implements IUploadService {
   /**
    * Delete file from a given path (from public)
    *
-   * @param pathFromPublic
+   * @param pathFromBucket
    * @returns void
    * @throws Error
    */
-  async deleteFile(pathFromPublic: string): Promise<void> {
+  async deleteFile(pathFromBucket: string): Promise<void> {
     try {
-      const targetPath = path.join(__dirname, '../public/', pathFromPublic);
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+
+      const targetPath = path.join(__dirname, '../public/bucket', pathFromBucket);
 
       // Delete file
       fs.unlink(targetPath);

@@ -30,6 +30,7 @@ services:
     volumes:
       - ./backend:/app # Mount the backend folder to the container
       - /app/node_modules # Prevent the node_modules folder from being mounted
+      - upload-data:/app/public # Upload data
     ports:
       - "3000:3000"
     depends_on:
@@ -65,6 +66,7 @@ services:
     volumes:
       - ./frontend:/app # Mount the frontend folder to the container
       - /app/node_modules # Prevent the node_modules folder from being mounted
+      - upload-data:/app/public # Upload data
     ports:
       - "5173:5173"
     networks:
@@ -87,6 +89,8 @@ services:
 volumes:
   db-data:
     name: linkinpurry-db-data
+  upload-data:
+    name: linkinpurry-upload-data
 
 networks:
   linkinpurry-network:

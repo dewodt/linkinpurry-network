@@ -46,8 +46,15 @@ type UpdateProfile = Prisma.UserGetPayload<{
 }>;
 
 export interface IUserService extends IService {
-  getProfile(userId: bigint, currentUserId?: bigint): Promise<UserProfile>;
-  updateProfile(currentUserId: bigint, body: IUpdateProfileRequestBodyDto): Promise<UpdateProfile>;
+  getProfile(
+    currentUserId: bigint | undefined,
+    userId: bigint
+  ): Promise<{ profile: UserProfile; isConnected: boolean }>;
+  updateProfile(
+    currentUserId: bigint,
+    userId: bigint,
+    body: IUpdateProfileRequestBodyDto
+  ): Promise<UpdateProfile>;
 }
 
 @injectable()
@@ -73,7 +80,7 @@ export class UserService implements IUserService {
    * @returns user profile
    * @throws ServiceException
    */
-  async getProfile(userId: bigint, currentUserId?: bigint) {
+  async getProfile(currentUserId: bigint | undefined, userId: bigint) {
     // Simple check if user exists
     let isUserExists = false;
     try {
@@ -133,7 +140,7 @@ export class UserService implements IUserService {
     const isLevel4 = isLevel1 && currentUserId !== undefined && currentUserId === userId;
 
     try {
-      const userProfile = await this.prisma.user.findUnique({
+      const profile = await this.prisma.user.findUnique({
         where: {
           id: userId,
         },
@@ -168,9 +175,12 @@ export class UserService implements IUserService {
         },
       });
 
-      if (!userProfile) throw ExceptionFactory.notFound('User not found');
+      if (!profile) throw ExceptionFactory.notFound('User not found');
 
-      return userProfile;
+      return {
+        profile,
+        isConnected,
+      };
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);
@@ -186,8 +196,10 @@ export class UserService implements IUserService {
    * @returns void
    * @throws ServiceException
    */
-  async updateProfile(currentUserId: bigint, body: IUpdateProfileRequestBodyDto) {
+  async updateProfile(currentUserId: bigint, userId: bigint, body: IUpdateProfileRequestBodyDto) {
     // I.S. currentUserId exists because passed authentication
+    if (currentUserId !== userId)
+      throw ExceptionFactory.forbidden('You can only update your own profile');
 
     // Check if username exists
     let usernameExists = false;
@@ -221,7 +233,7 @@ export class UserService implements IUserService {
     let profilePhotoPath: string | null = null;
     if (body.profile_photo) {
       try {
-        profilePhotoPath = await this.uploadService.uploadFile(body.profile_photo);
+        profilePhotoPath = await this.uploadService.uploadFile('/avatar', body.profile_photo);
       } catch (error) {
         // Internal server error
         if (error instanceof Error) logger.error(error.message);

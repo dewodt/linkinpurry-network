@@ -388,4 +388,16 @@ export class OpenApiRequestFactory {
       },
     };
   }
+
+  static formDataBody<T extends ZodType>(description: string, schema: T) {
+    return {
+      required: true,
+      description,
+      content: {
+        'multipart/form-data': {
+          schema,
+        },
+      },
+    };
+  }
 }

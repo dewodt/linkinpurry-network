@@ -31,7 +31,7 @@ import { AVATAR_MAX_SIZE } from '@/utils/constants';
  */
 
 // Request
-export const getProfileRequestParamsDto = z.object({
+export const userIdRequestParamsDto = z.object({
   // cannot use coerce + bigint in zod + openapi, must manually transform + refine
   userId: z
     .string({ message: 'userId must be type of string' })
@@ -50,7 +50,7 @@ export const getProfileRequestParamsDto = z.object({
     }),
 });
 
-export interface IGetProfileRequestParamsDto extends z.infer<typeof getProfileRequestParamsDto> {}
+export interface IGetProfileRequestParamsDto extends z.infer<typeof userIdRequestParamsDto> {}
 
 // Response
 export const getProfileResponseBodyDto = z.object({
@@ -70,6 +70,10 @@ export const getProfileResponseBodyDto = z.object({
   connection_count: z.number().openapi({
     description: 'Number of connections the user has',
     example: 10,
+  }),
+  is_connected: z.boolean().openapi({
+    description: 'Whether the current user is connected to the user',
+    example: true,
   }),
   // level 2
   work_history: z
@@ -92,7 +96,13 @@ export const getProfileResponseBodyDto = z.object({
     .optional() // not authorized to see
     .openapi({
       description: 'Skills of the user (rich text)',
-      example: 'JavaScript, TypeScript, Node.js',
+      example: `
+        <ul>
+          <li>JavaScript</li>
+          <li>TypeScript</li>
+          <li>Node.js</li>
+        </ul>      
+      `,
     }), // optional depending on authorization,
   relevant_posts: z
     .array(
@@ -175,15 +185,63 @@ export const updateProfileRequestBodyDto = z.object({
         </ul>
       `,
     }),
-  skills: z.string({ message: 'Skills must be a string' }).optional().openapi({
-    description: 'Skills of the user (rich text)',
-    example: 'JavaScript, TypeScript, Node.js',
-  }),
+  skills: z
+    .string({ message: 'Skills must be a string' })
+    .optional()
+    .openapi({
+      description: 'Skills of the user (rich text)',
+      example: `
+        <ul>
+          <li>JavaScript</li>
+          <li>TypeScript</li>
+          <li>Node.js</li>
+        </ul>      
+      `,
+    }),
 });
 
 export interface IUpdateProfileRequestBodyDto extends z.infer<typeof updateProfileRequestBodyDto> {}
 
 // Response
-export const updateUserResponseBodyDto = z.literal(null);
+// only need to return new profile photo if updated
+export const updateProfileResponseBodyDto = z.object({
+  username: z.string().openapi({
+    description: 'Username of the user',
+    example: 'dewodt',
+  }),
+  name: z.string().openapi({
+    description: 'Name of the user',
+    example: 'John Doe',
+  }),
+  profile_photo: z.string().openapi({
+    description: 'Profile photo of the user',
+    example: 'https://example.com/my-pict.jpg',
+  }),
+  work_history: z
+    .string()
+    .nullable() // no work history (null)
+    .openapi({
+      description: 'Work history of the user (in rich text)',
+      example: `
+      <ul>
+        <li>Frontend Developer at Company A</li>
+        <li>Backend Developer at Company B</li>
+      </ul>
+    `,
+    }), // optional depending on authorization
+  skills: z
+    .string()
+    .nullable() // no skills (null)
+    .openapi({
+      description: 'Skills of the user (rich text)',
+      example: `
+        <ul>
+          <li>JavaScript</li>
+          <li>TypeScript</li>
+          <li>Node.js</li>
+        </ul>      
+      `,
+    }), // optional depending on authorization
+});
 
-export type IUpdateUserResponseBodyDto = z.infer<typeof updateUserResponseBodyDto>;
+export type IUpdateProfileResponseBodyDto = z.infer<typeof updateProfileResponseBodyDto>;
