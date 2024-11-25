@@ -12,6 +12,7 @@ import { ResponseDtoFactory } from '@/dto/common';
 import { Database } from '@/infrastructures/database/database';
 import { AuthRoute } from '@/routes/auth-route';
 import type { IRoute } from '@/routes/route';
+import { UserRoute } from '@/routes/user-route';
 
 import { Utils } from './../utils/utils';
 import { Config } from './config';
@@ -99,7 +100,7 @@ export class App {
     });
 
     // Register all routers
-    const routeKeys = [AuthRoute.Key];
+    const routeKeys = [AuthRoute.Key, UserRoute.Key];
     routeKeys.forEach((key) => this.container.get<IRoute>(key).registerRoutes(this.app));
 
     // Docs swagger UI (public route)
@@ -110,6 +111,7 @@ export class App {
         version: '1.0.0',
       },
     });
+
     this.app.get('/docs', swaggerUI({ url: '/api/docs' }));
   }
 

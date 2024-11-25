@@ -19,7 +19,7 @@ export interface RawJWTPayload extends BaseJwtPayload {
  */
 
 // Request
-export const LoginRequestBodyDto = z.object({
+export const loginRequestBodyDto = z.object({
   identifier: z
     .string({ message: 'Identifier is required' }) // handle null or undefined
     .min(1, { message: 'Identifier is required' })
@@ -36,10 +36,10 @@ export const LoginRequestBodyDto = z.object({
     }), // handle empty string
 });
 
-export interface ILoginRequestBodyDto extends z.infer<typeof LoginRequestBodyDto> {}
+export interface ILoginRequestBodyDto extends z.infer<typeof loginRequestBodyDto> {}
 
 // Response
-export const LoginResponseBodyDto = z.object({
+export const loginResponseBodyDto = z.object({
   token: z.string().openapi({
     description: 'JWT token for authentication',
     example:
@@ -47,13 +47,13 @@ export const LoginResponseBodyDto = z.object({
   }),
 });
 
-export interface ILoginResponseBodyDto extends z.infer<typeof LoginResponseBodyDto> {}
+export interface ILoginResponseBodyDto extends z.infer<typeof loginResponseBodyDto> {}
 
 /**
  * Register DTO
  */
 // Request
-export const RegisterRequestBodyDto = z.object({
+export const registerRequestBodyDto = z.object({
   username: z
     .string({ message: 'Username is required' }) // handle null or undefined
     .min(1, { message: 'Username is required' }) // handle empty string
@@ -101,10 +101,10 @@ export const RegisterRequestBodyDto = z.object({
     }),
 });
 
-export interface IRegisterRequestBodyDto extends z.infer<typeof RegisterRequestBodyDto> {}
+export interface IRegisterRequestBodyDto extends z.infer<typeof registerRequestBodyDto> {}
 
 // Response
-export const RegisterResponseBodyDto = z.object({
+export const registerResponseBodyDto = z.object({
   token: z.string().openapi({
     description: 'JWT token for authentication',
     example:
@@ -112,4 +112,4 @@ export const RegisterResponseBodyDto = z.object({
   }),
 });
 
-export interface IRegisterResponseBodyDto extends z.infer<typeof RegisterResponseBodyDto> {}
+export interface IRegisterResponseBodyDto extends z.infer<typeof registerResponseBodyDto> {}

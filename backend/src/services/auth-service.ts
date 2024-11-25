@@ -96,9 +96,10 @@ export class AuthService implements IAuthService {
       const jwtPayload: JWTPayload = {
         userId: user.id,
         email: user.email,
-        iat: Date.now(),
-        exp: Date.now() + 3600 * 1000, // 1 hour
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
       };
+
       token = await this.generateToken(jwtPayload);
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
@@ -125,6 +126,9 @@ export class AuthService implements IAuthService {
         where: {
           username: body.username,
         },
+        select: {
+          id: true,
+        },
       });
 
       if (user) usernameExists = true;
@@ -145,6 +149,9 @@ export class AuthService implements IAuthService {
       const user = await prisma.user.findFirst({
         where: {
           email: body.email,
+        },
+        select: {
+          id: true,
         },
       });
 
@@ -200,6 +207,7 @@ export class AuthService implements IAuthService {
         email: jwtPayload.email,
         iat: jwtPayload.iat,
         exp: jwtPayload.exp,
+        nbf: jwtPayload.nbf,
       };
 
       return parsedJwtPayload;
@@ -223,6 +231,7 @@ export class AuthService implements IAuthService {
         email: payload.email,
         iat: payload.iat,
         exp: payload.exp,
+        nbf: payload.nbf,
       };
 
       const token = await sign(rawJwtPayload, jwtSecret, 'HS256');
