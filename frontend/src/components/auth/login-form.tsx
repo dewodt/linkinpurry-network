@@ -67,7 +67,7 @@ const LogInForm = () => {
               <FormItem>
                 <FormLabel>Identifier</FormLabel>
                 <FormControl>
-                  <Input type="identifier" placeholder="Identifier" {...field} />
+                  <Input type="text" placeholder="Identifier" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -108,11 +108,11 @@ export const Navbar = () => {
             </li>
           </ul>
 
-          {/* Sign in button */}
+          {/* Login button */}
           {!session && (
             <Link to="/auth/login">
               <Button size="sm" className="px-5">
-                Sign In
+                Login
               </Button>
             </Link>
           )}
@@ -170,7 +170,7 @@ export const Navbar = () => {
               {!session && (
                 <div className="self-center">
                   <Link to="/auth/login">
-                    <Button className="px-6">Sign In</Button>
+                    <Button className="px-6">Login</Button>
                   </Link>
                 </div>
               )}
