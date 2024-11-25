@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { compare, hash } from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { sign, verify } from 'hono/jwt';
 import type { CookieOptions } from 'hono/utils/cookie';
 import { inject, injectable } from 'inversify';
@@ -81,7 +81,7 @@ export class AuthService implements IAuthService {
 
     try {
       // Check if password is correct
-      cmpResult = await compare(body.password, user.passwordHash);
+      cmpResult = await bcrypt.compare(body.password, user.passwordHash);
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
 
@@ -170,7 +170,7 @@ export class AuthService implements IAuthService {
     try {
       // NOTE: use bcrypt@5.0.1 for node-alpine
       // https://github.com/kelektiv/node.bcrypt.js/issues/1006
-      const hashedPassword = await hash(body.password, 10);
+      const hashedPassword = await bcrypt.hash(body.password, 10);
 
       const newUser = await prisma.user.create({
         data: {
