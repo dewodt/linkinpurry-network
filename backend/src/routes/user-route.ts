@@ -87,14 +87,15 @@ export class UserRoute implements IRoute {
         const responseData: IGetProfileResponseBodyDto = {
           // level 1
           username: profile.username,
-          name: profile.name || 'N/A',
+          name: profile.fullName || '',
           profile_photo: profile.profilePhotoPath,
           connection_count: profile._count.sentConnections,
           is_connected: isConnected,
           // level 2
           work_history: profile.workHistory,
           // level 3 & 4
-          relevant_posts: profile.feeds,
+          relevant_posts:
+            profile.feeds && profile.feeds.map((feed) => ({ ...feed, id: feed.id.toString() })),
           skills: profile.skills,
         };
 
@@ -175,7 +176,7 @@ export class UserRoute implements IRoute {
         // Map to dto
         const responseData: IUpdateProfileResponseBodyDto = {
           username: updatedUser.username,
-          name: updatedUser.name || 'N/A',
+          name: updatedUser.fullName || '',
           profile_photo: updatedUser.profilePhotoPath,
           work_history: updatedUser.workHistory,
           skills: updatedUser.skills,

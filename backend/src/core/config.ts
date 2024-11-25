@@ -9,6 +9,12 @@ import { logger } from './logger';
  */
 export const ConfigSchema = z.object({
   // App
+  BE_URL: z
+    .string({ message: 'BE_URL must be a string' })
+    .min(1, { message: 'BE_URL must not be empty' }),
+  BE_DOMAIN: z
+    .string({ message: 'BE_DOMAIN must be a string' })
+    .min(1, { message: 'BE_DOMAIN must not be empty' }),
   FE_URL: z
     .string({ message: 'FE_URL must be a string' })
     .min(1, { message: 'FE_URL must not be empty' }),

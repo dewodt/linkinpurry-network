@@ -5,6 +5,7 @@ import { z } from 'zod';
  */
 export const configSchema = z.object({
   VITE_BE_URL: z.string({ message: 'BE_URL is required' }).min(1, { message: 'BE_URL is required' }).default('http://localhost:3000'),
+  NODE_ENV: z.string({ message: 'NODE_ENV is required' }).min(1, { message: 'NODE_ENV is required' }).default('development'),
 });
 
 export type IConfigSchema = z.infer<typeof configSchema>;
@@ -26,7 +27,6 @@ export class Config {
       this.config = configSchema.parse(rawConfig);
     } catch (err) {
       if (import.meta.env.MODE == 'development') console.error(err);
-
       throw new Error('Invalid configuration');
     }
   }
@@ -35,11 +35,10 @@ export class Config {
     if (!Config.instance) {
       Config.instance = new Config();
     }
-
     return Config.instance;
   }
 
-  public static get<T extends keyof IConfigSchema>(key: T): IConfigSchema[T] {
-    return this.instance.config[key];
+  public get<T extends keyof IConfigSchema>(key: T): IConfigSchema[T] {
+    return this.config[key];
   }
 }
