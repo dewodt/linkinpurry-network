@@ -7,9 +7,11 @@ COPY ./frontend/ ./
 
 # For development
 FROM base as development
+ENV NODE_ENV=development
 CMD ["npm" , "run", "dev"]
 
 # For production
 FROM base as production
 RUN npm run build
+ENV NODE_ENV=production
 CMD ["npm", "run", "start"]

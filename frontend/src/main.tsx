@@ -4,7 +4,11 @@ import ReactDOM from 'react-dom/client';
 import React from 'react';
 
 import './index.css';
+import { Config } from './lib/config';
 import { routeTree } from './routeTree.gen';
+
+// Load env
+Config.getInstance();
 
 // Set up a Router instance
 const router = createRouter({
