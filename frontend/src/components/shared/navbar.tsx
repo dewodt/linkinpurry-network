@@ -1,5 +1,7 @@
-import { Link, useLocation } from '@tanstack/react-router';
+import { useMutation } from '@tanstack/react-query';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { ChevronDown, FileText, LogOut, Menu, Search as SearchIcon, UserCircle2, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 import React from 'react';
 
@@ -17,46 +19,31 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useSession } from '@/hooks/use-session';
 import { cn } from '@/lib/utils';
+import { logout } from '@/services/auth';
+import { LogoutErrorResponse, LogoutSuccessResponse } from '@/types/api/auth';
+import { Session } from '@/types/models/session';
 
 export const Navbar = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = React.useState('');
-  // const debouncedSearch = useDebounce(searchQuery, 750);
 
-  const session: object | null = null;
+  const { session } = useSession();
 
-  // const { data } = useQuery({
-  //   queryKey: ['session'],
-  //   // Assuming you have an API endpoint to fetch session
-  //   queryFn: async () => {
-  //     const res = await fetch('/api/auth/session');
-  //     if (!res.ok) throw new Error('Failed to fetch session');
-  //     return res.json();
-  //   },
-  // });
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    // prevent blink
+    e.preventDefault();
+    if (!searchQuery) return;
 
-  // const handleSearch = React.useCallback(
-  //   e => {
-  //     e.preventDefault();
-  //     // Handle search logic here
-  //     const baseUrl = session?.role === 'COMPANY' ? '/company/jobs' : '/jobs';
-  //     window.location.href = `${baseUrl}?search=${encodeURIComponent(debouncedSearch)}`;
-  //   },
-  //   [debouncedSearch, session],
-  // );
-
-  // const handleSignOut = React.useCallback(async () => {
-  //   try {
-  //     const res = await fetch('/api/auth/sign-out', {
-  //       method: 'POST',
-  //       credentials: 'include',
-  //     });
-  //     if (!res.ok) throw new Error('Failed to sign out');
-  //     window.location.href = '/';
-  //   } catch (error) {
-  //     console.error('Sign out failed:', error);
-  //   }
-  // }, []);
+    // navigate to search page with query params
+    await navigate({
+      to: '/', // TODO: search page
+      search: {
+        query: searchQuery,
+      },
+    });
+  };
 
   return (
     <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-center border-b bg-background px-6 md:px-16">
@@ -71,13 +58,13 @@ export const Navbar = () => {
 
           {/* Search */}
           <search>
-            <form className="relative flex max-w-64 flex-1">
+            <form className="relative flex max-w-64 flex-1" onSubmit={handleFormSubmit}>
               <label htmlFor="search-people" className="sr-only"></label>
               <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 id="search-people"
-                placeholder="Search for people"
+                placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-9 bg-muted pl-9 text-sm"
@@ -89,18 +76,24 @@ export const Navbar = () => {
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-12 md:flex">
           <ul className="flex items-center gap-9">
-            <li>
-              <NavLink href="/feed" icon={LinkedInHomeIcon}>
-                Home
-              </NavLink>
-            </li>
+            {/* Authorized */}
+            {session && (
+              <>
+                <li>
+                  <NavLink href="/feed" icon={LinkedInHomeIcon}>
+                    Home
+                  </NavLink>
+                </li>
 
-            <li>
-              <NavLink href="/my-networks" icon={LinkedInNetworkIcon}>
-                My Networks
-              </NavLink>
-            </li>
+                <li>
+                  <NavLink href="/my-networks" icon={LinkedInNetworkIcon}>
+                    My Networks
+                  </NavLink>
+                </li>
+              </>
+            )}
 
+            {/* Public */}
             <li>
               <NavLink href="/explore" icon={LinkedInFindUserIcon}>
                 Explore
@@ -118,7 +111,7 @@ export const Navbar = () => {
           )}
         </nav>
 
-        {session && <UserDropdown />}
+        {session && <UserDropdown session={session} />}
 
         {/* Mobile Navigation */}
         <Sheet>
@@ -142,8 +135,9 @@ export const Navbar = () => {
               <SheetTitle className="text-left">Menu</SheetTitle>
             </SheetHeader>
 
-            <nav className="mt-5 flex flex-col gap-7">
+            <nav className="mt-6 flex flex-col gap-7">
               <ul className="flex flex-col gap-5">
+                {/* Authenticated */}
                 {session && (
                   <>
                     <li>
@@ -160,6 +154,7 @@ export const Navbar = () => {
                   </>
                 )}
 
+                {/* Public */}
                 <li>
                   <NavLink href="/explore" icon={LinkedInFindUserIcon}>
                     Explore
@@ -211,12 +206,29 @@ const NavLink = ({
   );
 };
 
-function UserDropdown() {
+function UserDropdown({ session }: { session: Session }) {
+  const logoutMutation = useMutation<LogoutSuccessResponse, LogoutErrorResponse, void>({
+    mutationFn: logout,
+    onMutate: () => {
+      toast.loading('Loading...', { description: 'Please wait', duration: Infinity });
+    },
+    onError: (error) => {
+      toast.dismiss();
+      toast.error(error.response?.statusText || 'Error', { description: error.response?.data.message || 'An error occurred' });
+    },
+    onSuccess: (data) => {
+      toast.dismiss();
+      toast.success('Success', { description: data.message });
+
+      window.location.href = '/auth/login';
+    },
+  });
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex flex-col items-center gap-[1px] focus:outline-none">
-        <Avatar className="size-6">
-          <AvatarImage src="https://github.com/shadcn.png" alt="Profile picture" />
+        <Avatar className="size-8 md:size-6">
+          <AvatarImage src={'http://localhost:3000/bucket/avatar/dbce971e-d860-4863-8868-5eb9a1c0fc69_1_10_2024_zoomed.jpg'} alt="Profile picture" />
           <AvatarFallback>
             <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
           </AvatarFallback>
@@ -228,27 +240,29 @@ function UserDropdown() {
         </div>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-72" align="end">
+      <DropdownMenuContent className="w-72" align="end" sideOffset={20}>
         <DropdownMenuGroup>
           <div className="flex items-center gap-3 p-3">
             <Avatar className="size-14">
-              <AvatarImage src="https://github.com/shadcn.png" alt="Profile picture" />
+              <AvatarImage src={session.avatarUrl} alt="Profile picture" />
               <AvatarFallback>
                 <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
               </AvatarFallback>
             </Avatar>
 
             <div className="flex-1">
-              <h3 className="font-semibold">Dewantoro Triatmojo</h3>
-              <p className="text-sm text-muted-foreground">Student at Bandung Institute of Technology</p>
+              <h3 className="font-semibold">{session.name}</h3>
+              <p className="text-sm text-muted-foreground">{session.email}</p>
             </div>
           </div>
 
-          <div className="mt-1 flex w-full px-3.5">
-            <Button variant="secondary" size={'sm'} className="flex-auto">
-              View Profile
-            </Button>
-          </div>
+          <Link to={`/user/${session.userId}`}>
+            <div className="mt-1 flex w-full px-3.5">
+              <Button variant="secondary" size={'sm'} className="flex-auto">
+                View Profile
+              </Button>
+            </div>
+          </Link>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator className="mt-4" />
@@ -257,7 +271,7 @@ function UserDropdown() {
         <DropdownMenuGroup>
           <DropdownMenuLabel className="px-3 font-semibold text-foreground">Manage</DropdownMenuLabel>
           <DropdownMenuItem className="px-3 py-2">
-            <FileText className="mr-2 size-4" />
+            <FileText className="size-4" />
             <span>Posts</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -265,8 +279,12 @@ function UserDropdown() {
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
-          <DropdownMenuItem className="px-3 py-2">
-            <LogOut className="mr-2 size-4" />
+          <DropdownMenuItem
+            className="px-3 py-2 text-destructive focus:text-destructive"
+            onSelect={() => logoutMutation.mutate()}
+            disabled={logoutMutation.isPending}
+          >
+            <LogOut className="size-4" />
             <span>Log Out</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>

@@ -1,6 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
-import path from 'path';
 
 import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
@@ -183,7 +182,7 @@ export class UserService implements IUserService {
       // note: return the profile photo path with the full URL
       const fullURL =
         profile.profilePhotoPath.length > 0
-          ? path.join(this.config.get('BE_URL'), profile.profilePhotoPath)
+          ? `${this.config.get('BE_URL')}${profile.profilePhotoPath}`
           : '';
 
       return {
@@ -272,7 +271,7 @@ export class UserService implements IUserService {
       // note: return the profile photo path with the full URL
       const fullURL =
         updatedData.profilePhotoPath.length > 0
-          ? path.join(this.config.get('BE_URL'), updatedData.profilePhotoPath)
+          ? `${this.config.get('BE_URL')}${updatedData.profilePhotoPath}`
           : '';
 
       return {

@@ -12,15 +12,14 @@ api.defaults.headers.common['Content-Type'] = 'application/json';
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    const { response } = error;
+    // const { response } = error;
 
-    if (response && response.status === 401) {
-      const currentPath = window.location.pathname;
-      if (currentPath !== '/auth/login') {
-        localStorage.removeItem('user');
-        window.location.href = '/auth/login';
-      }
-    }
+    // if (response && response.status === 401) {
+    //   const currentPath = window.location.pathname;
+    //   if (currentPath !== '/auth/login') {
+    //     window.location.href = '/auth/login';
+    //   }
+    // }
 
     return Promise.reject(error);
   },

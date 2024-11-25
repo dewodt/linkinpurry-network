@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { useSession } from '@/hooks/use-session';
 import { loginRequestBody } from '@/lib/schemas/auth';
 import { login } from '@/services/auth';
 import { LoginErrorResponse, LoginRequestBody, LoginSuccessResponse } from '@/types/api/auth';
@@ -15,6 +16,9 @@ import { LoginErrorResponse, LoginRequestBody, LoginSuccessResponse } from '@/ty
 const LogInForm = () => {
   // Router hooks
   const navigate = useNavigate();
+
+  // Session
+  const { refetchSession } = useSession();
 
   // Mutation hook
   const mutation = useMutation<LoginSuccessResponse, LoginErrorResponse, LoginRequestBody>({
@@ -39,7 +43,8 @@ const LogInForm = () => {
     onSuccess: async (data) => {
       toast.dismiss();
       toast.success('Success', { description: data.message });
-      await navigate({ to: '/' });
+      await navigate({ to: '/' }); // TODO: change to /feed
+      await refetchSession();
     },
   });
 

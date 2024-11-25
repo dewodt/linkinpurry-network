@@ -73,7 +73,7 @@ export class AuthService implements IAuthService {
       // note: return the profile photo path with the full URL
       const fullURL =
         user.profilePhotoPath.length > 0
-          ? path.join(this.config.get('BE_URL'), user.profilePhotoPath)
+          ? `${this.config.get('BE_URL')}${user.profilePhotoPath}`
           : '';
 
       return {

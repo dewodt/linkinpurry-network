@@ -66,41 +66,40 @@ export class App {
    * Register middlewares and routes
    */
   private setup(): void {
-    // Cors
+    /**
+     * Middlewares
+     */
+    // CORS
     this.app.use(
       cors({
         origin: this.config.get('FE_URL'),
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-        allowHeaders: [
-          'Content-Type',
-          'X-XSRF-TOKEN',
-          'Accept',
-          'Origin',
-          'X-Requested-With',
-          'Authorization',
-        ],
-        exposeHeaders: ['Content-Length'],
+        allowHeaders: ['Content-Type', 'Authorization'],
+        exposeHeaders: ['Content-Range', 'X-Content-Range'],
         credentials: true,
         maxAge: 60 * 60 * 24, // 1 hour
       })
     );
 
-    // Helmet
+    // Override default secure headers CORP for avatar bucket
+    this.app.use('/bucket/avatar/*', secureHeaders({ crossOriginResourcePolicy: 'cross-origin' }));
+
+    // Secure headers (default settings)
     this.app.use(secureHeaders());
 
-    // Request / Response logger
+    // Request & response logger (after passing through security middlewares)
     this.app.use(honoLogger((str: string, ...rest) => logger.info(str, ...rest)));
 
     // Global error handler
     this.app.use(async (c, next) => {
       await next();
-
-      if (c.error) {
-        return c.json({ error: c.error.message }, 500);
-      }
+      if (c.error) return c.json({ error: c.error.message }, 500);
     });
 
-    // Server static (public) files
+    /**
+     * Routes
+     */
+    // Register static file routes
     this.app.use('/bucket/*', serveStatic({ root: './public' }));
 
     // Register all routers

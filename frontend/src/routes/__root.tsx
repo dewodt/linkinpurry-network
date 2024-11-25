@@ -6,6 +6,7 @@ import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import * as React from 'react';
 
 import { Toaster } from '@/components/ui/sonner';
+import { SessionProvider } from '@/context/session-provider';
 import RootLayout from '@/layouts/root-layout';
 import { Config } from '@/lib/config';
 import { queryClient } from '@/lib/query';
@@ -19,11 +20,13 @@ function RootComponent() {
     <>
       {/* Root layouting */}
       <QueryClientProvider client={queryClient}>
-        <RootLayout>
-          <Outlet />
+        <SessionProvider>
+          <RootLayout>
+            <Outlet />
 
-          <Toaster closeButton richColors />
-        </RootLayout>
+            <Toaster closeButton richColors theme="light" />
+          </RootLayout>
+        </SessionProvider>
       </QueryClientProvider>
 
       {/* Devtools (development mode only) */}

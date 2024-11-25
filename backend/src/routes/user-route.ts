@@ -94,7 +94,8 @@ export class UserRoute implements IRoute {
           // level 2
           work_history: profile.workHistory,
           // level 3 & 4
-          relevant_posts: profile.feeds.map((feed) => ({ ...feed, id: feed.id.toString() })),
+          relevant_posts:
+            profile.feeds && profile.feeds.map((feed) => ({ ...feed, id: feed.id.toString() })),
           skills: profile.skills,
         };
 

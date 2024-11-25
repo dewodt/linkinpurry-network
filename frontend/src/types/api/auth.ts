@@ -2,7 +2,17 @@ import { z } from 'zod';
 
 import { loginRequestBody, registerRequestBody } from '@/lib/schemas/auth';
 
+import { Session } from '../models/session';
 import { AxiosErrorResponse, SuccessResponse } from './common';
+
+/**
+ * Session
+ */
+export type SessionResponseBody = Session;
+
+export type SessionSuccessResponse = SuccessResponse<SessionResponseBody>;
+
+export type SessionErrorResponse = AxiosErrorResponse;
 
 /**
  * Login
@@ -29,3 +39,11 @@ export interface RegisterResponseBody {
 export type RegisterSuccessResponse = SuccessResponse<RegisterResponseBody>;
 
 export type RegisterErrorResponse = AxiosErrorResponse;
+
+/**
+ * Logout
+ */
+
+export type LogoutSuccessResponse = SuccessResponse<null>;
+
+export type LogoutErrorResponse = AxiosErrorResponse;

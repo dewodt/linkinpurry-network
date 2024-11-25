@@ -1,6 +1,21 @@
 import { api } from '@/lib/api';
 import { RegisterRequestBody } from '@/lib/schemas/auth';
-import { LoginRequestBody, LoginSuccessResponse, RegisterSuccessResponse } from '@/types/api/auth';
+import { LoginRequestBody, LoginSuccessResponse, LogoutSuccessResponse, RegisterSuccessResponse, SessionSuccessResponse } from '@/types/api/auth';
+
+/**
+ * Session service
+ */
+export const getSession = async (): Promise<SessionSuccessResponse> => {
+  const axiosResponse = await api.get<SessionSuccessResponse>('/api/session');
+  // deserialize userId
+  return {
+    ...axiosResponse.data,
+    data: {
+      ...axiosResponse.data.data,
+      userId: BigInt(axiosResponse.data.data.userId),
+    },
+  };
+};
 
 /**
  * Login service
@@ -21,6 +36,7 @@ export const register = async (data: RegisterRequestBody): Promise<RegisterSucce
 /**
  * Logout service
  */
-export const logout = async (): Promise<void> => {
-  await api.post('/api/logout');
+export const logout = async (): Promise<LogoutSuccessResponse> => {
+  const axiosResponse = await api.post<LogoutSuccessResponse>('/api/logout');
+  return axiosResponse.data;
 };
