@@ -1,8 +1,9 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { sign, verify } from 'hono/jwt';
 import type { CookieOptions } from 'hono/utils/cookie';
 import { inject, injectable } from 'inversify';
+import path from 'path';
 
 import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
@@ -21,11 +22,16 @@ import { type IService } from './service';
  * Interface definition
  */
 export interface IAuthService extends IService {
+  session(currentUserId: bigint): Promise<SessionData>;
   login(body: ILoginRequestBodyDto): Promise<string>;
   register(body: IRegisterRequestBodyDto): Promise<any>;
   verifyToken(token: string): Promise<JWTPayload | null>;
   generateToken(payload: JWTPayload): Promise<string | null>;
 }
+
+type SessionData = Prisma.UserGetPayload<{
+  select: { id: boolean; email: boolean; fullName: boolean; profilePhotoPath: boolean };
+}>;
 
 /**
  * Service implementation
@@ -35,11 +41,51 @@ export class AuthService implements IAuthService {
   // IoC Key
   static readonly Key = Symbol.for('AuthService');
 
+  private prisma: PrismaClient;
+
   // Inject dependencies
   constructor(
     @inject(Config.Key) private config: Config,
     @inject(Database.Key) private database: Database
-  ) {}
+  ) {
+    this.prisma = this.database.getPrisma();
+  }
+
+  /**
+   * Get user session (prof pic, ect)
+   */
+  async session(currentUserId: bigint): Promise<SessionData> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: currentUserId,
+        },
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          profilePhotoPath: true,
+        },
+      });
+
+      if (!user) throw ExceptionFactory.notFound('User not found');
+
+      // note: return the profile photo path with the full URL
+      const fullURL =
+        user.profilePhotoPath.length > 0
+          ? path.join(this.config.get('BE_URL'), user.profilePhotoPath)
+          : '';
+
+      return {
+        ...user,
+        profilePhotoPath: fullURL,
+      };
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to get session');
+    }
+  }
 
   /**
    *  Login method
@@ -50,15 +96,13 @@ export class AuthService implements IAuthService {
    * @throws CustomException
    */
   async login(body: ILoginRequestBodyDto): Promise<string> {
-    const prisma = this.database.getPrisma();
-
     // Find user by identifier (username or email)
     let user: Prisma.UserGetPayload<{
       select: { id: boolean; email: boolean; passwordHash: boolean };
     }> | null = null;
 
     try {
-      user = await prisma.user.findFirst({
+      user = await this.prisma.user.findFirst({
         where: {
           OR: [{ username: body.identifier }, { email: body.identifier }],
         },
@@ -125,12 +169,10 @@ export class AuthService implements IAuthService {
    * @returns void
    */
   async register(body: IRegisterRequestBodyDto) {
-    const prisma = this.database.getPrisma();
-
     // Validate if username exists
     let usernameExists = false;
     try {
-      const user = await prisma.user.findFirst({
+      const user = await this.prisma.user.findFirst({
         where: {
           username: body.username,
         },
@@ -154,7 +196,7 @@ export class AuthService implements IAuthService {
     // Validate if email exists
     let emailExists = false;
     try {
-      const user = await prisma.user.findFirst({
+      const user = await this.prisma.user.findFirst({
         where: {
           email: body.email,
         },
@@ -180,10 +222,10 @@ export class AuthService implements IAuthService {
       // https://github.com/kelektiv/node.bcrypt.js/issues/1006
       const hashedPassword = await bcrypt.hash(body.password, 10);
 
-      const newUser = await prisma.user.create({
+      const newUser = await this.prisma.user.create({
         data: {
           email: body.email,
-          name: body.name,
+          fullName: body.name,
           username: body.username,
           passwordHash: hashedPassword,
         },

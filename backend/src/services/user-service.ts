@@ -1,6 +1,8 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
+import path from 'path';
 
+import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import type { IUpdateProfileRequestBodyDto } from '@/dto/user-dto';
@@ -13,7 +15,7 @@ type UserProfile = Prisma.UserGetPayload<{
   select: {
     id: true;
     username: true;
-    name: true;
+    fullName: true;
     profilePhotoPath: true;
     _count: {
       select: {
@@ -66,6 +68,7 @@ export class UserService implements IUserService {
 
   // Dependencies
   constructor(
+    @inject(Config.Key) private readonly config: Config,
     @inject(Database.Key) private readonly database: Database,
     @inject(UploadService.Key) private readonly uploadService: UploadService
   ) {
@@ -148,7 +151,7 @@ export class UserService implements IUserService {
           // Level 1 or higher
           id: true,
           username: true,
-          name: true,
+          fullName: true,
           profilePhotoPath: true,
           _count: {
             select: {
@@ -177,9 +180,18 @@ export class UserService implements IUserService {
 
       if (!profile) throw ExceptionFactory.notFound('User not found');
 
+      // note: return the profile photo path with the full URL
+      const fullURL =
+        profile.profilePhotoPath.length > 0
+          ? path.join(this.config.get('BE_URL'), profile.profilePhotoPath)
+          : '';
+
       return {
-        profile,
         isConnected,
+        profile: {
+          ...profile,
+          profilePhotoPath: fullURL,
+        },
       };
     } catch (error) {
       // Internal server error
@@ -257,7 +269,16 @@ export class UserService implements IUserService {
         },
       });
 
-      return updatedData;
+      // note: return the profile photo path with the full URL
+      const fullURL =
+        updatedData.profilePhotoPath.length > 0
+          ? path.join(this.config.get('BE_URL'), updatedData.profilePhotoPath)
+          : '';
+
+      return {
+        ...updatedData,
+        profilePhotoPath: fullURL,
+      };
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);

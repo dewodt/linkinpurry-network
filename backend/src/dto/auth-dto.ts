@@ -15,6 +15,32 @@ export interface RawJWTPayload extends BaseJwtPayload {
 }
 
 /**
+ * Session DTO
+ */
+export const sessionResponseBodyDto = z.object({
+  userId: z
+    .string() // cannot serialize bigint, must convert manually in fe
+    .openapi({
+      description: 'User ID',
+      example: '100',
+    }),
+  email: z.string().openapi({
+    description: 'User email',
+    example: 'dewodt@gmail.com',
+  }),
+  name: z.string().openapi({
+    description: 'User full name',
+    example: 'Dewantoro Triatmojo',
+  }),
+  avatarUrl: z.string().openapi({
+    description: 'Profile photo path',
+    example: 'https://example.com/photo.jpg',
+  }),
+});
+
+export interface ISessionResponseBodyDto extends z.infer<typeof sessionResponseBodyDto> {}
+
+/**
  * Login DTO
  */
 

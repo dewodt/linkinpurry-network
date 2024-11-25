@@ -107,7 +107,7 @@ export const getProfileResponseBodyDto = z.object({
   relevant_posts: z
     .array(
       z.object({
-        id: z.bigint(),
+        id: z.string(), // cannot serialize bigint, must convert manually in fe
         createdAt: z.date(),
         content: z.string(),
       })

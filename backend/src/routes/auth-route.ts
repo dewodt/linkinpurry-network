@@ -8,12 +8,15 @@ import { logger } from '@/core/logger';
 import {
   type ILoginResponseBodyDto,
   type IRegisterResponseBodyDto,
+  type ISessionResponseBodyDto,
   loginRequestBodyDto,
   loginResponseBodyDto,
   registerRequestBodyDto,
   registerResponseBodyDto,
+  sessionResponseBodyDto,
 } from '@/dto/auth-dto';
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
+import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { AuthService } from '@/services/auth-service';
 
 import type { IRoute } from './route';
@@ -27,7 +30,10 @@ export class AuthRoute implements IRoute {
   static readonly Key = Symbol.for('AuthRoute');
 
   // Dependencies
-  constructor(@inject(AuthService.Key) private authService: AuthService) {}
+  constructor(
+    @inject(AuthMiddleware.Key) private authMiddleware: AuthMiddleware,
+    @inject(AuthService.Key) private authService: AuthService
+  ) {}
 
   /**
    * Register route handlers
@@ -36,6 +42,9 @@ export class AuthRoute implements IRoute {
    * @override
    */
   registerRoutes(app: OpenAPIHono<IGlobalContext>): void {
+    // Get session
+    this.getSession(app);
+
     // Login
     this.login(app);
 
@@ -44,6 +53,58 @@ export class AuthRoute implements IRoute {
 
     // Logout
     this.logout(app);
+  }
+
+  /**
+   * Get session
+   */
+  private getSession(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const getSessionRoute = createRoute({
+      tags: ['auth'],
+      method: 'get',
+      path: '/api/session',
+      summary: 'Get user session',
+      description: 'API endpoint for getting user session',
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessData('Session retrieved', sessionResponseBodyDto),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while getting session'
+        ),
+      },
+    });
+
+    // Register route
+    app.use(getSessionRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
+    app.openapi(getSessionRoute, async (c) => {
+      try {
+        // Get current user id
+        const currentUserId = c.get('user')!.userId; // assured by auth middleware not to be null
+
+        // Call service
+        const overviewProfile = await this.authService.session(currentUserId);
+
+        // Map to dto
+        const responseData: ISessionResponseBodyDto = {
+          userId: overviewProfile.id.toString(),
+          email: overviewProfile.email,
+          name: overviewProfile.fullName ?? '',
+          avatarUrl: overviewProfile.profilePhotoPath,
+        };
+        const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          "Successfully retrieved user's session",
+          responseData
+        );
+
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Internal server error
+        if (e instanceof Error) logger.error(e.message);
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+
+        return c.json(responseDto, 500);
+      }
+    });
   }
 
   /**
