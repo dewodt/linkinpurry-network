@@ -95,7 +95,12 @@ export class UserRoute implements IRoute {
           skills: profile.skills,
           // level 2
           relevant_posts:
-            profile.feeds && profile.feeds.map((feed) => ({ ...feed, id: feed.id.toString() })),
+            profile.feeds &&
+            profile.feeds.map((feed) => ({
+              ...feed,
+              created_at: feed.createdAt,
+              id: feed.id.toString(),
+            })),
         };
 
         const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(

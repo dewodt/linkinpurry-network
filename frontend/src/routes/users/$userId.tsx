@@ -1,47 +1,40 @@
-import { queryOptions } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { Link, createFileRoute } from '@tanstack/react-router';
 import { Pencil, UserCircle2 } from 'lucide-react';
 
 // @ts-expect-error - babel
 import * as React from 'react';
 
+import { ErrorPage } from '@/components/shared/error-page';
+import { LoadingPage } from '@/components/shared/loading-page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn, formatDate } from '@/lib/utils';
-
-// const profileQueryOptions = (userId: string) =>
-//   queryOptions({
-//     queryKey: ['users', userId],
-//     queryFn: () => {
-
-//     }
-//   });
+import { getProfile } from '@/services/user';
+import { GetProfileErrorResponse, GetProfileSuccessResponse } from '@/types/api/user';
 
 export const Route = createFileRoute('/users/$userId')({
   component: RouteComponent,
-  // loader: ({ params: { userId } }) => ({
-  //   // Pre-fetch user data and feed it to React Query
-  //   queryKey: ['users', userId],
-  //   queryFn: () => fetchUser(userId),
-  // }),
 });
 
 function RouteComponent() {
-  // const { userId } = Route.useParams();
+  const { userId } = Route.useParams();
 
-  const recentPosts = [
-    {
-      id: '1',
-      content:
-        'Hello World 1 from Dewantoro Triatmojo Hello World 1 from Dewantoro Triatmojo Hello World 1 from Dewantoro Triatmojo Hello World 1 from Dewantoro Triatmojo Hello World 1 from Dewantoro Triatmojo Hello World 1 from Dewantoro Triatmojo Hello World 1 from Dewantoro Triatmojo',
-      createdAt: '2021-10-10T00:00:00Z',
-    },
-    {
-      id: '2',
-      content: 'Hello World 2 from Dewantoro Triatmojo',
-      createdAt: '2021-10-10T00:00:00Z',
-    },
-  ];
+  const {
+    data: profile,
+    isPending: isPendingProfile,
+    error: errorProfile,
+    isError: isErrorProfile,
+    refetch,
+  } = useQuery<GetProfileSuccessResponse, GetProfileErrorResponse>({
+    queryKey: ['users', userId],
+    queryFn: () => getProfile({ userId }),
+  });
+
+  if (isPendingProfile) return <LoadingPage />;
+
+  if (isErrorProfile)
+    return <ErrorPage statusText={errorProfile.response?.statusText} message={errorProfile?.response?.data.message} refetch={refetch} />;
 
   return (
     <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
@@ -68,13 +61,15 @@ function RouteComponent() {
           </Button>
 
           {/* Texts */}
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-foreground">Dewantoro Triatmojo</h1>
+          <div className="flex flex-col items-start gap-1">
+            <h1 className="text-2xl font-bold text-foreground">{profile.data.name}</h1>
 
-            <p className="text-base font-medium text-muted-foreground">@dewodt</p>
+            <p className="text-sm font-medium text-muted-foreground">@{profile.data.username}</p>
 
             {/* Connection count */}
-            <p className="text-base font-semibold text-primary">300+ connections</p>
+            <Link to={`/users/${userId}/connections`} className="text-sm font-semibold text-primary decoration-2 underline-offset-2 hover:underline">
+              {profile.data.connection_count > 500 ? '500+ connections' : `${profile.data.connection_count} connections`}
+            </Link>
           </div>
 
           {/* Connect / unconnect button */}
@@ -88,39 +83,42 @@ function RouteComponent() {
       <section className="w-full max-w-3xl space-y-1 overflow-hidden rounded-xl border border-border bg-background p-6 shadow-md">
         <h2 className="text-xl font-bold text-foreground">Experience</h2>
 
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec dui ac nunc ultricies fermentum. Lorem ipsum dolor sit amet, consectetur
-          adipiscing elit. Nullam nec dui ac nunc ultricies fermentum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec dui ac nunc
-          ultricies fermentum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec dui ac nunc ultricies fermentum.
-        </p>
+        <div>{profile.data.work_history ? <p>{profile.data.work_history}</p> : <p className="text-muted-foreground">No work history added.</p>}</div>
       </section>
 
       {/* Skills */}
       <section className="w-full max-w-3xl space-y-1 overflow-hidden rounded-xl border border-border bg-background p-6 shadow-md">
         <h2 className="text-xl font-bold text-foreground">Skills</h2>
 
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec dui ac nunc ultricies fermentum. Lorem ipsum dolor sit amet, consectetur
-          adipiscing elit. Nullam nec dui ac nunc ultricies fermentum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec dui ac nunc
-          ultricies fermentum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec dui ac nunc ultricies fermentum.
-        </p>
+        <div>{profile.data.skills ? <p>{profile.data.skills}</p> : <p className="text-muted-foreground">No skills added.</p>}</div>
       </section>
 
       {/* Recent posts */}
-      <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background p-6 shadow-md">
-        <h2 className="text-xl font-bold text-foreground">Recent Posts</h2>
+      {profile.data.relevant_posts != undefined && (
+        <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background p-6 shadow-md">
+          <h2 className="text-xl font-bold text-foreground">Recent Posts</h2>
 
-        <ol>
-          {recentPosts.map((post, idx) => (
-            <li key={post.id} className={cn('border-b py-3', idx === recentPosts.length - 1 && 'border-b-0 pb-0')}>
-              <article className="flex flex-col gap-1">
-                <p className="text-sm font-medium text-muted-foreground">{formatDate(post.createdAt)}</p>
-                <p className="line-clamp-3 text-base text-foreground">{post.content}</p>
-              </article>
-            </li>
-          ))}
-        </ol>
-      </section>
+          {profile.data.relevant_posts.length > 0 ? (
+            <ol>
+              {profile.data.relevant_posts.map((post) => {
+                const isLast = profile.data.relevant_posts && profile.data.relevant_posts.length - 1;
+                return (
+                  <li key={post.id} className={cn('border-b py-3', isLast && 'border-b-0 pb-0')}>
+                    <article className="flex flex-col gap-1">
+                      <p className="text-sm font-medium text-muted-foreground">{formatDate(post.created_at)}</p>
+                      <p className="line-clamp-3 text-base text-foreground">{post.content}</p>
+                    </article>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <div>
+              <p className="text-muted-foreground">No posts added.</p>
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }

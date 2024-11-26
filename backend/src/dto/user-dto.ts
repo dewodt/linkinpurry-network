@@ -104,28 +104,27 @@ export const getProfileResponseBodyDto = z.object({
     .array(
       z.object({
         id: z.string(), // cannot serialize bigint, must convert manually in fe
-        createdAt: z.date(),
+        created_at: z.date(),
         content: z.string(),
       })
     )
     .optional() // not authorized to see
-    // @ts-ignore
     .openapi({
       description: 'Relevant posts of the user',
       example: [
         {
-          id: 1,
-          createdAt: new Date('2021-09-01T00:00:00.000Z'),
+          id: '1',
+          created_at: new Date('2021-09-01T00:00:00.000Z'),
           content: 'Hello, world! 1',
         },
         {
-          id: 2,
-          createdAt: new Date('2021-09-02T00:00:00.000Z'),
+          id: '2',
+          created_at: new Date('2021-09-02T00:00:00.000Z'),
           content: 'Hello, world! 2',
         },
         {
-          id: 3,
-          createdAt: new Date('2021-09-03T00:00:00.000Z'),
+          id: '3',
+          created_at: new Date('2021-09-03T00:00:00.000Z'),
           content: 'Hello, world! 3',
         },
       ],
