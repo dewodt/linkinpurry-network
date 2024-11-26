@@ -1,22 +1,21 @@
 import { z } from '@hono/zod-openapi';
 import { type Context } from 'hono';
 
-
 /**
  * List Connections DTO
  */
 
 // Params
 export const ListConnectionsBodyDto = z.object({
-    userId: z
+  userId: z
     .string({ message: 'userId must be type of string' })
     .transform((v) => {
-        const userIdBigInt = BigInt(v);
-        // Refine to ensure it's a valid BigInt and greater than 0
-        if (Number.isNaN(userIdBigInt) || userIdBigInt <= 0) {
-            throw new Error('userId must be a valid big int greater than 0');
-        }
-        return userIdBigInt;
+      const userIdBigInt = BigInt(v);
+      // Refine to ensure it's a valid BigInt and greater than 0
+      if (Number.isNaN(userIdBigInt) || userIdBigInt <= 0) {
+        throw new Error('userId must be a valid big int greater than 0');
+      }
+      return userIdBigInt;
     })
     // @ts-ignore
     .openapi({
@@ -86,7 +85,6 @@ export const ListConnectionsResponseBodyDto = z.object({
 
 export interface IListConnectionsResponseBodyDto extends z.infer<typeof ListConnectionsResponseBodyDto> {}
 
-
 /**
  * Accept or Reject Connections DTO
  */
@@ -117,8 +115,7 @@ export const AcceptorRejectParamsDto = z.object({
 });
 
 export interface IAcceptorRejectParamsDto extends z.infer<typeof AcceptorRejectParamsDto> {}
-
-
+                                              
 //Request
 export const AcceptorRejectRequestBodyDto = {
     content: {
@@ -170,3 +167,65 @@ export const  AcceptorRejectResponseBodyDto = z.object({
 });
 
 export interface IAcceptorRejectResponseBodyDto extends z.infer<typeof AcceptorRejectResponseBodyDto> {}
+
+/**
+ * Connection Request DTO (get list of connection request)
+ */
+
+// Params
+export const RequestConnectionBodyDTO = z.object({
+  userId: z
+    .string({ message: 'userId must be type of string' })
+    .transform((v) => {
+      const userIdBigInt = BigInt(v);
+      // Refine to ensure it's a valid BigInt and greater than 0
+      if (Number.isNaN(userIdBigInt) || userIdBigInt <= 0) {
+        throw new Error('userId must be a valid big int greater than 0');
+      }
+      return userIdBigInt;
+    })
+    // @ts-ignore
+    .openapi({
+      type: 'bigint',
+      param: {
+        name: 'userId',
+        in: 'path',
+        required: true,
+        description: 'User ID who has been requested connection',
+        example: 1,
+      },
+    }),
+});
+
+export interface IRequestConnectionBodyDTO extends z.infer<typeof RequestConnectionBodyDTO> {}
+
+// Response
+export const RequestConnectionResponseBodyDTO = z.object({
+  requestsList: z
+    .array(
+      z.object({
+        userId: z.string().openapi({
+          description: 'ID of the user who requested the connection',
+          example: '67890',
+        }),
+        requestId: z.string().openapi({
+          description: 'ID of the connection request',
+          example: '3',
+        }),
+        username: z.string().openapi({
+          description: 'Username of the user who requested the connection',
+          example: 'dewodt',
+        }),
+        email: z.string().openapi({
+          description: 'Email of the user who requested the connection',
+          example: 'dewodt@gmail.com',
+        }),
+      })
+    )
+    .openapi({
+      description: 'List of connection requests',
+    }),
+});
+
+export interface IRequestConnectionResponseBodyDTO
+  extends z.infer<typeof RequestConnectionResponseBodyDTO> {}

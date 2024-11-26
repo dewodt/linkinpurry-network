@@ -5,18 +5,21 @@ import { inject, injectable } from 'inversify';
 import type { IGlobalContext } from '@/core/app';
 import { BadRequestException } from '@/core/exception';
 import { logger } from '@/core/logger';
+import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import {
-  type IListConnectionsBodyDto,
-  type IListConnectionsResponseBodyDto,
-  type IAcceptorRejectResponseBodyDto,
-  type IAcceptorRejectParamsDto,
-  ListConnectionsBodyDto,
-  ListConnectionsResponseBodyDto,
+  AcceptorRejectParamsDto,
   AcceptorRejectRequestBodyDto,
   AcceptorRejectResponseBodyDto,
-  AcceptorRejectParamsDto
+  type IAcceptorRejectParamsDto,
+  type IAcceptorRejectResponseBodyDto,
+  type IListConnectionsBodyDto,
+  type IListConnectionsResponseBodyDto,
+  type IRequestConnectionResponseBodyDTO,
+  ListConnectionsBodyDto,
+  ListConnectionsResponseBodyDto,
+  RequestConnectionBodyDTO,
+  RequestConnectionResponseBodyDTO,
 } from '@/dto/connection-dto';
-import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import { ConnectionService } from '@/services/connection-service';
 
 import type { IRoute } from './route';
@@ -42,6 +45,7 @@ export class ConnectionRoute implements IRoute {
     // Login
     this.connectionList(app);
     this.connectionDecide(app);
+    this.connectionRequest(app);
   }
 
   /**
@@ -70,7 +74,6 @@ export class ConnectionRoute implements IRoute {
     app.openapi(connectionListRoute, async (c) => {
       // Get validated params
       const { userId } = c.req.valid('param');
-
 
       try {
         // Call service
@@ -103,7 +106,7 @@ export class ConnectionRoute implements IRoute {
   private connectionDecide(app: OpenAPIHono<IGlobalContext>) {
     const AcceptorRejectRequestBodyDtoContent = {
       content: {
-          'application/json': AcceptorRejectRequestBodyDto,
+        'application/json': AcceptorRejectRequestBodyDto,
       },
     };
     // Create route definition
@@ -129,23 +132,78 @@ export class ConnectionRoute implements IRoute {
       const { userId } = c.req.valid('param');
       const body = c.req.valid('json');
 
-
       try {
-        const decisionResult = await this.ConnectionService.decideConnection(userId, body.requestId, userId, body.action);
+        const decisionResult = await this.ConnectionService.decideConnection(
+          userId,
+          body.requestId,
+          userId,
+          body.action
+        );
 
         const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
-            'Connection decision processed successfully',
-            decisionResult
+          'Connection decision processed successfully',
+          decisionResult
         );
 
         return c.json(responseDto, 200);
       } catch (e) {
-          if (e instanceof BadRequestException) {
-              return c.json(e.toResponseDto(), 400);
-          }
+        if (e instanceof BadRequestException) {
+          return c.json(e.toResponseDto(), 400);
+        }
 
-          const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
-          return c.json(responseDto, 500);
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
+
+  // Get Connection Requested
+  private connectionRequest(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const connectionRequestRoute = createRoute({
+      tags: ['Connection'],
+      method: 'get',
+      path: '/connection_request/{userId}',
+      request: {
+        params: RequestConnectionBodyDTO,
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessData(
+          'Get Connection Request successful',
+          RequestConnectionResponseBodyDTO
+        ),
+        400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while getting list of connection'
+        ),
+      },
+    });
+    // Register route
+    app.openapi(connectionRequestRoute, async (c) => {
+      // Get validated params
+      const { userId } = c.req.valid('param');
+
+      try {
+        // Call Connection Service
+        const requestsList = await this.ConnectionService.getConnectionRequestTo(userId);
+
+        // Map response to dto
+        const responseData: IRequestConnectionResponseBodyDTO = { requestsList };
+        const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          'Connection requests fetched successfully',
+          responseData
+        );
+
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof BadRequestException) {
+          return c.json(e.toResponseDto(), 400);
+        }
+
+        // Internal server error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
       }
     });
   }
