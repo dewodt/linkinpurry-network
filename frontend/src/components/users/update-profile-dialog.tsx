@@ -113,7 +113,7 @@ const EditProfileDialog = ({ children, initialData }: EditProfileDialogProps) =>
   } = form;
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => setIsOpen(newOpen)}>
+    <Dialog open={open} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
 
       <DialogContent>

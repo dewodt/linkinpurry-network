@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { Link, useLocation, useNavigate } from '@tanstack/react-router';
+import { Link, useLocation, useNavigate, useRouter } from '@tanstack/react-router';
 import { ChevronDown, FileText, LogOut, Menu, Search as SearchIcon, UserCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,11 +26,28 @@ import { LogoutErrorResponse, LogoutSuccessResponse } from '@/types/api/auth';
 import { Session } from '@/types/models/session';
 
 export const Navbar = () => {
-  const navigate = useNavigate();
+  // States
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [open, setIsOpen] = React.useState(false);
 
+  // Hooks
+  const router = useRouter();
+  const navigate = useNavigate();
   const { session } = useSession();
 
+  // Listen for route changes
+  React.useEffect(() => {
+    // Create cleanup function for route changes
+    const unsubscribe = router.subscribe('onBeforeNavigate', () => {
+      setIsOpen(false); // Close modal before navigation
+    });
+
+    return () => {
+      unsubscribe(); // Cleanup subscription
+    };
+  }, [router]);
+
+  // Handlers
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     // prevent blink
     e.preventDefault();
@@ -114,7 +131,7 @@ export const Navbar = () => {
         {session && <UserDropdown session={session} />}
 
         {/* Mobile Navigation */}
-        <Sheet>
+        <Sheet open={open} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="size-9 p-1 md:hidden">
               <Menu className="size-full" />
@@ -207,7 +224,11 @@ const NavLink = ({
 };
 
 function UserDropdown({ session }: { session: Session }) {
+  // Dropdown state
+  const [open, setIsOpen] = React.useState(false);
+
   // Hooks
+  const router = useRouter();
   const navigate = useNavigate();
   const { deleteSession } = useSession();
 
@@ -230,8 +251,20 @@ function UserDropdown({ session }: { session: Session }) {
     },
   });
 
+  // Listen for route changes to close the dropdown
+  React.useEffect(() => {
+    // Create cleanup function for route changes
+    const unsubscribe = router.subscribe('onBeforeNavigate', () => {
+      setIsOpen(false); // Close modal before navigation
+    });
+
+    return () => {
+      unsubscribe(); // Cleanup subscription
+    };
+  }, [router]);
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger className="flex flex-col items-center gap-[1px] focus:outline-none">
         <Avatar className="size-8 md:size-6">
           <AvatarImage src={session.avatarUrl} alt="Profile picture" />
