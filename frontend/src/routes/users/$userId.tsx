@@ -9,6 +9,8 @@ import { ErrorPage } from '@/components/shared/error-page';
 import { LoadingPage } from '@/components/shared/loading-page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { EditProfileDialog } from '@/components/users/update-profile-dialog';
+import { useSession } from '@/hooks/use-session';
 import { cn, formatDate } from '@/lib/utils';
 import { getProfile } from '@/services/user';
 import { GetProfileErrorResponse, GetProfileSuccessResponse } from '@/types/api/user';
@@ -18,7 +20,9 @@ export const Route = createFileRoute('/users/$userId')({
 });
 
 function RouteComponent() {
+  // Hooks
   const { userId } = Route.useParams();
+  const { session } = useSession();
 
   const {
     data: profile,
@@ -44,10 +48,7 @@ function RouteComponent() {
         <div className="relative h-32 bg-primary/25 md:h-48">
           {/* Avatar */}
           <Avatar className="absolute -bottom-[60px] left-7 size-[120px] md:-bottom-[48px] md:size-[152px]">
-            <AvatarImage
-              src={'http://localhost:3000/bucket/avatar/dbce971e-d860-4863-8868-5eb9a1c0fc69_1_10_2024_zoomed.jpg'}
-              alt="Profile picture"
-            />
+            <AvatarImage src={profile.data.profile_photo} alt="Profile picture" />
             <AvatarFallback>
               <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
             </AvatarFallback>
@@ -55,27 +56,39 @@ function RouteComponent() {
         </div>
 
         <div className="relative flex flex-col items-start gap-3 px-6 pb-6 pt-[68px] md:pt-[60px]">
-          {/* Edit button */}
-          <Button size="icon" variant="ghost" className="absolute right-4 top-4 rounded-full text-muted-foreground">
-            <Pencil className="size-5" />
-          </Button>
+          {/* Edit button (only if userid = session id) */}
+          {session && session.userId === userId && (
+            <EditProfileDialog initialData={profile.data}>
+              <Button size="icon" variant="ghost" className="absolute right-4 top-4 rounded-full text-muted-foreground">
+                <Pencil className="size-5" />
+              </Button>
+            </EditProfileDialog>
+          )}
 
           {/* Texts */}
           <div className="flex flex-col items-start gap-1">
             <h1 className="text-2xl font-bold text-foreground">{profile.data.name}</h1>
 
-            <p className="text-sm font-medium text-muted-foreground">@{profile.data.username}</p>
+            <p className="text-base font-medium text-muted-foreground">@{profile.data.username}</p>
 
             {/* Connection count */}
-            <Link to={`/users/${userId}/connections`} className="text-sm font-semibold text-primary decoration-2 underline-offset-2 hover:underline">
+            <Link to={`/my-networks/${userId}`} className="text-sm font-semibold text-primary decoration-2 underline-offset-2 hover:underline">
               {profile.data.connection_count > 500 ? '500+ connections' : `${profile.data.connection_count} connections`}
             </Link>
           </div>
 
-          {/* Connect / unconnect button */}
-          <Button className="rounded-full px-5 font-semibold" size="sm">
-            Connect
-          </Button>
+          {/* Connect / unconnect button (for auth only + not current user) */}
+          {session &&
+            session.userId !== userId &&
+            (!profile.data.is_connected ? (
+              <Button className="rounded-full px-5 font-semibold" size="sm">
+                Connect
+              </Button>
+            ) : (
+              <Button className="rounded-full px-5 font-semibold" size="sm">
+                Unconnect
+              </Button>
+            ))}
         </div>
       </section>
 

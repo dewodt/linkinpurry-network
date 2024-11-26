@@ -68,28 +68,40 @@ export class ConnectionService implements IConnectionService {
             select: {
               id: true,
               username: true,
-              email: true,
+              fullName: true,
+              profilePhotoPath: true,
+              workHistory: true,
+              skills: true,
             },
           },
           toUser: {
             select: {
               id: true,
               username: true,
-              email: true,
+              fullName: true,
+              profilePhotoPath: true,
+              workHistory: true,
+              skills: true,
             },
           },
         },
       });
-
-      // Transform the result into the desired structure
+  
       return connections.map((connection) => {
         const isFromUser = connection.fromId === userId;
         const connectedUser = isFromUser ? connection.toUser : connection.fromUser;
-
+  
+        if (!connectedUser) {
+          throw new Error("Connected user not found in the connection.");
+        }
+  
         return {
-          userId: connectedUser.id.toString(),
+          userID: connectedUser.id.toString(),
           username: connectedUser.username,
-          email: connectedUser.email,
+          name: connectedUser.fullName || "No name provided",
+          profile_photo: connectedUser.profilePhotoPath || "",
+          work_history: connectedUser.workHistory || null,
+          skills: connectedUser.skills || null,
         };
       });
     } catch (error) {

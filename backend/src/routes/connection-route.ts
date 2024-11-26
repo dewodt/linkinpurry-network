@@ -63,10 +63,7 @@ export class ConnectionRoute implements IRoute {
         params: ListConnectionsBodyDto,
       },
       responses: {
-        200: OpenApiResponseFactory.jsonSuccessData(
-          'Get List Connection successful',
-          ListConnectionsResponseBodyDto
-        ),
+        200: OpenApiResponseFactory.jsonSuccessData('Get List Connection successful', ListConnectionsResponseBodyDto),
         400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
         500: OpenApiResponseFactory.jsonInternalServerError(
           'Unexpected error occurred while getting list of connection'
@@ -118,14 +115,11 @@ export class ConnectionRoute implements IRoute {
       method: 'post',
       path: '/api/user/{userId}/decide',
       request: {
-        params: AcceptorRejectParamsDto,
-        body: AcceptorRejectRequestBodyDto,
+        params : AcceptorRejectParamsDto,
+        body : AcceptorRejectRequestBodyDto,
       },
       responses: {
-        200: OpenApiResponseFactory.jsonSuccessData(
-          'Get List Connection successful',
-          AcceptorRejectResponseBodyDto
-        ),
+        200: OpenApiResponseFactory.jsonSuccessData('Get List Connection successful', AcceptorRejectResponseBodyDto),
         400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
         500: OpenApiResponseFactory.jsonInternalServerError(
           'Unexpected error occurred while getting list of connection'

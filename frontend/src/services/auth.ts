@@ -7,14 +7,7 @@ import { LoginRequestBody, LoginSuccessResponse, LogoutSuccessResponse, Register
  */
 export const getSession = async (): Promise<SessionSuccessResponse> => {
   const axiosResponse = await api.get<SessionSuccessResponse>('/api/session');
-  // deserialize userId
-  return {
-    ...axiosResponse.data,
-    data: {
-      ...axiosResponse.data.data,
-      userId: BigInt(axiosResponse.data.data.userId),
-    },
-  };
+  return axiosResponse.data;
 };
 
 /**
