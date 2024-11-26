@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate, useRouter } from '@tanstack/react-router';
-import { ChevronDown, FileText, LogOut, Menu, Search as SearchIcon, UserCircle2, X } from 'lucide-react';
+import { ChevronDown, FileText, LogOut, Menu, Moon, Search as SearchIcon, Sun, UserCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import React from 'react';
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useTheme } from '@/context/theme-provider';
 import { useSession } from '@/hooks/use-session';
 import { cn } from '@/lib/utils';
 import { logout } from '@/services/auth';
@@ -231,6 +232,7 @@ function UserDropdown({ session }: { session: Session }) {
   const router = useRouter();
   const navigate = useNavigate();
   const { deleteSession } = useSession();
+  const { setTheme, theme } = useTheme();
 
   const logoutMutation = useMutation<LogoutSuccessResponse, LogoutErrorResponse>({
     mutationFn: logout,
@@ -262,6 +264,18 @@ function UserDropdown({ session }: { session: Session }) {
       unsubscribe(); // Cleanup subscription
     };
   }, [router]);
+
+  // Handlers
+  const handleToggle = (e: Event) => {
+    // prevent closing
+    e.preventDefault();
+
+    if (theme === 'dark') {
+      setTheme('light');
+    } else {
+      setTheme('dark');
+    }
+  };
 
   return (
     <DropdownMenu open={open} onOpenChange={setIsOpen}>
@@ -318,6 +332,14 @@ function UserDropdown({ session }: { session: Session }) {
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
+          {/* Theme */}
+          <DropdownMenuItem className="px-3 py-2" onSelect={handleToggle}>
+            <Sun className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span>Toggle Theme</span>
+          </DropdownMenuItem>
+
+          {/* Logout */}
           <DropdownMenuItem
             className="px-3 py-2 text-destructive focus:text-destructive"
             onSelect={() => logoutMutation.mutate()}
