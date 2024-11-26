@@ -12,7 +12,6 @@ import type { JWTPayload } from '@/dto/auth-dto';
 import { ResponseDtoFactory } from '@/dto/common';
 import { Database } from '@/infrastructures/database/database';
 import { AuthRoute } from '@/routes/auth-route';
-import { ConnectionRoute } from '@/routes/connection-route';
 import type { IRoute } from '@/routes/route';
 import { UserRoute } from '@/routes/user-route';
 

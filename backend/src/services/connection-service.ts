@@ -211,10 +211,10 @@ export class ConnectionService implements IConnectionService {
    */
   async getConnectionRequestTo(userId: bigint): Promise<any[]> {
     const prisma = this.database.getPrisma();
-
+  
     try {
       logger.info(`Fetching connection requests for userId: ${userId.toString()}`);
-
+  
       // Fetch connection requests from the database
       const connectionRequests = await prisma.connectionRequest.findMany({
         where: {
@@ -223,32 +223,32 @@ export class ConnectionService implements IConnectionService {
         select: {
           fromId: true,
           toId: true,
+          createdAt: true, // for debugging/logging purposes
           fromUser: {
             select: {
               id: true,
               username: true,
-              email: true,
-            },
-          },
-          toUser: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
+              fullName: true,
+              profilePhotoPath: true,
+              workHistory: true,
+              skills: true,
             },
           },
         },
       });
-
+  
       // Transform the result into the desired structure
       return connectionRequests.map((connectionRequest) => {
+        const fromUser = connectionRequest.fromUser;
+  
         return {
-          // userId, ID of the user who requested the connection
-          userId: connectionRequest.fromUser.id.toString(),
-          // requestId, ID of the connection request
-          requestId: connectionRequest.toId.toString(),
-          username: connectionRequest.fromUser.username,
-          email: connectionRequest.fromUser.email,
+          userId: fromUser.id.toString(), // ID of the user who requested the connection
+          requestId: connectionRequest.toId.toString(), // ID of the connection request
+          username: fromUser.username, // Username of the user
+          name: fromUser.fullName || "N/A", // Full name, default to "N/A" if null
+          profile_photo: fromUser.profilePhotoPath || "https://example.com/default-profile-photo.jpg", // Default profile photo
+          work_history: fromUser.workHistory || null, // Nullable work history
+          skills: fromUser.skills || null, // Nullable skills
         };
       });
     } catch (error) {
@@ -256,8 +256,8 @@ export class ConnectionService implements IConnectionService {
         logger.error(`Error in getConnectionRequestTo: ${error.message}`);
         logger.error(`Stack Trace: ${error.stack}`);
       }
-
+  
       throw ExceptionFactory.internalServerError('Failed to fetch connection requests');
     }
-  }
+  }  
 }
