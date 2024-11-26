@@ -256,7 +256,7 @@ function UserDropdown({ session }: { session: Session }) {
             </div>
           </div>
 
-          <Link to={`/user/${session.userId}`}>
+          <Link to={`/users/${session.userId}`}>
             <div className="mt-1 flex w-full px-3.5">
               <Button variant="secondary" size={'sm'} className="flex-auto">
                 View Profile
