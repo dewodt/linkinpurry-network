@@ -48,7 +48,7 @@ export const Navbar = () => {
   return (
     <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-center border-b bg-background px-6 md:px-16">
       {/* Container */}
-      <div className="flex flex-1 items-center justify-between gap-4 md:gap-9 lg:max-w-4xl">
+      <div className="flex flex-1 items-center justify-between gap-4 md:gap-9 lg:max-w-3xl">
         {/* Search & logo */}
         <div className="flex flex-1 items-center gap-3 md:gap-4">
           {/* Logo */}
@@ -228,7 +228,7 @@ function UserDropdown({ session }: { session: Session }) {
     <DropdownMenu>
       <DropdownMenuTrigger className="flex flex-col items-center gap-[1px] focus:outline-none">
         <Avatar className="size-8 md:size-6">
-          <AvatarImage src={'http://localhost:3000/bucket/avatar/dbce971e-d860-4863-8868-5eb9a1c0fc69_1_10_2024_zoomed.jpg'} alt="Profile picture" />
+          <AvatarImage src={session.avatarUrl} alt="Profile picture" />
           <AvatarFallback>
             <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
           </AvatarFallback>
