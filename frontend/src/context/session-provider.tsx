@@ -11,7 +11,7 @@ import { SessionErrorResponse, SessionSuccessResponse } from '@/types/api/auth';
 
 interface SessionContextValue {
   sessionQuery: UseQueryResult<SessionSuccessResponse, SessionErrorResponse>;
-  deleteSession: () => void;
+  deleteSession: () => Promise<void>;
   updateSession: ({ name, avatarUrl }: { name: string; avatarUrl: string }) => void;
 }
 
@@ -27,12 +27,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const queryClient = useQueryClient();
 
-  const deleteSession = () => {
-    queryClient.setQueryData(['session'], undefined);
+  const deleteSession = async () => {
+    await queryClient.resetQueries({
+      queryKey: ['session'],
+    });
   };
 
   const updateSession = ({ name, avatarUrl }: { name: string; avatarUrl: string }) => {
-    queryClient.setQueryData(['session'], (prevData: SessionSuccessResponse | undefined) => {
+    queryClient.setQueryData<SessionSuccessResponse>(['session'], (prevData) => {
       if (!prevData) return prevData;
 
       return {
@@ -40,7 +42,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         data: {
           ...prevData.data,
           name,
-          avatar_url: avatarUrl,
+          avatarUrl,
         },
       };
     });

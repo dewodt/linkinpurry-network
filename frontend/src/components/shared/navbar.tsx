@@ -207,20 +207,26 @@ const NavLink = ({
 };
 
 function UserDropdown({ session }: { session: Session }) {
-  const logoutMutation = useMutation<LogoutSuccessResponse, LogoutErrorResponse, void>({
+  // Hooks
+  const navigate = useNavigate();
+  const { deleteSession } = useSession();
+
+  const logoutMutation = useMutation<LogoutSuccessResponse, LogoutErrorResponse>({
     mutationFn: logout,
     onMutate: () => {
       toast.loading('Loading...', { description: 'Please wait', duration: Infinity });
     },
-    onError: (error) => {
+    onError: (error, _) => {
       toast.dismiss();
       toast.error(error.response?.statusText || 'Error', { description: error.response?.data.message || 'An error occurred' });
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.dismiss();
       toast.success('Success', { description: data.message });
 
-      window.location.href = '/auth/login';
+      // delete session
+      await deleteSession();
+      await navigate({ to: '/auth/login' });
     },
   });
 
