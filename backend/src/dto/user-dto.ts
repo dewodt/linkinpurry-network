@@ -12,22 +12,20 @@ import { AVATAR_MAX_SIZE } from '@/utils/constants';
 /**
  * R
  * Get user profile DTO
- * 4 case based on auth:
+ * 2 case based on auth:
  * - User is not authenticated
  *    - fullName,
  *    - avatar,
- *    - deskripsi singkat (DEPRECATED)
- *    - jumlah orang yang terkoneksi
- * - (Other user) is authenticated but not connected to the user
- *    - (same as previous) +
+ *    - connection_count
  *    - workHistory
- * - (Other user) is authenticated and connected to the user
- *    - (same as previous) +
  *    - skills
- *    - relevant posts
+ * - (Other user) is authenticated but not connected to the user
+ *    - (same as previous)
+ *    - relevant post
+ * - (Other user) is authenticated and connected to the user
+ *    - (same as previous)
  * - (Current user) is authenticated and connected to the user
- *    - (same as previous) +
- *    - crud email, profile photo, workHistory, skill,
+ *    - (same as previous)
  */
 
 // Request
@@ -71,15 +69,9 @@ export const getProfileResponseBodyDto = z.object({
     description: 'Number of connections the user has',
     example: 10,
   }),
-  is_connected: z.boolean().openapi({
-    description: 'Whether the current user is connected to the user',
-    example: true,
-  }),
-  // level 2
   work_history: z
     .string()
     .nullable() // no work history (null)
-    .optional() // not authorized to see
     .openapi({
       description: 'Work history of the user (in rich text)',
       example: `
@@ -88,22 +80,26 @@ export const getProfileResponseBodyDto = z.object({
         <li>Backend Developer at Company B</li>
       </ul>
     `,
-    }), // optional depending on authorization
-  // level 3
+    }),
   skills: z
     .string()
     .nullable() // no skills (null)
-    .optional() // not authorized to see
     .openapi({
       description: 'Skills of the user (rich text)',
       example: `
-        <ul>
-          <li>JavaScript</li>
-          <li>TypeScript</li>
-          <li>Node.js</li>
-        </ul>      
-      `,
-    }), // optional depending on authorization,
+          <ul>
+            <li>JavaScript</li>
+            <li>TypeScript</li>
+            <li>Node.js</li>
+          </ul>      
+        `,
+    }),
+  is_connected: z.boolean().openapi({
+    description: 'Whether the current user is connected to the user',
+    example: true,
+  }),
+
+  // level 2
   relevant_posts: z
     .array(
       z.object({
@@ -228,7 +224,7 @@ export const updateProfileResponseBodyDto = z.object({
         <li>Backend Developer at Company B</li>
       </ul>
     `,
-    }), // optional depending on authorization
+    }),
   skills: z
     .string()
     .nullable() // no skills (null)
@@ -241,7 +237,7 @@ export const updateProfileResponseBodyDto = z.object({
           <li>Node.js</li>
         </ul>      
       `,
-    }), // optional depending on authorization
+    }),
 });
 
 export type IUpdateProfileResponseBodyDto = z.infer<typeof updateProfileResponseBodyDto>;
