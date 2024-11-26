@@ -7,6 +7,8 @@ import { UserRoute } from '@/routes/user-route';
 import { AuthService } from '@/services/auth-service';
 import { UploadService } from '@/services/upload-service';
 import { UserService } from '@/services/user-service';
+import { ConnectionService } from '@/services/connection-service';
+import { ConnectionRoute } from '@/routes/connection-route';
 
 import { Config } from './config';
 
@@ -16,6 +18,7 @@ export class DependencyContainer {
   private coreModule: ContainerModule;
   private authModule: ContainerModule;
   private userModule: ContainerModule;
+  private connectionModule: ContainerModule;
 
   constructor() {
     // Initialize container
@@ -41,10 +44,17 @@ export class DependencyContainer {
       bind(UserRoute.Key).to(UserRoute).inSingletonScope();
     });
 
+    // Connection module
+    this.connectionModule = new ContainerModule((bind) => {
+      bind(ConnectionService.Key).to(ConnectionService).inSingletonScope();
+      bind(ConnectionRoute.Key).to(ConnectionRoute).inSingletonScope();
+    })
+
     // Load modules
     this.container.load(this.coreModule);
     this.container.load(this.authModule);
     this.container.load(this.userModule);
+    this.container.load(this.connectionModule);
   }
 
   /**
