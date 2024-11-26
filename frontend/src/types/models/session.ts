@@ -1,5 +1,5 @@
 export interface Session {
-  userId: bigint; // REMEMBER TO DESERIALIZE
+  userId: string; // treat as string (simpler) => in fe, often uses string (for path params, ect)
   email: string;
   name: string;
   avatarUrl: string;

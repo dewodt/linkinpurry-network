@@ -9,7 +9,7 @@ export function useSession() {
     throw new Error('useSession must be used within an AuthProvider');
   }
 
-  const { sessionQuery } = context;
+  const { sessionQuery, updateSession, deleteSession } = context;
 
   return {
     session: sessionQuery.data?.data,
@@ -19,5 +19,7 @@ export function useSession() {
     isErrorSession: sessionQuery.isError,
     errorSession: sessionQuery.error,
     refetchSession: sessionQuery.refetch,
+    updateSession,
+    deleteSession,
   };
 }

@@ -263,8 +263,8 @@ export class UserService implements IUserService {
         data: {
           username: body.username,
           fullName: body.name,
-          workHistory: body.work_history,
-          skills: body.skills,
+          workHistory: body.work_history || null,
+          skills: body.skills || null,
           profilePhotoPath: profilePhotoPath || undefined,
         },
       });

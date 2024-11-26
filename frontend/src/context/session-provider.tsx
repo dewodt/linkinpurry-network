@@ -1,4 +1,4 @@
-import { UseQueryResult, useQuery } from '@tanstack/react-query';
+import { UseQueryResult, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import React from 'react';
 
@@ -11,6 +11,8 @@ import { SessionErrorResponse, SessionSuccessResponse } from '@/types/api/auth';
 
 interface SessionContextValue {
   sessionQuery: UseQueryResult<SessionSuccessResponse, SessionErrorResponse>;
+  deleteSession: () => Promise<void>;
+  updateSession: ({ name, avatarUrl }: { name: string; avatarUrl: string }) => void;
 }
 
 export const SessionContext = React.createContext<SessionContextValue | null>(null);
@@ -23,5 +25,28 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     retry: 1,
   });
 
-  return <SessionContext.Provider value={{ sessionQuery }}>{children}</SessionContext.Provider>;
+  const queryClient = useQueryClient();
+
+  const deleteSession = async () => {
+    await queryClient.resetQueries({
+      queryKey: ['session'],
+    });
+  };
+
+  const updateSession = ({ name, avatarUrl }: { name: string; avatarUrl: string }) => {
+    queryClient.setQueryData<SessionSuccessResponse>(['session'], (prevData) => {
+      if (!prevData) return prevData;
+
+      return {
+        ...prevData,
+        data: {
+          ...prevData.data,
+          name,
+          avatarUrl,
+        },
+      };
+    });
+  };
+
+  return <SessionContext.Provider value={{ sessionQuery, deleteSession, updateSession }}>{children}</SessionContext.Provider>;
 }
