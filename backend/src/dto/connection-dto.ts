@@ -213,13 +213,42 @@ export const RequestConnectionResponseBodyDTO = z.object({
           example: '3',
         }),
         username: z.string().openapi({
-          description: 'Username of the user who requested the connection',
+          description: 'Username of the user',
           example: 'dewodt',
         }),
-        email: z.string().openapi({
-          description: 'Email of the user who requested the connection',
-          example: 'dewodt@gmail.com',
+        name: z.string().openapi({
+          description: 'Name of the user',
+          example: 'John Doe',
         }),
+        profile_photo: z.string().openapi({
+          description: 'Profile photo of the user',
+          example: 'https://example.com/my-pict.jpg',
+        }),
+        work_history: z
+          .string()
+          .nullable() // no work history (null)
+          .openapi({
+            description: 'Work history of the user (in rich text)',
+            example: `
+            <ul>
+              <li>Frontend Developer at Company A</li>
+              <li>Backend Developer at Company B</li>
+            </ul>
+          `,
+          }),
+        skills: z
+          .string()
+          .nullable() // no skills (null)
+          .openapi({
+            description: 'Skills of the user (rich text)',
+            example: `
+                <ul>
+                  <li>JavaScript</li>
+                  <li>TypeScript</li>
+                  <li>Node.js</li>
+                </ul>      
+              `,
+          }),
       })
     )
     .openapi({
