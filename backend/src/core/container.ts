@@ -3,8 +3,10 @@ import { Container, ContainerModule } from 'inversify';
 import { Database } from '@/infrastructures/database/database';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { AuthRoute } from '@/routes/auth-route';
+import { ConnectionRoute } from '@/routes/connection-route';
 import { UserRoute } from '@/routes/user-route';
 import { AuthService } from '@/services/auth-service';
+import { ConnectionService } from '@/services/connection-service';
 import { UploadService } from '@/services/upload-service';
 import { UserService } from '@/services/user-service';
 
@@ -16,6 +18,7 @@ export class DependencyContainer {
   private coreModule: ContainerModule;
   private authModule: ContainerModule;
   private userModule: ContainerModule;
+  private connectionModule: ContainerModule;
 
   constructor() {
     // Initialize container
@@ -39,6 +42,12 @@ export class DependencyContainer {
     this.userModule = new ContainerModule((bind) => {
       bind(UserService.Key).to(UserService).inSingletonScope();
       bind(UserRoute.Key).to(UserRoute).inSingletonScope();
+    });
+
+    // Connection module
+    this.connectionModule = new ContainerModule((bind) => {
+      bind(ConnectionService.Key).to(ConnectionService).inSingletonScope();
+      bind(ConnectionRoute.Key).to(ConnectionRoute).inSingletonScope();
     });
 
     // Load modules
