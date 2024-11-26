@@ -7,33 +7,36 @@ import { logger } from '@/core/logger';
 import type { IUpdateProfileRequestBodyDto } from '@/dto/user-dto';
 import { Database } from '@/infrastructures/database/database';
 
+import { type Optional } from './../types/common';
 import type { IService } from './service';
 import { UploadService } from './upload-service';
 
-type UserProfile = Prisma.UserGetPayload<{
-  select: {
-    id: true;
-    username: true;
-    fullName: true;
-    profilePhotoPath: true;
-    _count: {
-      select: {
-        sentConnections: true;
+// todo: why this optional doesnt work
+type UserProfile = Optional<
+  Prisma.UserGetPayload<{
+    select: {
+      id: true;
+      username: true;
+      fullName: true;
+      profilePhotoPath: true;
+      _count: {
+        select: {
+          sentConnections: true;
+        };
+      };
+      workHistory: true;
+      skills: true;
+      feeds: {
+        select: {
+          id: true;
+          content: true;
+          createdAt: true;
+        };
       };
     };
-    workHistory: true;
-    skills: true;
-    feeds: {
-      select: {
-        id: true;
-        content: true;
-        createdAt: true;
-        updatedAt: true;
-        userId: true;
-      };
-    };
-  };
-}>;
+  }>,
+  'feeds'
+>;
 
 type UpdateProfile = Prisma.UserGetPayload<{
   select: {
@@ -135,11 +138,9 @@ export class UserService implements IUserService {
       }
     }
 
-    // Level
-    const isLevel1 = true;
-    const isLevel2 = isLevel1 && currentUserId !== undefined && !isConnected;
-    const isLevel3 = isLevel1 && currentUserId !== undefined && isConnected;
-    const isLevel4 = isLevel1 && currentUserId !== undefined && currentUserId === userId;
+    // Access level
+    const isLevel1 = true; // all public
+    const isLevel2 = currentUserId !== undefined; // authenticated
 
     try {
       const profile = await this.prisma.user.findUnique({
@@ -148,32 +149,32 @@ export class UserService implements IUserService {
         },
         select: {
           // Level 1 or higher
-          id: true,
-          username: true,
-          fullName: true,
-          profilePhotoPath: true,
+          id: isLevel1 || isLevel2,
+          username: isLevel1 || isLevel2,
+          fullName: isLevel1 || isLevel2,
+          profilePhotoPath: isLevel1 || isLevel2,
           _count: {
             select: {
-              sentConnections: true,
+              sentConnections: isLevel1 || isLevel2,
             },
           },
+          workHistory: isLevel1 || isLevel2,
+          skills: isLevel1 || isLevel2,
 
-          // Level 2 or higher
-          workHistory: isLevel2 || isLevel3 || isLevel4,
-
-          // Level 3 or higher
-          skills: isLevel3 || isLevel4,
-          feeds: (isLevel3 || isLevel4) && {
-            select: {
-              id: true,
-              content: true,
-              createdAt: true,
-            },
-            take: 5,
-            orderBy: {
-              createdAt: 'desc',
-            },
-          },
+          // Level 2
+          feeds: isLevel2
+            ? {
+                select: {
+                  id: true,
+                  content: true,
+                  createdAt: true,
+                },
+                take: 5,
+                orderBy: {
+                  createdAt: 'desc',
+                },
+              }
+            : false,
         },
       });
 

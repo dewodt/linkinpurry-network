@@ -91,12 +91,16 @@ export class UserRoute implements IRoute {
           profile_photo: profile.profilePhotoPath,
           connection_count: profile._count.sentConnections,
           is_connected: isConnected,
-          // level 2
           work_history: profile.workHistory,
-          // level 3 & 4
-          relevant_posts:
-            profile.feeds && profile.feeds.map((feed) => ({ ...feed, id: feed.id.toString() })),
           skills: profile.skills,
+          // level 2
+          relevant_posts:
+            profile.feeds &&
+            profile.feeds.map((feed) => ({
+              ...feed,
+              created_at: feed.createdAt,
+              id: feed.id.toString(),
+            })),
         };
 
         const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
