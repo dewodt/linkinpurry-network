@@ -54,6 +54,7 @@ export class DependencyContainer {
     this.container.load(this.coreModule);
     this.container.load(this.authModule);
     this.container.load(this.userModule);
+    this.container.load(this.connectionModule);
   }
 
   /**
