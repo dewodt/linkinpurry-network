@@ -185,11 +185,16 @@ export class ConnectionService implements IConnectionService {
   }
 
   /**
-   * Get List of connection requests sent to a specific user.
+   * Fetches connection requests sent to a specific user.
    *
    * @param userId - The ID of the user to whom the connection requests are sent.
    * @returns A promise that resolves to an array of connection request objects.
-   * Each object contains the requestId, username, and email of the user who sent the request.
+   * Each object contains the following properties:
+   * - userId: The ID of the user who requested the connection.
+   * - requestId: The ID of the connection request.
+   * - username: The username of the user who requested the connection.
+   * - email: The email of the user who requested the connection.
+   *
    * @throws Will throw an error if the connection requests cannot be fetched.
    */
   async getConnectionRequestTo(userId: bigint): Promise<any[]> {
@@ -229,7 +234,7 @@ export class ConnectionService implements IConnectionService {
           // userId, ID of the user who requested the connection
           userId: connectionRequest.fromUser.id.toString(),
           // requestId, ID of the connection request
-          requestId: connectionRequest.fromId.toString(),
+          requestId: connectionRequest.toId.toString(),
           username: connectionRequest.fromUser.username,
           email: connectionRequest.fromUser.email,
         };

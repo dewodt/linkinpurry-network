@@ -18,6 +18,7 @@ import {
   ListConnectionsBodyDto,
   ListConnectionsResponseBodyDto,
   RequestConnectionBodyDTO,
+  RequestConnectionResponseBodyDTO,
 } from '@/dto/connection-dto';
 import { ConnectionService } from '@/services/connection-service';
 
@@ -44,6 +45,7 @@ export class ConnectionRoute implements IRoute {
     // Login
     this.connectionList(app);
     this.connectionDecide(app);
+    this.connectionRequest(app);
   }
 
   /**
@@ -174,7 +176,7 @@ export class ConnectionRoute implements IRoute {
       responses: {
         200: OpenApiResponseFactory.jsonSuccessData(
           'Get Connection Request successful',
-          RequestConnectionBodyDTO
+          RequestConnectionResponseBodyDTO
         ),
         400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
         500: OpenApiResponseFactory.jsonInternalServerError(
