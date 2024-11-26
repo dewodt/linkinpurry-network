@@ -43,7 +43,7 @@ const MyNetworksUserIdRoute = MyNetworksUserIdImport.update({
   id: '/my-networks/$userId',
   path: '/my-networks/$userId',
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const AuthRegisterRoute = AuthRegisterImport.update({
   id: '/auth/register',
@@ -83,19 +83,19 @@ declare module '@tanstack/react-router' {
       parentRoute: typeof rootRoute
     }
     '/auth/register': {
-      id: '/auth/register'
-      path: '/auth/register'
-      fullPath: '/auth/register'
-      preLoaderRoute: typeof AuthRegisterImport
-      parentRoute: typeof rootRoute
-    }
+      id: '/auth/register';
+      path: '/auth/register';
+      fullPath: '/auth/register';
+      preLoaderRoute: typeof AuthRegisterImport;
+      parentRoute: typeof rootRoute;
+    };
     '/my-networks/$userId': {
-      id: '/my-networks/$userId'
-      path: '/my-networks/$userId'
-      fullPath: '/my-networks/$userId'
-      preLoaderRoute: typeof MyNetworksUserIdImport
-      parentRoute: typeof rootRoute
-    }
+      id: '/my-networks/$userId';
+      path: '/my-networks/$userId';
+      fullPath: '/my-networks/$userId';
+      preLoaderRoute: typeof MyNetworksUserIdImport;
+      parentRoute: typeof rootRoute;
+    };
     '/users/$userId': {
       id: '/users/$userId'
       path: '/users/$userId'

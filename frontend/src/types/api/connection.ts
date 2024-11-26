@@ -24,7 +24,6 @@ export interface ListConnectionResponseBody {
 export type ListConnectionSuccessResponse = SuccessResponse<ListConnectionResponseBody>;
 
 export type ListConnectionErrorResponse = AxiosErrorResponse;
-
 /**
  * List of Requested Connection
  */

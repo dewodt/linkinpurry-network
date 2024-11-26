@@ -14,6 +14,7 @@ export const listConnection = async ({ userId }: ListConnectionRequestParams) =>
   return axiosResponse.data;
 };
 
+
 /**
  * List Connection request
  */
