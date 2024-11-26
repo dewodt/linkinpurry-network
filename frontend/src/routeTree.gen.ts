@@ -5,12 +5,14 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 // Import Routes
-import { Route as rootRoute } from './routes/__root';
-import { Route as AuthLoginImport } from './routes/auth/login';
-import { Route as AuthRegisterImport } from './routes/auth/register';
-import { Route as IndexImport } from './routes/index';
-import { Route as UsersUserIdImport } from './routes/users/$userId';
-import { Route as UsersIndexImport } from './routes/users/index';
+
+import { Route as rootRoute } from './routes/__root'
+import { Route as IndexImport } from './routes/index'
+import { Route as UsersIndexImport } from './routes/users/index'
+import { Route as UsersUserIdImport } from './routes/users/$userId'
+import { Route as MyNetworksUserIdImport } from './routes/my-networks/$userId'
+import { Route as AuthRegisterImport } from './routes/auth/register'
+import { Route as AuthLoginImport } from './routes/auth/login'
 
 // Create/Update Routes
 
@@ -31,6 +33,12 @@ const UsersUserIdRoute = UsersUserIdImport.update({
   path: '/users/$userId',
   getParentRoute: () => rootRoute,
 } as any);
+
+const MyNetworksUserIdRoute = MyNetworksUserIdImport.update({
+  id: '/my-networks/$userId',
+  path: '/my-networks/$userId',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const AuthRegisterRoute = AuthRegisterImport.update({
   id: '/auth/register',
@@ -63,12 +71,19 @@ declare module '@tanstack/react-router' {
       parentRoute: typeof rootRoute;
     };
     '/auth/register': {
-      id: '/auth/register';
-      path: '/auth/register';
-      fullPath: '/auth/register';
-      preLoaderRoute: typeof AuthRegisterImport;
-      parentRoute: typeof rootRoute;
-    };
+      id: '/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterImport
+      parentRoute: typeof rootRoute
+    }
+    '/my-networks/$userId': {
+      id: '/my-networks/$userId'
+      path: '/my-networks/$userId'
+      fullPath: '/my-networks/$userId'
+      preLoaderRoute: typeof MyNetworksUserIdImport
+      parentRoute: typeof rootRoute
+    }
     '/users/$userId': {
       id: '/users/$userId';
       path: '/users/$userId';
@@ -89,51 +104,75 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute;
-  '/auth/login': typeof AuthLoginRoute;
-  '/auth/register': typeof AuthRegisterRoute;
-  '/users/$userId': typeof UsersUserIdRoute;
-  '/users': typeof UsersIndexRoute;
+  '/': typeof IndexRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/my-networks/$userId': typeof MyNetworksUserIdRoute
+  '/users/$userId': typeof UsersUserIdRoute
+  '/users': typeof UsersIndexRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute;
-  '/auth/login': typeof AuthLoginRoute;
-  '/auth/register': typeof AuthRegisterRoute;
-  '/users/$userId': typeof UsersUserIdRoute;
-  '/users': typeof UsersIndexRoute;
+  '/': typeof IndexRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/my-networks/$userId': typeof MyNetworksUserIdRoute
+  '/users/$userId': typeof UsersUserIdRoute
+  '/users': typeof UsersIndexRoute
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute;
-  '/': typeof IndexRoute;
-  '/auth/login': typeof AuthLoginRoute;
-  '/auth/register': typeof AuthRegisterRoute;
-  '/users/$userId': typeof UsersUserIdRoute;
-  '/users/': typeof UsersIndexRoute;
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/my-networks/$userId': typeof MyNetworksUserIdRoute
+  '/users/$userId': typeof UsersUserIdRoute
+  '/users/': typeof UsersIndexRoute
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '/auth/login' | '/auth/register' | '/users/$userId' | '/users';
-  fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '/auth/login' | '/auth/register' | '/users/$userId' | '/users';
-  id: '__root__' | '/' | '/auth/login' | '/auth/register' | '/users/$userId' | '/users/';
-  fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/auth/login'
+    | '/auth/register'
+    | '/my-networks/$userId'
+    | '/users/$userId'
+    | '/users'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/auth/login'
+    | '/auth/register'
+    | '/my-networks/$userId'
+    | '/users/$userId'
+    | '/users'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth/login'
+    | '/auth/register'
+    | '/my-networks/$userId'
+    | '/users/$userId'
+    | '/users/'
+  fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AuthLoginRoute: typeof AuthLoginRoute;
-  AuthRegisterRoute: typeof AuthRegisterRoute;
-  UsersUserIdRoute: typeof UsersUserIdRoute;
-  UsersIndexRoute: typeof UsersIndexRoute;
+  IndexRoute: typeof IndexRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+  MyNetworksUserIdRoute: typeof MyNetworksUserIdRoute
+  UsersUserIdRoute: typeof UsersUserIdRoute
+  UsersIndexRoute: typeof UsersIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  MyNetworksUserIdRoute: MyNetworksUserIdRoute,
   UsersUserIdRoute: UsersUserIdRoute,
   UsersIndexRoute: UsersIndexRoute,
 };
@@ -149,6 +188,7 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
         "/",
         "/auth/login",
         "/auth/register",
+        "/my-networks/$userId",
         "/users/$userId",
         "/users/"
       ]
@@ -161,6 +201,9 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
     },
     "/auth/register": {
       "filePath": "auth/register.tsx"
+    },
+    "/my-networks/$userId": {
+      "filePath": "my-networks/$userId.tsx"
     },
     "/users/$userId": {
       "filePath": "users/$userId.tsx"
