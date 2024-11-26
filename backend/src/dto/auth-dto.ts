@@ -24,7 +24,7 @@ export const sessionResponseBodyDto = z.object({
       description: 'User ID',
       example: '100',
     }),
-  email: z.string().openapi({
+  email: z.string().email().openapi({
     description: 'User email',
     example: 'dewodt@gmail.com',
   }),
@@ -84,6 +84,9 @@ export const registerRequestBodyDto = z.object({
     .string({ message: 'Username is required' }) // handle null or undefined
     .min(1, { message: 'Username is required' }) // handle empty string
     .max(255, { message: 'Username maximum length is 255' })
+    .regex(new RegExp('^[a-z0-9_]*$'), {
+      message: 'Username must contain only lower case letters, numbers, and underscores',
+    })
     .openapi({
       description: 'Username',
       example: 'dewodt',

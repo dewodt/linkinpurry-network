@@ -15,7 +15,10 @@ export const registerRequestBody = z.object({
   username: z
     .string({ message: 'Username is required' }) // handle null or undefined
     .min(1, { message: 'Username is required' }) // handle empty string
-    .max(255, { message: 'Username maximum length is 255' }),
+    .max(255, { message: 'Username maximum length is 255' })
+    .regex(new RegExp('^[a-z0-9_]*$'), {
+      message: 'Username must contain only lower case letters, numbers, and underscores',
+    }),
   email: z
     .string({ message: 'Email is required' }) // handle null or undefined
     .email({ message: 'Email is invalid' })

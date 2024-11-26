@@ -33,6 +33,10 @@ export const updateProfile = async ({ userId }: UpdateProfileRequestParams, body
     formData.set('skills', body.skills);
   }
 
-  const axiosResponse = await api.put<UpdateProfileSuccessResponse>(`/api/profile/${userId}`, formData);
+  const axiosResponse = await api.put<UpdateProfileSuccessResponse>(`/api/profile/${userId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return axiosResponse.data;
 };
