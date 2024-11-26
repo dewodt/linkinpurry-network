@@ -9,8 +9,6 @@ import { AuthService } from '@/services/auth-service';
 import { ConnectionService } from '@/services/connection-service';
 import { UploadService } from '@/services/upload-service';
 import { UserService } from '@/services/user-service';
-import { ConnectionService } from '@/services/connection-service';
-import { ConnectionRoute } from '@/routes/connection-route';
 
 import { Config } from './config';
 
