@@ -58,7 +58,7 @@ const EditProfileDialog = ({ children, initialData }: EditProfileDialogProps) =>
       // update current session data
       updateSession({
         name: data.data.name,
-        avatarUrl: data.data.profile_photo,
+        profilePhoto: data.data.profile_photo,
       });
 
       // update ['users', 'id'] data if exists

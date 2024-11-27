@@ -131,11 +131,9 @@ export class ConnectionRoute implements IRoute {
         return c.json(responseDto, 200);
       } catch (e) {
         // Handle service exception
-        if (e instanceof BadRequestException) {
-          return c.json(e.toResponseDto(), 400);
-        } else if (e instanceof NotFoundException) {
-          return c.json(e.toResponseDto(), 404);
-        }
+        if (e instanceof BadRequestException) return c.json(e.toResponseDto(), 400);
+        else if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
         // Internal server error
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');

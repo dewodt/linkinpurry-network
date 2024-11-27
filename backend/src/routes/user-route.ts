@@ -2,7 +2,12 @@ import { type OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { inject, injectable } from 'inversify';
 
 import type { IGlobalContext } from '@/core/app';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@/core/exception';
+import {
+  BadRequestException,
+  ForbiddenException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@/core/exception';
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import {
   type IGetProfileResponseBodyDto,
@@ -112,9 +117,8 @@ export class UserRoute implements IRoute {
         return c.json(responseDto, 200);
       } catch (e) {
         // Handle service exception
-        if (e instanceof NotFoundException) {
-          return c.json(e.toResponseDto(), 404);
-        }
+        if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
         // Internal server error
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
@@ -197,6 +201,7 @@ export class UserRoute implements IRoute {
         if (e instanceof BadRequestException) return c.json(e.toResponseDto(), 400);
         else if (e instanceof ForbiddenException) return c.json(e.toResponseDto(), 403);
         else if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
         // Internal server error
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');

@@ -89,7 +89,7 @@ export class AuthRoute implements IRoute {
           userId: overviewProfile.id.toString(),
           email: overviewProfile.email,
           name: overviewProfile.fullName ?? '',
-          avatarUrl: overviewProfile.profilePhotoPath,
+          profilePhoto: overviewProfile.profilePhotoPath,
         };
         const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
           "Successfully retrieved user's session",
@@ -155,9 +155,8 @@ export class AuthRoute implements IRoute {
         return c.json(responseDto, 200);
       } catch (e) {
         // Handle service exception
-        if (e instanceof BadRequestException) {
-          return c.json(e.toResponseDto(), 400);
-        }
+        if (e instanceof BadRequestException) return c.json(e.toResponseDto(), 400);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
         // Internal server error
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
@@ -222,9 +221,8 @@ export class AuthRoute implements IRoute {
         return c.json(responseDto, 200);
       } catch (e) {
         // Handle service exception
-        if (e instanceof BadRequestException) {
-          return c.json(e.toResponseDto(), 400);
-        }
+        if (e instanceof BadRequestException) return c.json(e.toResponseDto(), 400);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
         // Internal server error
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');

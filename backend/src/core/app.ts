@@ -105,7 +105,7 @@ export class App {
     const routeKeys = [AuthRoute.Key, UserRoute.Key, ConnectionRoute.Key];
     routeKeys.forEach((key) => this.container.get<IRoute>(key).registerRoutes(this.app));
 
-    // Docs swagger UI (public route)
+    // Docs API
     this.app.doc('/api/docs', {
       openapi: '3.0.0',
       info: {
@@ -114,7 +114,23 @@ export class App {
       },
     });
 
+    // Docs UI
     this.app.get('/docs', swaggerUI({ url: '/api/docs' }));
+
+    // Docs bearer token
+    this.app.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
+      type: 'http',
+      scheme: 'bearer',
+      description: 'JWT token',
+    });
+
+    // Docs cookie
+    this.app.openAPIRegistry.registerComponent('securitySchemes', 'Cookie', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'token',
+      description: 'JWT token',
+    });
   }
 
   /**

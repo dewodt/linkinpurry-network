@@ -36,7 +36,7 @@ export const userIdRequestParamsDto = z.object({
     .string({ message: 'userId must be type of string' })
     .refine(
       (v) => {
-        const { result, isValid } = Utils.parseBigInt(v);
+        const { result, isValid } = Utils.parseBigIntId(v);
         return isValid && result > 0;
       },
       { message: 'userId must be type of big int and greater than 0' }

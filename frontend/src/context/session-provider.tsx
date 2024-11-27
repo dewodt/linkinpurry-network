@@ -12,7 +12,7 @@ import { SessionErrorResponse, SessionSuccessResponse } from '@/types/api/auth';
 interface SessionContextValue {
   sessionQuery: UseQueryResult<SessionSuccessResponse, SessionErrorResponse>;
   deleteSession: () => Promise<void>;
-  updateSession: ({ name, avatarUrl }: { name: string; avatarUrl: string }) => void;
+  updateSession: ({ name, profilePhoto }: { name: string; profilePhoto: string }) => void;
 }
 
 export const SessionContext = React.createContext<SessionContextValue | null>(null);
@@ -33,7 +33,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateSession = ({ name, avatarUrl }: { name: string; avatarUrl: string }) => {
+  const updateSession = ({ name, profilePhoto }: { name: string; profilePhoto: string }) => {
     queryClient.setQueryData<SessionSuccessResponse>(['session'], (prevData) => {
       if (!prevData) return prevData;
 
@@ -42,7 +42,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         data: {
           ...prevData.data,
           name,
-          avatarUrl,
+          profilePhoto,
         },
       };
     });
