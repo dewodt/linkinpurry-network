@@ -10,14 +10,10 @@ import { Utils } from '@/utils/utils';
 // Request
 export const CreateConnectionReqRequestBodyDto = z.object({
   toUserId: z
-    .string({ message: 'userId must be type of string' })
-    .refine(
-      (v) => {
-        const { result, isValid } = Utils.parseBigInt(v);
-        return isValid && result > 0;
-      },
-      { message: 'userId must be type of big int and greater than 0' }
-    )
+    .string({ message: 'toUserId must be type of string' })
+    .refine((v) => Utils.parseBigIntId(v).isValid, {
+      message: 'toUserId must be type of big int and greater than 0',
+    })
     .transform((v) => BigInt(v))
     // @ts-ignore
     .openapi({
@@ -54,13 +50,9 @@ export interface ICreateConnectionReqResponseBodyDto
 export const GetConnectionListRequestParamsDto = z.object({
   userId: z
     .string({ message: 'userId must be type of string' })
-    .refine(
-      (v) => {
-        const { result, isValid } = Utils.parseBigInt(v);
-        return isValid && result > 0;
-      },
-      { message: 'userId must be type of big int and greater than 0' }
-    )
+    .refine((v) => Utils.parseBigIntId(v).isValid, {
+      message: 'userId must be type of big int and greater than 0',
+    })
     .transform((v) => BigInt(v))
     // @ts-ignore
     .openapi({
@@ -151,25 +143,78 @@ export interface IGetConnectionListResponseBodyDto
   extends z.infer<typeof GetConnectionListResponseBodyDto> {}
 
 /**
- * Accept or Reject Connections DTO
+ * Get pending connection requests DTO
+ */
+// Request query  (pagination)
+export const GetPendingConnectionReqRequestQueryDto = z.object({
+  page: z.coerce
+    .number({ message: 'page must be type of number' })
+    .int({ message: 'page must be an integer' })
+    .gte(1, { message: 'page must be greater than or equal to 1' })
+    .default(1)
+    .openapi({
+      description: 'Page number for pagination',
+      example: 1,
+    }),
+  limit: z.coerce
+    .number({ message: 'limit must be type of number' })
+    .int({ message: 'limit must be an integer' })
+    .gte(1, { message: 'limit must be greater than or equal to 1' })
+    .default(15)
+    .openapi({
+      description: 'Limit for pagination',
+      example: 15,
+    }),
+});
+
+// Response
+export const GetPendingConnectionReqResponseBodyDto = z.array(
+  z.object({
+    user_id: z.string().openapi({
+      description: 'ID pf the connected user',
+      example: '67890',
+    }),
+    username: z.string().openapi({
+      description: 'Username of the user',
+      example: 'dewodt',
+    }),
+    name: z.string().openapi({
+      description: 'Name of the user',
+      example: 'John Doe',
+    }),
+    profile_photo: z.string().openapi({
+      description: 'Profile photo of the user',
+      example: 'https://example.com/my-pict.jpg',
+    }),
+    work_history: z
+      .string()
+      .nullable() // no work history (null)
+      .openapi({
+        description: 'Work history of the user',
+        example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
+      }),
+  })
+);
+
+export interface IGetPendingConnectionReqResponseBodyDto
+  extends z.infer<typeof GetPendingConnectionReqResponseBodyDto> {}
+
+/**
+ * Decide Connections DTO
  */
 // Request params
 export const DecideConnectionReqRequestParamsDto = z.object({
   fromUserId: z
     .string({ message: 'fromUserId must be type of string' })
-    .refine(
-      (v) => {
-        const { result, isValid } = Utils.parseBigInt(v);
-        return isValid && result > 0;
-      },
-      { message: 'userId must be type of big int and greater than 0' }
-    )
+    .refine((v) => Utils.parseBigIntId(v).isValid, {
+      message: 'userId must be type of big int and greater than 0',
+    })
     .transform((v) => BigInt(v))
     // @ts-ignore
     .openapi({
       type: 'bigint',
       param: {
-        name: 'userId',
+        name: 'fromUserId',
         in: 'path',
         required: true,
         description: 'User ID to get the profile',
@@ -200,95 +245,3 @@ export const DecideConnectionReqResponseBodyDto = z.literal(null).openapi({
 export type IDecideConnectionReqResponseBodyDto = z.infer<
   typeof DecideConnectionReqResponseBodyDto
 >;
-
-/**
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- */
-/**
- * Connection Request DTO (get list of connection request)
- */
-
-// Params
-export const RequestConnectionBodyDTO = z.object({
-  userId: z
-    .string({ message: 'userId must be type of string' })
-    .refine(
-      (v) => {
-        const { result, isValid } = Utils.parseBigInt(v);
-        return isValid && result > 0;
-      },
-      { message: 'userId must be type of big int and greater than 0' }
-    )
-    .transform((v) => BigInt(v))
-    // @ts-ignore
-    .openapi({
-      type: 'bigint',
-      param: {
-        name: 'userId',
-        in: 'path',
-        required: true,
-        description: 'User ID who has been requested connection',
-        example: 1,
-      },
-    }),
-});
-
-export interface IRequestConnectionBodyDTO extends z.infer<typeof RequestConnectionBodyDTO> {}
-
-// Response
-export const RequestConnectionResponseBodyDTO = z.object({
-  requestsList: z
-    .array(
-      z.object({
-        userId: z.string().openapi({
-          description: 'ID of the user who requested the connection',
-          example: '67890',
-        }),
-        requestId: z.string().openapi({
-          description: 'ID of the connection request',
-          example: '3',
-        }),
-        username: z.string().openapi({
-          description: 'Username of the user',
-          example: 'dewodt',
-        }),
-        name: z.string().openapi({
-          description: 'Name of the user',
-          example: 'John Doe',
-        }),
-        profile_photo: z.string().openapi({
-          description: 'Profile photo of the user',
-          example: 'https://example.com/my-pict.jpg',
-        }),
-        work_history: z
-          .string()
-          .nullable() // no work history (null)
-          .openapi({
-            description: 'Work history of the user',
-            example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
-          }),
-        skills: z
-          .string()
-          .nullable() // no skills (null)
-          .openapi({
-            description: 'Skills of the user',
-            example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
-          }),
-      })
-    )
-    .openapi({
-      description: 'List of connection requests',
-    }),
-});
-
-export interface IRequestConnectionResponseBodyDTO
-  extends z.infer<typeof RequestConnectionResponseBodyDTO> {}

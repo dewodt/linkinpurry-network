@@ -37,11 +37,28 @@ export interface IConnectionService extends IService {
     meta: PagePaginationResponseMeta;
   }>;
 
+  getPendingConnections(
+    currentUserId: bigint,
+    page: number,
+    limit: number
+  ): Promise<{
+    requests: {
+      id: bigint;
+      username: string;
+      fullName: string;
+      profilePhotoPath: string;
+      workHistory: string | null;
+    }[];
+    meta: PagePaginationResponseMeta;
+  }>;
+
   decideConnectionRequest(
     currentUserId: bigint,
     fromUserId: bigint,
     action: ConnectionRequestDecision
   ): Promise<void>;
+
+  unconnectUser(currentUserId: bigint, userId: bigint): Promise<void>;
 }
 
 /**
@@ -236,7 +253,43 @@ export class ConnectionService implements IConnectionService {
       // if currentUser id is not null, reutrn also the connection with the current user
       // order by connected time descending
 
-      const connectionPromise = this.prisma.connection.findMany({
+      const totalItems = await this.prisma.connection.count({
+        where: {
+          AND: [
+            {
+              fromId: userId,
+            },
+            search
+              ? {
+                  OR: [
+                    {
+                      toUser: {
+                        username: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    },
+                    {
+                      toUser: {
+                        fullName: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    },
+                  ],
+                }
+              : {},
+          ],
+        },
+      });
+
+      // Validate upper bound of page
+      let totalPages = Math.ceil(totalItems / limit);
+      if (page > totalPages) page = totalPages;
+
+      const rawConnections = await this.prisma.connection.findMany({
         take: limit,
         skip: (page - 1) * limit,
         orderBy: {
@@ -311,45 +364,11 @@ export class ConnectionService implements IConnectionService {
         },
       });
 
-      const metaPromise = this.prisma.connection.count({
-        where: {
-          AND: [
-            {
-              fromId: userId,
-            },
-            search
-              ? {
-                  OR: [
-                    {
-                      toUser: {
-                        username: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
-                      },
-                    },
-                    {
-                      toUser: {
-                        fullName: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
-                      },
-                    },
-                  ],
-                }
-              : {},
-          ],
-        },
-      });
-
-      const [rawConnections, totalItems] = await Promise.all([connectionPromise, metaPromise]);
-
       const meta: PagePaginationResponseMeta = {
         page,
         limit,
         totalItems,
-        totalPages: Math.ceil(totalItems / limit),
+        totalPages,
       };
 
       const connections = rawConnections.map((connection) => {
@@ -383,6 +402,86 @@ export class ConnectionService implements IConnectionService {
     }
   }
 
+  /**
+   * Get pending connection (incoming to current user)
+   *
+   * @param currentUserId
+   */
+  async getPendingConnections(currentUserId: bigint, page: number, limit: number) {
+    try {
+      // Get all pending connection request to current user
+      const totalItems = await this.prisma.connectionRequest.count({
+        where: {
+          toId: currentUserId,
+        },
+      });
+
+      // Validate upper bound of page
+      let totalPages = Math.ceil(totalItems / limit);
+      if (page > totalPages) page = totalPages;
+
+      // Get all pending connection request to current user (paginated)
+      const rawRequests = await this.prisma.connectionRequest.findMany({
+        take: limit,
+        skip: (page - 1) * limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        where: {
+          toId: currentUserId,
+        },
+        include: {
+          fromUser: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              profilePhotoPath: true,
+              workHistory: true,
+            },
+          },
+        },
+      });
+
+      // Map
+      const meta: PagePaginationResponseMeta = {
+        page,
+        limit,
+        totalItems,
+        totalPages,
+      };
+
+      const requests = rawRequests.map((request) => {
+        const fromUser = request.fromUser;
+        const fullURL =
+          fromUser.profilePhotoPath.length > 0
+            ? `${this.config.get('BE_URL')}${fromUser.profilePhotoPath}`
+            : '';
+
+        return {
+          id: fromUser.id,
+          username: fromUser.username,
+          fullName: fromUser.fullName || 'N/A',
+          profilePhotoPath: fullURL,
+          workHistory: fromUser.workHistory,
+        };
+      });
+
+      return { requests, meta };
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to fetch pending connections');
+    }
+  }
+
+  /**
+   * Decide connection request
+   *
+   * @param currentUserId
+   * @param fromUserId
+   * @param action
+   */
   async decideConnectionRequest(
     currentUserId: bigint,
     fromUserId: bigint,
@@ -470,71 +569,59 @@ export class ConnectionService implements IConnectionService {
 
   /**
    * Unconnect a user from currentUser
+   *
+   * @param currentUserId
+   * @param userId
    */
+  async unconnectUser(currentUserId: bigint, userId: bigint) {
+    // Check if the user is trying to unconnect to themselves
+    if (currentUserId === userId)
+      throw ExceptionFactory.badRequest('You cannot unconnect to yourself');
 
-  // /**
-  //  * Fetches connection requests sent to a specific user.
-  //  *
-  //  * @param userId - The ID of the user to whom the connection requests are sent.
-  //  * @returns A promise that resolves to an array of connection request objects.
-  //  * Each object contains the following properties:
-  //  * - userId: The ID of the user who requested the connection.
-  //  * - requestId: The ID of the connection request.
-  //  * - username: The username of the user who requested the connection.
-  //  * - email: The email of the user who requested the connection.
-  //  *
-  //  * @throws Will throw an error if the connection requests cannot be fetched.
-  //  */
-  // async getConnectionRequestTo(userId: bigint): Promise<any[]> {
-  //   const prisma = this.database.getPrisma();
+    // Check if the connection already exists
+    let isConnectionExist = false;
 
-  //   try {
-  //     logger.info(`Fetching connection requests for userId: ${userId.toString()}`);
+    try {
+      // Note: each connection has 2 rows, A -> B and B -> A.
+      const connection = await this.prisma.connection.findFirst({
+        where: {
+          OR: [
+            { fromId: currentUserId, toId: userId },
+            { fromId: userId, toId: currentUserId },
+          ],
+        },
+        select: {
+          fromId: true,
+          toId: true,
+        },
+      });
 
-  //     // Fetch connection requests from the database
-  //     const connectionRequests = await prisma.connectionRequest.findMany({
-  //       where: {
-  //         toId: userId,
-  //       },
-  //       select: {
-  //         fromId: true,
-  //         toId: true,
-  //         createdAt: true, // for debugging/logging purposes
-  //         fromUser: {
-  //           select: {
-  //             id: true,
-  //             username: true,
-  //             fullName: true,
-  //             profilePhotoPath: true,
-  //             workHistory: true,
-  //             skills: true,
-  //           },
-  //         },
-  //       },
-  //     });
+      if (connection) isConnectionExist = true;
+    } catch (error) {
+      // Internal server error
+      if (error instanceof Error) logger.error(error.message);
 
-  //     // Transform the result into the desired structure
-  //     return connectionRequests.map((connectionRequest) => {
-  //       const fromUser = connectionRequest.fromUser;
+      throw ExceptionFactory.internalServerError('Failed to check connection existence');
+    }
 
-  //       return {
-  //         userId: fromUser.id.toString(), // ID of the user who requested the connection
-  //         requestId: connectionRequest.toId.toString(), // ID of the connection request
-  //         username: fromUser.username, // Username of the user
-  //         name: fromUser.fullName || 'N/A', // Full name, default to "N/A" if null
-  //         profile_photo:
-  //           fromUser.profilePhotoPath || 'https://example.com/default-profile-photo.jpg', // Default profile photo
-  //         work_history: fromUser.workHistory || null, // Nullable work history
-  //         skills: fromUser.skills || null, // Nullable skills
-  //       };
-  //     });
-  //   } catch (error) {
-  //     if (error instanceof Error) {
-  //       logger.error(`Error in getConnectionRequestTo: ${error.message}`);
-  //       logger.error(`Stack Trace: ${error.stack}`);
-  //     }
+    if (!isConnectionExist) throw ExceptionFactory.badRequest('Connection not found');
 
-  //     throw ExceptionFactory.internalServerError('Failed to fetch connection requests');
-  //   }
-  // }
+    // Remove the connection
+    try {
+      // no need transaction (delete * from where )
+      await this.prisma.connection.deleteMany({
+        where: {
+          OR: [
+            { fromId: currentUserId, toId: userId },
+            { fromId: userId, toId: currentUserId },
+          ],
+        },
+      });
+    } catch (error) {
+      // Internal server error
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to unconnect user');
+    }
+  }
 }

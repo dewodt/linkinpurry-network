@@ -19,11 +19,43 @@ export class Utils {
     return zodParseResult.errors.map((err) => err.message).join(', ');
   };
 
-  static parseBigInt = (
-    val: string | number
+  static parseBigIntId = (
+    val: string
   ): { isValid: true; result: bigint } | { isValid: false; result: null } => {
     try {
       const result = BigInt(val);
+      const isValid = result > 0n;
+
+      if (!isValid)
+        return {
+          isValid: false,
+          result: null,
+        };
+
+      return {
+        isValid: true,
+        result,
+      };
+    } catch {
+      return {
+        isValid: false,
+        result: null,
+      };
+    }
+  };
+
+  static parsePagePagination = (
+    val: string
+  ): { isValid: true; result: number } | { isValid: false; result: null } => {
+    try {
+      const result = parseInt(val);
+      const isValid = result > 0n;
+
+      if (!isValid)
+        return {
+          isValid: false,
+          result: null,
+        };
 
       return {
         isValid: true,

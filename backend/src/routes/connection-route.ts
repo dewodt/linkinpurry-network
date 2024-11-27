@@ -16,8 +16,11 @@ import {
   GetConnectionListRequestParamsDto,
   GetConnectionListRequestQueryDto,
   GetConnectionListResponseBodyDto,
+  GetPendingConnectionReqRequestQueryDto,
+  GetPendingConnectionReqResponseBodyDto,
   type ICreateConnectionReqResponseBodyDto,
   type IGetConnectionListResponseBodyDto,
+  type IGetPendingConnectionReqResponseBodyDto,
 } from '@/dto/connection-dto';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { ConnectionService } from '@/services/connection-service';
@@ -52,11 +55,13 @@ export class ConnectionRoute implements IRoute {
     // Get connection list
     this.getConnectionsList(app);
 
+    // Get pending connections
+    this.getPendingConnections(app);
+
     // Decide connection request
     this.decideConnectionRequest(app);
 
-    // this.connectionDecide(app);
-    // this.connectionRequest(app);
+    // Unconnect user
   }
 
   /**
@@ -221,6 +226,81 @@ export class ConnectionRoute implements IRoute {
 
   /**
    * (Protected)
+   * Get user's pending connection
+   */
+  private getPendingConnections(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const pendingConnectionsRoute = createRoute({
+      tags: ['connections'],
+      method: 'get',
+      path: '/api/connections/requests/pending',
+      summary: 'Get list of pending connection requests',
+      description: 'API endpoint for getting list of pending connection requests',
+      request: {
+        query: GetPendingConnectionReqRequestQueryDto,
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessPagePagination(
+          'Get list of pending connection requests successful',
+          GetPendingConnectionReqResponseBodyDto
+        ),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while getting list of pending connection requests'
+        ),
+      },
+    });
+
+    // Register route
+    app.use(
+      pendingConnectionsRoute.getRoutingPath(),
+      this.authMiddleware.authorize({ isPublic: false })
+    );
+    app.openapi(pendingConnectionsRoute, async (c) => {
+      // Get query params
+      const { page, limit } = c.req.valid('query');
+
+      // Get current user id
+      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+
+      // Call service
+      try {
+        const { requests: rawRequests, meta } = await this.ConnectionService.getPendingConnections(
+          currentUserId,
+          page,
+          limit
+        );
+
+        // Map response to dto
+        const responseData: IGetPendingConnectionReqResponseBodyDto = rawRequests.map((user) => {
+          return {
+            user_id: user.id.toString(),
+            username: user.username,
+            name: user.fullName,
+            profile_photo: user.profilePhotoPath,
+            work_history: user.workHistory,
+          };
+        });
+
+        const responseDto = ResponseDtoFactory.createSuccessPagePaginationResponseDto(
+          'Pending connection requests fetched successfully',
+          responseData,
+          meta
+        );
+
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Internal server error
+        if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+
+        // Unexpected error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
+
+  /**
+   * (Protected)
    *
    * Decide connection request
    *
@@ -295,54 +375,8 @@ export class ConnectionRoute implements IRoute {
     });
   }
 
-  // // Get Connection Requested
-  // private connectionRequest(app: OpenAPIHono<IGlobalContext>) {
-  //   // Create route definition
-  //   const connectionRequestRoute = createRoute({
-  //     tags: ['Connection'],
-  //     method: 'get',
-  //     path: '/connection_request/{userId}',
-  //     request: {
-  //       params: RequestConnectionBodyDTO,
-  //     },
-  //     responses: {
-  //       200: OpenApiResponseFactory.jsonSuccessData(
-  //         'Get Connection Request successful',
-  //         RequestConnectionResponseBodyDTO
-  //       ),
-  //       400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
-  //       500: OpenApiResponseFactory.jsonInternalServerError(
-  //         'Unexpected error occurred while getting list of connection'
-  //       ),
-  //     },
-  //   });
-  //   // Register route
-  //   app.openapi(connectionRequestRoute, async (c) => {
-  //     // Get validated params
-  //     const { userId } = c.req.valid('param');
-
-  //     try {
-  //       // Call Connection Service
-  //       const requestsList = await this.ConnectionService.getConnectionRequestTo(userId);
-
-  //       // Map response to dto
-  //       const responseData: IRequestConnectionResponseBodyDTO = { requestsList };
-  //       const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
-  //         'Connection requests fetched successfully',
-  //         responseData
-  //       );
-
-  //       return c.json(responseDto, 200);
-  //     } catch (e) {
-  //       // Handle service exception
-  //       if (e instanceof BadRequestException) {
-  //         return c.json(e.toResponseDto(), 400);
-  //       }
-
-  //       // Internal server error
-  //       const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
-  //       return c.json(responseDto, 500);
-  //     }
-  //   });
-  // }
+  /**
+   * (Protected)
+   */
+  private unconnectUser(app: OpenAPIHono<IGlobalContext>) {}
 }
