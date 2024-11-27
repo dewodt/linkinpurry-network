@@ -5,17 +5,12 @@ import type { IGlobalContext } from '@/core/app';
 import { BadRequestException, NotFoundException } from '@/core/exception';
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import {
-  AcceptorRejectParamsDto,
-  AcceptorRejectRequestBodyDto,
-  AcceptorRejectResponseBodyDto,
   CreateConnectionReqRequestBodyDto,
+  GetConnectionListRequestParamsDto,
+  GetConnectionListRequestQueryDto,
+  GetConnectionListResponseBodyDto,
   type ICreateConnectionReqResponseBodyDto,
-  type IListConnectionsResponseBodyDto,
-  type IRequestConnectionResponseBodyDTO,
-  ListConnectionsBodyDto,
-  ListConnectionsResponseBodyDto,
-  RequestConnectionBodyDTO,
-  RequestConnectionResponseBodyDTO,
+  type IGetConnectionListResponseBodyDto,
 } from '@/dto/connection-dto';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { ConnectionService } from '@/services/connection-service';
@@ -47,12 +42,16 @@ export class ConnectionRoute implements IRoute {
     // Create connection
     this.createConnectionRequest(app);
 
+    // Get connection list
+    this.getConnectionsList(app);
+
     // this.connectionList(app);
     // this.connectionDecide(app);
     // this.connectionRequest(app);
   }
 
   /**
+   * (Protected)
    * Create request connection to another user
    */
   private createConnectionRequest(app: OpenAPIHono<IGlobalContext>) {
@@ -128,60 +127,86 @@ export class ConnectionRoute implements IRoute {
     });
   }
 
-  // /**
-  //  * connectionList route
-  //  *
-  //  * @param app
-  //  */
-  // private connectionList(app: OpenAPIHono<IGlobalContext>) {
-  //   // Create route definition
-  //   const connectionListRoute = createRoute({
-  //     tags: ['connection'],
-  //     method: 'get',
-  //     path: '/api/connection/{userId}',
-  //     request: {
-  //       params: ListConnectionsBodyDto,
-  //     },
-  //     responses: {
-  //       200: OpenApiResponseFactory.jsonSuccessData(
-  //         'Get List Connection successful',
-  //         ListConnectionsResponseBodyDto
-  //       ),
-  //       400: OpenApiResponseFactory.jsonBadRequest('Invalid fields'),
-  //       500: OpenApiResponseFactory.jsonInternalServerError(
-  //         'Unexpected error occurred while getting list of connection'
-  //       ),
-  //     },
-  //   });
-  //   // Register route
-  //   app.openapi(connectionListRoute, async (c) => {
-  //     // Get validated params
-  //     const { userId } = c.req.valid('param');
+  /**
+   * (Public)
+   * ENHANCEMENT: use pagination
+   * See list of connections of any users
+   *
+   * @param app
+   */
+  private getConnectionsList(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const connectionListRoute = createRoute({
+      tags: ['connection'],
+      method: 'get',
+      path: '/api/users/{userId}/connections',
+      request: {
+        params: GetConnectionListRequestParamsDto,
+        query: GetConnectionListRequestQueryDto,
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessData(
+          'Get List Connection successful',
+          GetConnectionListResponseBodyDto
+        ),
+        400: OpenApiResponseFactory.jsonBadRequest('Invalid query params or path params'),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while getting list of connection'
+        ),
+      },
+    });
 
-  //     try {
-  //       // Call service
-  //       const connections = await this.ConnectionService.listConnection(userId);
+    // Register route
+    app.use(
+      connectionListRoute.getRoutingPath(),
+      this.authMiddleware.authorize({ isPublic: true })
+    );
+    app.openapi(connectionListRoute, async (c) => {
+      // Get validated params
+      const { userId } = c.req.valid('param');
 
-  //       // Map response to dto
-  //       const responseData: IListConnectionsResponseBodyDto = { connections };
-  //       const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
-  //         'Connection list fetched successfully',
-  //         responseData
-  //       );
+      // Query
+      const { search, page, limit } = c.req.valid('query');
 
-  //       return c.json(responseDto, 200);
-  //     } catch (e) {
-  //       // Handle service exception
-  //       if (e instanceof BadRequestException) {
-  //         return c.json(e.toResponseDto(), 400);
-  //       }
+      // Get current user id
+      const currentUserId = c.get('user')?.userId;
 
-  //       // Internal server error
-  //       const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
-  //       return c.json(responseDto, 500);
-  //     }
-  //   });
-  // }
+      try {
+        // Call service
+        const { connections, meta } = await this.ConnectionService.getConnectionsList(
+          currentUserId,
+          userId,
+          search,
+          page,
+          limit
+        );
+
+        // Map response to dto
+        const responseData: IGetConnectionListResponseBodyDto = connections.map((user) => {
+          return {
+            user_id: user.id.toString(),
+            username: user.username,
+            name: user.fullName,
+            profile_photo: user.profilePhotoPath,
+            work_history: user.workHistory,
+            connection_status: user.connectionStatus,
+          };
+        });
+        const responseDto = ResponseDtoFactory.createSuccessPagePaginationResponseDto(
+          "User's connections fetched successfully",
+          responseData,
+          meta
+        );
+
+        // Meta data
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Internal server error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
 
   // private connectionDecide(app: OpenAPIHono<IGlobalContext>) {
   //   const AcceptorRejectRequestBodyDtoContent = {

@@ -80,26 +80,15 @@ export const getProfileResponseBodyDto = z.object({
     .string()
     .nullable() // no work history (null)
     .openapi({
-      description: 'Work history of the user (in rich text)',
-      example: `
-      <ul>
-        <li>Frontend Developer at Company A</li>
-        <li>Backend Developer at Company B</li>
-      </ul>
-    `,
+      description: 'Work history of the user',
+      example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
     }),
   skills: z
     .string()
     .nullable() // no skills (null)
     .openapi({
-      description: 'Skills of the user (rich text)',
-      example: `
-          <ul>
-            <li>JavaScript</li>
-            <li>TypeScript</li>
-            <li>Node.js</li>
-          </ul>      
-        `,
+      description: 'Skills of the user',
+      example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
     }),
   is_connected: z.boolean().openapi({
     description: 'Whether the current user is connected to the user',
@@ -178,33 +167,14 @@ export const updateProfileRequestBodyDto = z.object({
       description: 'Profile photo of the user',
       example: new File([], 'my-pict.jpg', { type: 'image/jpeg' }),
     }),
-  work_history: z
-    .string({ message: 'Work history must be a string' })
-    .trim()
-    .optional()
-    .openapi({
-      description: 'Work history of the user (in rich text)',
-      example: `
-        <ul>
-          <li>Frontend Developer at Company A</li>
-          <li>Backend Developer at Company B</li>
-        </ul>
-      `,
-    }),
-  skills: z
-    .string({ message: 'Skills must be a string' })
-    .trim()
-    .optional()
-    .openapi({
-      description: 'Skills of the user (rich text)',
-      example: `
-        <ul>
-          <li>JavaScript</li>
-          <li>TypeScript</li>
-          <li>Node.js</li>
-        </ul>      
-      `,
-    }),
+  work_history: z.string({ message: 'Work history must be a string' }).trim().optional().openapi({
+    description: 'Work history of the user',
+    example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
+  }),
+  skills: z.string({ message: 'Skills must be a string' }).trim().optional().openapi({
+    description: 'Skills of the user',
+    example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
+  }),
 });
 
 export interface IUpdateProfileRequestBodyDto extends z.infer<typeof updateProfileRequestBodyDto> {}
@@ -229,25 +199,14 @@ export const updateProfileResponseBodyDto = z.object({
     .nullable() // no work history (null)
     .openapi({
       description: 'Work history of the user (in rich text)',
-      example: `
-      <ul>
-        <li>Frontend Developer at Company A</li>
-        <li>Backend Developer at Company B</li>
-      </ul>
-    `,
+      example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
     }),
   skills: z
     .string()
     .nullable() // no skills (null)
     .openapi({
-      description: 'Skills of the user (rich text)',
-      example: `
-        <ul>
-          <li>JavaScript</li>
-          <li>TypeScript</li>
-          <li>Node.js</li>
-        </ul>      
-      `,
+      description: 'Skills of the user',
+      example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
     }),
 });
 

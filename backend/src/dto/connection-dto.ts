@@ -1,5 +1,6 @@
 import { z } from '@hono/zod-openapi';
 
+import { ConnectionStatus } from '@/utils/enum';
 import { Utils } from '@/utils/utils';
 
 /**
@@ -36,10 +37,10 @@ export interface ICreateConnectionReqRequestBodyDto
 
 // Response
 export const CreateConnectionReqResponseBodyDto = z.object({
-  finalState: z.enum(['PENDING', 'ACCEPTED']).openapi({
+  finalState: z.enum([ConnectionStatus.PENDING, ConnectionStatus.ACCEPTED]).openapi({
     description:
       'Final state of the connection request. Accepted if the other user already sent a request to the user, and pending if not.',
-    example: 'PENDING',
+    example: ConnectionStatus.PENDING,
   }),
 });
 
@@ -49,9 +50,8 @@ export interface ICreateConnectionReqResponseBodyDto
 /**
  * List Connections DTO
  */
-
-// Params
-export const ListConnectionsBodyDto = z.object({
+// Request Params
+export const GetConnectionListRequestParamsDto = z.object({
   userId: z
     .string({ message: 'userId must be type of string' })
     .refine(
@@ -75,68 +75,84 @@ export const ListConnectionsBodyDto = z.object({
     }),
 });
 
-export interface IListConnectionsBodyDto extends z.infer<typeof ListConnectionsBodyDto> {}
+export interface IGetConnectionListRequestParamsDto
+  extends z.infer<typeof GetConnectionListRequestParamsDto> {}
 
-// Response
-export const ListConnectionsResponseBodyDto = z.object({
-  connections: z
-    .array(
-      z.object({
-        userId: z.string().openapi({
-          description: 'ID pf the connected user',
-          example: '67890',
-        }),
-        username: z.string().openapi({
-          description: 'Username of the user',
-          example: 'dewodt',
-        }),
-        name: z.string().openapi({
-          description: 'Name of the user',
-          example: 'John Doe',
-        }),
-        profile_photo: z.string().openapi({
-          description: 'Profile photo of the user',
-          example: 'https://example.com/my-pict.jpg',
-        }),
-        work_history: z
-          .string()
-          .nullable() // no work history (null)
-          .openapi({
-            description: 'Work history of the user (in rich text)',
-            example: `
-            <ul>
-              <li>Frontend Developer at Company A</li>
-              <li>Backend Developer at Company B</li>
-            </ul>
-          `,
-          }),
-        skills: z
-          .string()
-          .nullable() // no skills (null)
-          .openapi({
-            description: 'Skills of the user (rich text)',
-            example: `
-                <ul>
-                  <li>JavaScript</li>
-                  <li>TypeScript</li>
-                  <li>Node.js</li>
-                </ul>      
-              `,
-          }),
-      })
-    )
+// Enhancement: Create using pagination also
+// Request query
+export const GetConnectionListRequestQueryDto = z.object({
+  search: z.string({ message: 'search must be type of string' }).optional().openapi({
+    description: 'Search query for filtering connections',
+    example: 'John Doe',
+  }),
+  page: z.coerce
+    .number({ message: 'page must be type of number' })
+    .int({ message: 'page must be an integer' })
+    .gte(1, { message: 'page must be greater than or equal to 1' })
+    .default(1)
     .openapi({
-      description: 'List of connections',
+      description: 'Page number for pagination',
+      example: 1,
+    }),
+  limit: z.coerce
+    .number({ message: 'limit must be type of number' })
+    .int({ message: 'limit must be an integer' })
+    .gte(1, { message: 'limit must be greater than or equal to 1' })
+    .default(15)
+    .openapi({
+      description: 'Limit for pagination',
+      example: 15,
     }),
 });
 
-export interface IListConnectionsResponseBodyDto
-  extends z.infer<typeof ListConnectionsResponseBodyDto> {}
+export interface IGetConnectionListRequestQueryDto
+  extends z.infer<typeof GetConnectionListRequestQueryDto> {}
+
+// Response
+export const GetConnectionListResponseBodyDto = z
+  .array(
+    z.object({
+      user_id: z.string().openapi({
+        description: 'ID pf the connected user',
+        example: '67890',
+      }),
+      username: z.string().openapi({
+        description: 'Username of the user',
+        example: 'dewodt',
+      }),
+      name: z.string().openapi({
+        description: 'Name of the user',
+        example: 'John Doe',
+      }),
+      profile_photo: z.string().openapi({
+        description: 'Profile photo of the user',
+        example: 'https://example.com/my-pict.jpg',
+      }),
+      work_history: z
+        .string()
+        .nullable() // no work history (null)
+        .openapi({
+          description: 'Work history of the user',
+          example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
+        }),
+      connection_status: z
+        .enum([ConnectionStatus.ACCEPTED, ConnectionStatus.PENDING, ConnectionStatus.NONE])
+        .openapi({
+          description: 'Status of the connection',
+          example: ConnectionStatus.ACCEPTED,
+        }),
+    })
+  )
+  .openapi({
+    description: 'List of connections',
+  });
+
+export interface IGetConnectionListResponseBodyDto
+  extends z.infer<typeof GetConnectionListResponseBodyDto> {}
 
 /**
  * Accept or Reject Connections DTO
  */
-
 // Params
 export const AcceptorRejectParamsDto = z.object({
   userId: z
@@ -268,26 +284,15 @@ export const RequestConnectionResponseBodyDTO = z.object({
           .string()
           .nullable() // no work history (null)
           .openapi({
-            description: 'Work history of the user (in rich text)',
-            example: `
-            <ul>
-              <li>Frontend Developer at Company A</li>
-              <li>Backend Developer at Company B</li>
-            </ul>
-          `,
+            description: 'Work history of the user',
+            example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
           }),
         skills: z
           .string()
           .nullable() // no skills (null)
           .openapi({
-            description: 'Skills of the user (rich text)',
-            example: `
-                <ul>
-                  <li>JavaScript</li>
-                  <li>TypeScript</li>
-                  <li>Node.js</li>
-                </ul>      
-              `,
+            description: 'Skills of the user',
+            example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
           }),
       })
     )

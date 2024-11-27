@@ -1,16 +1,42 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
 
+import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
+import type { PagePaginationResponseMeta } from '@/dto/common';
 import { Database } from '@/infrastructures/database/database';
+import { ConnectionStatus } from '@/utils/enum';
 
 import { type IService } from './service';
 
 /**
  * Interface definition
  */
-export interface IConnectionService extends IService {}
+export interface IConnectionService extends IService {
+  createConnectionRequest(
+    currentUserId: bigint,
+    userId: bigint
+  ): Promise<{ finalState: ConnectionStatus.ACCEPTED | ConnectionStatus.PENDING }>;
+
+  getConnectionsList(
+    currentUserId: bigint | undefined,
+    userId: bigint,
+    search: string | undefined,
+    page: number,
+    limit: number
+  ): Promise<{
+    connections: {
+      id: bigint;
+      username: string;
+      fullName: string;
+      profilePhotoPath: string;
+      workHistory: string | null;
+      connectionStatus: ConnectionStatus;
+    }[];
+    meta: PagePaginationResponseMeta;
+  }>;
+}
 
 /**
  * Service implementation
@@ -23,7 +49,10 @@ export class ConnectionService implements IConnectionService {
   private prisma: PrismaClient;
 
   // Inject dependencies
-  constructor(@inject(Database.Key) private database: Database) {
+  constructor(
+    @inject(Config.Key) private config: Config,
+    @inject(Database.Key) private database: Database
+  ) {
     this.prisma = this.database.getPrisma();
   }
 
@@ -31,12 +60,7 @@ export class ConnectionService implements IConnectionService {
    * Request connect current user to user id
    * @param userId
    */
-  async createConnectionRequest(
-    currentUserId: bigint,
-    userId: bigint
-  ): Promise<{
-    finalState: 'PENDING' | 'ACCEPTED';
-  }> {
+  async createConnectionRequest(currentUserId: bigint, userId: bigint) {
     // Check if the user is trying to connect to themselves
     if (currentUserId === userId)
       throw ExceptionFactory.badRequest('You cannot connect to yourself');
@@ -138,12 +162,20 @@ export class ConnectionService implements IConnectionService {
           });
 
           // Add the connection to the connection table
-          await tx.connection.create({
-            data: {
-              fromId: connectionRequest.fromId,
-              toId: connectionRequest.toId,
-              createdAt: new Date(),
-            },
+          // Note connection is mutual, so we need to create 2 rows
+          await tx.connection.createMany({
+            data: [
+              {
+                fromId: currentUserId,
+                toId: userId,
+                createdAt: new Date(),
+              }, // A -> B
+              {
+                fromId: userId,
+                toId: currentUserId,
+                createdAt: new Date(),
+              }, // B -> A
+            ],
           });
         });
       } catch (error) {
@@ -154,7 +186,7 @@ export class ConnectionService implements IConnectionService {
       }
 
       // RETURN EARLY
-      return { finalState: 'ACCEPTED' };
+      return { finalState: ConnectionStatus.ACCEPTED as const };
     }
 
     // If connection doesnt exists, create a new connection request
@@ -167,7 +199,7 @@ export class ConnectionService implements IConnectionService {
         },
       });
 
-      return { finalState: 'PENDING' };
+      return { finalState: ConnectionStatus.PENDING as const };
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);
@@ -176,75 +208,172 @@ export class ConnectionService implements IConnectionService {
     }
   }
 
-  // /**
-  //  *  Get connection list of a certain user
-  //  *
-  //  * @param userID
-  //  * @returns array of connections
-  //  * @throws CustomException
-  //  */
-  // async listConnection(userId: bigint): Promise<any[]> {
-  //   try {
-  //     // Fetch connections from the database
-  //     const connections = await this.prisma.connection.findMany({
-  //       where: {
-  //         OR: [
-  //           { fromId: userId }, // Pengguna sebagai pengirim koneksi
-  //           { toId: userId }, // Pengguna sebagai penerima koneksi
-  //         ],
-  //       },
-  //       select: {
-  //         fromId: true,
-  //         toId: true,
-  //         fromUser: {
-  //           select: {
-  //             id: true,
-  //             username: true,
-  //             fullName: true,
-  //             profilePhotoPath: true,
-  //             workHistory: true,
-  //             skills: true,
-  //           },
-  //         },
-  //         toUser: {
-  //           select: {
-  //             id: true,
-  //             username: true,
-  //             fullName: true,
-  //             profilePhotoPath: true,
-  //             workHistory: true,
-  //             skills: true,
-  //           },
-  //         },
-  //       },
-  //     });
+  /**
+   *  Get connection list of a certain user
+   *
+   * @param userID
+   * @returns array of connections
+   * @throws CustomException
+   */
+  async getConnectionsList(
+    currentUserId: bigint | undefined,
+    userId: bigint,
+    search: string | undefined,
+    page: number,
+    limit: number
+  ) {
+    try {
+      // Note: each connection has 2 rows, A -> B and B -> A.
+      // Only need to search for one direction. Use userId for the *fromId* search
+      // if currentUser id is not null, reutrn also the connection with the current user
+      // order by connected time descending
 
-  //     return connections.map((connection) => {
-  //       const isFromUser = connection.fromId === userId;
-  //       const connectedUser = isFromUser ? connection.toUser : connection.fromUser;
+      const connectionPromise = this.prisma.connection.findMany({
+        take: limit,
+        skip: (page - 1) * limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        where: {
+          AND: [
+            {
+              fromId: userId,
+            },
+            search
+              ? {
+                  OR: [
+                    {
+                      toUser: {
+                        username: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    },
+                    {
+                      toUser: {
+                        fullName: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    },
+                  ],
+                }
+              : {},
+          ],
+        },
 
-  //       if (!connectedUser) {
-  //         throw new Error('Connected user not found in the connection.');
-  //       }
+        include: {
+          toUser: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              profilePhotoPath: true,
+              workHistory: true,
 
-  //       return {
-  //         userID: connectedUser.id.toString(),
-  //         username: connectedUser.username,
-  //         name: connectedUser.fullName || 'No name provided',
-  //         profile_photo: connectedUser.profilePhotoPath || '',
-  //         work_history: connectedUser.workHistory || null,
-  //         skills: connectedUser.skills || null,
-  //       };
-  //     });
-  //   } catch (error) {
-  //     if (error instanceof Error) {
-  //       logger.error(`Error in listConnection: ${error.message}`);
-  //       logger.error(`Stack Trace: ${error.stack}`);
-  //     }
+              // find connection status of user to currentUser
+              ...(currentUserId && {
+                receivedConnections: {
+                  select: {
+                    fromId: true, // or toId, is ok
+                  },
+                  where: {
+                    fromId: currentUserId, // or toId, is ok
+                  },
+                  take: 1,
+                },
+              }),
 
-  //     throw ExceptionFactory.internalServerError('Failed to fetch connections');
-  //   }
-  // }
+              // find connection status of currentUser to user
+              ...(currentUserId && {
+                sentConnections: {
+                  select: {
+                    fromId: true,
+                  },
+                  where: {
+                    fromId: currentUserId, // pending defintiion: from the PoV of sender
+                  },
+                  take: 1,
+                },
+              }),
+            },
+          },
+        },
+      });
+
+      const metaPromise = this.prisma.connection.count({
+        where: {
+          AND: [
+            {
+              fromId: userId,
+            },
+            search
+              ? {
+                  OR: [
+                    {
+                      toUser: {
+                        username: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    },
+                    {
+                      toUser: {
+                        fullName: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    },
+                  ],
+                }
+              : {},
+          ],
+        },
+      });
+
+      const [rawConnections, totalItems] = await Promise.all([connectionPromise, metaPromise]);
+
+      const meta: PagePaginationResponseMeta = {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+      };
+
+      const connections = rawConnections.map((connection) => {
+        const toUser = connection.toUser;
+        const fullURL =
+          toUser.profilePhotoPath.length > 0
+            ? `${this.config.get('BE_URL')}${toUser.profilePhotoPath}`
+            : '';
+
+        return {
+          id: toUser.id,
+          username: toUser.username,
+          fullName: toUser.fullName || 'N/A',
+          profilePhotoPath: fullURL,
+          workHistory: toUser.workHistory,
+          connectionStatus: currentUserId
+            ? toUser.receivedConnections.length > 0
+              ? ConnectionStatus.ACCEPTED
+              : toUser.sentConnections.length > 0
+                ? ConnectionStatus.PENDING
+                : ConnectionStatus.NONE
+            : ConnectionStatus.NONE,
+        };
+      });
+
+      return { connections, meta };
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to fetch connection list');
+    }
+  }
 
   // async decideConnection(
   //   userId: bigint,
