@@ -3,7 +3,7 @@ import { deleteCookie, setCookie } from 'hono/cookie';
 import { inject, injectable } from 'inversify';
 
 import type { IGlobalContext } from '@/core/app';
-import { BadRequestException } from '@/core/exception';
+import { BadRequestException, InternalServerErrorException } from '@/core/exception';
 import { logger } from '@/core/logger';
 import {
   type ILoginResponseBodyDto,
@@ -99,9 +99,10 @@ export class AuthRoute implements IRoute {
         return c.json(responseDto, 200);
       } catch (e) {
         // Internal server error
-        if (e instanceof Error) logger.error(e.message);
-        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
+        // Unexpected error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
         return c.json(responseDto, 500);
       }
     });

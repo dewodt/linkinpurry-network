@@ -3,3 +3,8 @@ export enum ConnectionStatus {
   PENDING = 'PENDING',
   ACCEPTED = 'ACCEPTED',
 }
+
+export enum ConnectionRequestDecision {
+  ACCEPT = 'ACCEPT',
+  DECLINE = 'DECLINE',
+}

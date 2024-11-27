@@ -2,10 +2,17 @@ import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { inject, injectable } from 'inversify';
 
 import type { IGlobalContext } from '@/core/app';
-import { BadRequestException, NotFoundException } from '@/core/exception';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@/core/exception';
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import {
   CreateConnectionReqRequestBodyDto,
+  DecideConnectionReqRequestBodyDto,
+  DecideConnectionReqRequestParamsDto,
+  DecideConnectionReqResponseBodyDto,
   GetConnectionListRequestParamsDto,
   GetConnectionListRequestQueryDto,
   GetConnectionListResponseBodyDto,
@@ -45,7 +52,9 @@ export class ConnectionRoute implements IRoute {
     // Get connection list
     this.getConnectionsList(app);
 
-    // this.connectionList(app);
+    // Decide connection request
+    this.decideConnectionRequest(app);
+
     // this.connectionDecide(app);
     // this.connectionRequest(app);
   }
@@ -57,7 +66,7 @@ export class ConnectionRoute implements IRoute {
   private createConnectionRequest(app: OpenAPIHono<IGlobalContext>) {
     // Create route definition
     const createConnectionRequestRoute = createRoute({
-      tags: ['connection'],
+      tags: ['connections'],
       method: 'post',
       path: '/api/connections/requests',
       summary: 'Create connection request',
@@ -137,15 +146,17 @@ export class ConnectionRoute implements IRoute {
   private getConnectionsList(app: OpenAPIHono<IGlobalContext>) {
     // Create route definition
     const connectionListRoute = createRoute({
-      tags: ['connection'],
+      tags: ['connections'],
       method: 'get',
       path: '/api/users/{userId}/connections',
+      summary: 'Get list of connections',
+      description: 'API endpoint for getting list of connections of a user',
       request: {
         params: GetConnectionListRequestParamsDto,
         query: GetConnectionListRequestQueryDto,
       },
       responses: {
-        200: OpenApiResponseFactory.jsonSuccessData(
+        200: OpenApiResponseFactory.jsonSuccessPagePagination(
           'Get List Connection successful',
           GetConnectionListResponseBodyDto
         ),
@@ -208,62 +219,81 @@ export class ConnectionRoute implements IRoute {
     });
   }
 
-  // private connectionDecide(app: OpenAPIHono<IGlobalContext>) {
-  //   const AcceptorRejectRequestBodyDtoContent = {
-  //     content: {
-  //       'application/json': AcceptorRejectRequestBodyDto,
-  //     },
-  //   };
-  //   // Create route definition
-  //   const connectionDecideRoute = createRoute({
-  //     tags: ['Connection'],
-  //     method: 'post',
-  //     path: '/api/user/{userId}/decide',
-  //     request: {
-  //       params: AcceptorRejectParamsDto,
-  //       body: AcceptorRejectRequestBodyDto,
-  //     },
-  //     responses: {
-  //       200: OpenApiResponseFactory.jsonSuccessData(
-  //         'Get List Connection successful',
-  //         AcceptorRejectResponseBodyDto
-  //       ),
-  //       400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | Invalid credentials'),
-  //       500: OpenApiResponseFactory.jsonInternalServerError(
-  //         'Unexpected error occurred while getting list of connection'
-  //       ),
-  //     },
-  //   });
-  //   // Register route
-  //   app.openapi(connectionDecideRoute, async (c) => {
-  //     // Get validated params
-  //     const { userId } = c.req.valid('param');
-  //     const body = c.req.valid('json');
+  /**
+   * (Protected)
+   *
+   * Decide connection request
+   *
+   * @param app
+   */
+  private decideConnectionRequest(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const decideConnectionRequestRoute = createRoute({
+      tags: ['connections'],
+      method: 'post', // use POST (because PUT must be idempotent, and this is not)
+      path: '/api/connections/requests/{fromUserId}/decision',
+      summary: 'Decide connection request',
+      description: 'API endpoint for deciding connection request',
+      request: {
+        params: DecideConnectionReqRequestParamsDto,
+        body: OpenApiRequestFactory.jsonBody(
+          'Decide Connection Request Body',
+          DecideConnectionReqRequestBodyDto
+        ),
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessData(
+          'Connection request decided successfully',
+          DecideConnectionReqResponseBodyDto
+        ),
+        404: OpenApiResponseFactory.jsonNotFound('Connection request not found'),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while deciding connection request'
+        ),
+      },
+    });
 
-  //     try {
-  //       const decisionResult = await this.ConnectionService.decideConnection(
-  //         userId,
-  //         body.requestId,
-  //         userId,
-  //         body.action
-  //       );
+    // Register route
+    app.use(
+      decideConnectionRequestRoute.getRoutingPath(),
+      this.authMiddleware.authorize({ isPublic: false })
+    );
+    app.openapi(decideConnectionRequestRoute, async (c) => {
+      // Get validated params
+      const { fromUserId } = c.req.valid('param');
 
-  //       const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
-  //         'Connection decision processed successfully',
-  //         decisionResult
-  //       );
+      // Get validated body
+      const body = c.req.valid('json');
 
-  //       return c.json(responseDto, 200);
-  //     } catch (e) {
-  //       if (e instanceof BadRequestException) {
-  //         return c.json(e.toResponseDto(), 400);
-  //       }
+      // Get current user ID
+      const currentUserId = c.get('user')!.userId; // assured by auth middleware
 
-  //       const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
-  //       return c.json(responseDto, 500);
-  //     }
-  //   });
-  // }
+      // Call service
+      try {
+        await this.ConnectionService.decideConnectionRequest(
+          currentUserId,
+          fromUserId,
+          body.decision
+        );
+
+        // Map to dto
+        const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          'Connection request decided',
+          null
+        );
+
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+
+        // Other errors
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
 
   // // Get Connection Requested
   // private connectionRequest(app: OpenAPIHono<IGlobalContext>) {

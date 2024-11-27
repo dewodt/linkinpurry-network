@@ -6,7 +6,7 @@ import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import type { PagePaginationResponseMeta } from '@/dto/common';
 import { Database } from '@/infrastructures/database/database';
-import { ConnectionStatus } from '@/utils/enum';
+import { ConnectionRequestDecision, ConnectionStatus } from '@/utils/enum';
 
 import { type IService } from './service';
 
@@ -36,6 +36,12 @@ export interface IConnectionService extends IService {
     }[];
     meta: PagePaginationResponseMeta;
   }>;
+
+  decideConnectionRequest(
+    currentUserId: bigint,
+    fromUserId: bigint,
+    action: ConnectionRequestDecision
+  ): Promise<void>;
 }
 
 /**
@@ -151,32 +157,34 @@ export class ConnectionService implements IConnectionService {
       try {
         // Use transaction
         await this.prisma.$transaction(async (tx) => {
-          // Remove the connection request from connection_request table
-          await tx.connectionRequest.delete({
-            where: {
-              fromId_toId: {
-                fromId: connectionRequest.fromId,
-                toId: connectionRequest.toId,
+          await Promise.all([
+            // Remove the connection request from connection_request table
+            tx.connectionRequest.delete({
+              where: {
+                fromId_toId: {
+                  fromId: connectionRequest.fromId,
+                  toId: connectionRequest.toId,
+                },
               },
-            },
-          });
+            }),
 
-          // Add the connection to the connection table
-          // Note connection is mutual, so we need to create 2 rows
-          await tx.connection.createMany({
-            data: [
-              {
-                fromId: currentUserId,
-                toId: userId,
-                createdAt: new Date(),
-              }, // A -> B
-              {
-                fromId: userId,
-                toId: currentUserId,
-                createdAt: new Date(),
-              }, // B -> A
-            ],
-          });
+            // Add the connection to the connection table
+            // Note connection is mutual, so we need to create 2 rows
+            tx.connection.createMany({
+              data: [
+                {
+                  fromId: currentUserId,
+                  toId: userId,
+                  createdAt: new Date(),
+                }, // A -> B
+                {
+                  fromId: userId,
+                  toId: currentUserId,
+                  createdAt: new Date(),
+                }, // B -> A
+              ],
+            }),
+          ]);
         });
       } catch (error) {
         // Internal server error
@@ -375,87 +383,94 @@ export class ConnectionService implements IConnectionService {
     }
   }
 
-  // async decideConnection(
-  //   userId: bigint,
-  //   fromId: bigint,
-  //   toId: bigint,
-  //   action: 'accept' | 'reject'
-  // ) {
-  //   const prisma = this.database.getPrisma();
+  async decideConnectionRequest(
+    currentUserId: bigint,
+    fromUserId: bigint,
+    action: ConnectionRequestDecision
+  ) {
+    // Get request to current user from fromUserId
+    let connectionRequest: Prisma.ConnectionRequestGetPayload<{}> | null = null;
 
-  //   try {
-  //     logger.info(
-  //       `Processing connection decision: userId=${userId}, fromId=${fromId}, toId=${toId}, action=${action}`
-  //     );
+    try {
+      connectionRequest = await this.prisma.connectionRequest.findFirst({
+        where: {
+          fromId: fromUserId,
+          toId: currentUserId,
+        },
+      });
+    } catch (error) {
+      // Internal server error
+      if (error instanceof Error) logger.error(error.message);
 
-  //     // Fetch the connection request using both fromId and toId
-  //     const connectionRequest = await prisma.connectionRequest.findUnique({
-  //       where: {
-  //         fromId_toId: {
-  //           fromId: fromId,
-  //           toId: toId,
-  //         },
-  //       },
-  //     });
+      throw ExceptionFactory.internalServerError('Failed to check connection request existence');
+    }
 
-  //     if (!connectionRequest) {
-  //       throw ExceptionFactory.badRequest('Connection request not found');
-  //     }
+    // If connection request not found
+    if (!connectionRequest) throw ExceptionFactory.notFound('Connection request not found');
 
-  //     // Ensure the user is part of the request (the user must be the receiver of the request)
-  //     if (connectionRequest.toId !== userId) {
-  //       throw ExceptionFactory.badRequest('Unauthorized to decide on this request');
-  //     }
+    // Perform action based on 'accept' or 'reject'
+    if (action === ConnectionRequestDecision.ACCEPT) {
+      try {
+        // Use transaction
+        await this.prisma.$transaction(async (tx) => {
+          await Promise.all([
+            // Remove the connection request from connection_request table
+            tx.connectionRequest.delete({
+              where: {
+                fromId_toId: {
+                  fromId: fromUserId,
+                  toId: currentUserId,
+                },
+              },
+            }),
 
-  //     // Perform action based on 'accept' or 'reject'
-  //     if (action === 'accept') {
-  //       // Remove the connection request from connection_request table
-  //       await prisma.connectionRequest.delete({
-  //         where: {
-  //           fromId_toId: {
-  //             fromId: fromId,
-  //             toId: toId,
-  //           },
-  //         },
-  //       });
+            // Add the connection to the connection table
+            // Note connection is mutual, so we need to create 2 rows
+            tx.connection.createMany({
+              data: [
+                {
+                  fromId: fromUserId,
+                  toId: currentUserId,
+                  createdAt: new Date(),
+                }, // A -> B
+                {
+                  fromId: currentUserId,
+                  toId: fromUserId,
+                  createdAt: new Date(),
+                }, // B -> A
+              ],
+            }),
+          ]);
+        });
+      } catch (error) {
+        // Internal server error
+        if (error instanceof Error) logger.error(error.message);
 
-  //       // Add the connection to the connection table
-  //       await prisma.connection.create({
-  //         data: {
-  //           fromId: connectionRequest.fromId,
-  //           toId: connectionRequest.toId,
-  //           createdAt: new Date(),
-  //         },
-  //       });
+        throw ExceptionFactory.internalServerError('Failed to accept connection request');
+      }
+    } else if (action === ConnectionRequestDecision.DECLINE) {
+      try {
+        // Remove the connection request from connection_request table
+        await this.prisma.connectionRequest.delete({
+          where: {
+            fromId_toId: {
+              fromId: fromUserId,
+              toId: currentUserId,
+            },
+          },
+        });
+      } catch (error) {
+        // Internal server error
+        if (error instanceof Error) logger.error(error.message);
 
-  //       logger.info('Connection accepted and moved to connection table.');
-  //     } else if (action === 'reject') {
-  //       // Remove the connection request from connection_request table
-  //       await prisma.connectionRequest.delete({
-  //         where: {
-  //           fromId_toId: {
-  //             fromId: fromId,
-  //             toId: toId,
-  //           },
-  //         },
-  //       });
+        throw ExceptionFactory.internalServerError('Failed to decline connection request');
+      }
+    }
+  }
 
-  //       logger.info('Connection rejected and removed from connection_request table.');
-  //     }
-
-  //     // Return response with only requestId and status
-  //     return {
-  //       requestId: connectionRequest.toId.toString(), // Ensure the 'requestId' is correctly retrieved
-  //       status: action === 'accept' ? 'accepted' : 'rejected', // Set status based on action
-  //     };
-  //   } catch (error) {
-  //     if (error instanceof Error) {
-  //       logger.error(`Error in decideConnection: ${error.message}`);
-  //     }
-
-  //     throw ExceptionFactory.internalServerError('Failed to process connection decision');
-  //   }
-  // }
+  /**
+   * Unconnect a user from currentUser
+   */
 
   // /**
   //  * Fetches connection requests sent to a specific user.

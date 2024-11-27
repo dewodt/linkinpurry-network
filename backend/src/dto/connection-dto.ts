@@ -1,6 +1,6 @@
 import { z } from '@hono/zod-openapi';
 
-import { ConnectionStatus } from '@/utils/enum';
+import { ConnectionRequestDecision, ConnectionStatus } from '@/utils/enum';
 import { Utils } from '@/utils/utils';
 
 /**
@@ -153,10 +153,10 @@ export interface IGetConnectionListResponseBodyDto
 /**
  * Accept or Reject Connections DTO
  */
-// Params
-export const AcceptorRejectParamsDto = z.object({
-  userId: z
-    .string({ message: 'userId must be type of string' })
+// Request params
+export const DecideConnectionReqRequestParamsDto = z.object({
+  fromUserId: z
+    .string({ message: 'fromUserId must be type of string' })
     .refine(
       (v) => {
         const { result, isValid } = Utils.parseBigInt(v);
@@ -178,52 +178,41 @@ export const AcceptorRejectParamsDto = z.object({
     }),
 });
 
-export interface IAcceptorRejectParamsDto extends z.infer<typeof AcceptorRejectParamsDto> {}
+export interface IDecideConnectionReqRequestParamsDto
+  extends z.infer<typeof DecideConnectionReqRequestParamsDto> {}
 
-//Request
-export const AcceptorRejectRequestBodyDto = {
-  content: {
-    'application/json': {
-      schema: z.object({
-        action: z.enum(['accept', 'reject']).openapi({
-          description: 'Action to perform on the connection request',
-          example: 'accept',
-        }),
-        requestId: z
-          .number({ message: 'requestId must be a number' }) // Tipe awal adalah number
-          .int() // Pastikan bilangan bulat
-          .transform((v) => {
-            const requestIdBigInt = BigInt(v); // Transform menjadi BigInt
-            if (requestIdBigInt <= 0) {
-              throw new Error('requestId must be a valid big int greater than 0');
-            }
-            return requestIdBigInt;
-          })
-          .openapi({
-            type: 'integer', // OpenAPI mengharapkan integer di request
-            description: 'ID of the connection request',
-            example: 3, // Contoh requestId dalam bentuk integer
-          }),
-      }),
-    },
-  },
-};
-
-// Response
-export const AcceptorRejectResponseBodyDto = z.object({
-  requestId: z.string().openapi({
-    description: 'ID of the connection request',
-    example: '3',
-  }),
-  status: z.string().openapi({
-    description: 'Status of the connection request (e.g., accepted, rejected)',
-    example: 'accepted',
+// Request body
+export const DecideConnectionReqRequestBodyDto = z.object({
+  decision: z.enum([ConnectionRequestDecision.ACCEPT, ConnectionRequestDecision.DECLINE]).openapi({
+    description: 'Decision to accept or reject the connection request',
+    example: ConnectionRequestDecision.ACCEPT,
   }),
 });
 
-export interface IAcceptorRejectResponseBodyDto
-  extends z.infer<typeof AcceptorRejectResponseBodyDto> {}
+export interface IDecideConnectionReqRequestBodyDto
+  extends z.infer<typeof DecideConnectionReqRequestBodyDto> {}
 
+// Response
+export const DecideConnectionReqResponseBodyDto = z.literal(null).openapi({
+  description: 'Decide Connection Request Response',
+});
+
+export type IDecideConnectionReqResponseBodyDto = z.infer<
+  typeof DecideConnectionReqResponseBodyDto
+>;
+
+/**
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
 /**
  * Connection Request DTO (get list of connection request)
  */
