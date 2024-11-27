@@ -14,4 +14,26 @@ export class Utils {
       };
     });
   };
+
+  static getErrorMessagesFromZodParseResult = (zodParseResult: ZodError<any>): string => {
+    return zodParseResult.errors.map((err) => err.message).join(', ');
+  };
+
+  static parseBigInt = (
+    val: string | number
+  ): { isValid: true; result: bigint } | { isValid: false; result: null } => {
+    try {
+      const result = BigInt(val);
+
+      return {
+        isValid: true,
+        result,
+      };
+    } catch {
+      return {
+        isValid: false,
+        result: null,
+      };
+    }
+  };
 }

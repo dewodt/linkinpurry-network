@@ -12,6 +12,7 @@ import type { JWTPayload } from '@/dto/auth-dto';
 import { ResponseDtoFactory } from '@/dto/common';
 import { Database } from '@/infrastructures/database/database';
 import { AuthRoute } from '@/routes/auth-route';
+import { ConnectionRoute } from '@/routes/connection-route';
 import type { IRoute } from '@/routes/route';
 import { UserRoute } from '@/routes/user-route';
 
@@ -44,10 +45,8 @@ export class App {
       defaultHook: (result, c) => {
         if (!result.success) {
           const errorFields = Utils.getErrorFieldsFromZodParseResult(result.error);
-          const responseDto = ResponseDtoFactory.createErrorResponseDto(
-            'Validation Error',
-            errorFields
-          );
+          const message = Utils.getErrorMessagesFromZodParseResult(result.error);
+          const responseDto = ResponseDtoFactory.createErrorResponseDto(message, errorFields);
           return c.json(responseDto, 400);
         }
       },

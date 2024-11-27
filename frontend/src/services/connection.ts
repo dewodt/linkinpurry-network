@@ -1,9 +1,9 @@
 import { api } from '@/lib/api';
 import {
+  ConnectionRequestParams,
+  ConnectionRequestSuccessResponse,
   ListConnectionRequestParams,
   ListConnectionSuccessResponse,
-  ConnectionRequestParams,
-  ConnectionRequestSuccessResponse
 } from '@/types/api/connection';
 
 /**
@@ -14,7 +14,6 @@ export const listConnection = async ({ userId }: ListConnectionRequestParams) =>
   return axiosResponse.data;
 };
 
-
 /**
  * List Connection request
  */
@@ -22,4 +21,3 @@ export const ConnectionRequest = async ({ requestId }: ConnectionRequestParams) 
   const axiosResponse = await api.get<ConnectionRequestSuccessResponse>(`/connection_request/${requestId}`);
   return axiosResponse.data;
 };
-

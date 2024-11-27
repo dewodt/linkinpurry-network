@@ -35,7 +35,7 @@ export interface ConnectionRequestParams {
 // Response
 export interface ConnectionRequestResponseBody {
   requestsList: {
-    userId: string; 
+    userId: string;
     requestId: string;
     username: string;
     name: string;

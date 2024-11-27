@@ -25,7 +25,7 @@ export function ErrorPage({
     <main className={cn('flex min-h-[calc(100vh-4rem)] flex-auto items-center justify-center bg-muted p-6 py-12 sm:p-12 lg:p-24', className)}>
       <section className="flex w-full max-w-md">
         <Card className="w-full justify-center px-9 py-14 shadow-md">
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 text-center">
             {/* Icon */}
             {statusCode === 404 ? (
               <FileQuestion className="size-24 text-muted-foreground" />
@@ -34,8 +34,10 @@ export function ErrorPage({
             )}
 
             {/* Title */}
-            <h1 className="text-3xl font-bold tracking-tight">{statusText}</h1>
-            <p className="text-lg text-muted-foreground">{message}</p>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold tracking-tight">{statusText}</h1>
+              <p className="text-lg text-muted-foreground">{message}</p>
+            </div>
 
             {/* Action button */}
             {statusCode === 404 ? (

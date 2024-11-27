@@ -1,5 +1,50 @@
 import { z } from '@hono/zod-openapi';
-import { type Context } from 'hono';
+
+import { Utils } from '@/utils/utils';
+
+/**
+ * C
+ * Create request connection DTO
+ */
+// Request
+export const CreateConnectionReqRequestBodyDto = z.object({
+  toUserId: z
+    .string({ message: 'userId must be type of string' })
+    .refine(
+      (v) => {
+        const { result, isValid } = Utils.parseBigInt(v);
+        return isValid && result > 0;
+      },
+      { message: 'userId must be type of big int and greater than 0' }
+    )
+    .transform((v) => BigInt(v))
+    // @ts-ignore
+    .openapi({
+      type: 'bigint',
+      param: {
+        name: 'userId',
+        in: 'path',
+        required: true,
+        description: 'User ID to request connection',
+        example: '7',
+      },
+    }),
+});
+
+export interface ICreateConnectionReqRequestBodyDto
+  extends z.infer<typeof CreateConnectionReqRequestBodyDto> {}
+
+// Response
+export const CreateConnectionReqResponseBodyDto = z.object({
+  finalState: z.enum(['PENDING', 'ACCEPTED']).openapi({
+    description:
+      'Final state of the connection request. Accepted if the other user already sent a request to the user, and pending if not.',
+    example: 'PENDING',
+  }),
+});
+
+export interface ICreateConnectionReqResponseBodyDto
+  extends z.infer<typeof CreateConnectionReqResponseBodyDto> {}
 
 /**
  * List Connections DTO
@@ -9,14 +54,14 @@ import { type Context } from 'hono';
 export const ListConnectionsBodyDto = z.object({
   userId: z
     .string({ message: 'userId must be type of string' })
-    .transform((v) => {
-      const userIdBigInt = BigInt(v);
-      // Refine to ensure it's a valid BigInt and greater than 0
-      if (Number.isNaN(userIdBigInt) || userIdBigInt <= 0) {
-        throw new Error('userId must be a valid big int greater than 0');
-      }
-      return userIdBigInt;
-    })
+    .refine(
+      (v) => {
+        const { result, isValid } = Utils.parseBigInt(v);
+        return isValid && result > 0;
+      },
+      { message: 'userId must be type of big int and greater than 0' }
+    )
+    .transform((v) => BigInt(v))
     // @ts-ignore
     .openapi({
       type: 'bigint',
@@ -34,11 +79,12 @@ export interface IListConnectionsBodyDto extends z.infer<typeof ListConnectionsB
 
 // Response
 export const ListConnectionsResponseBodyDto = z.object({
-  connections : z.array(
-    z.object({
-        userID: z.string().openapi({
-            description: 'ID pf the connected user',
-            example: '67890',
+  connections: z
+    .array(
+      z.object({
+        userId: z.string().openapi({
+          description: 'ID pf the connected user',
+          example: '67890',
         }),
         username: z.string().openapi({
           description: 'Username of the user',
@@ -77,13 +123,15 @@ export const ListConnectionsResponseBodyDto = z.object({
                 </ul>      
               `,
           }),
-    }),
-    ).openapi({
-        description: 'List of connections',
+      })
+    )
+    .openapi({
+      description: 'List of connections',
     }),
 });
 
-export interface IListConnectionsResponseBodyDto extends z.infer<typeof ListConnectionsResponseBodyDto> {}
+export interface IListConnectionsResponseBodyDto
+  extends z.infer<typeof ListConnectionsResponseBodyDto> {}
 
 /**
  * Accept or Reject Connections DTO
@@ -91,16 +139,16 @@ export interface IListConnectionsResponseBodyDto extends z.infer<typeof ListConn
 
 // Params
 export const AcceptorRejectParamsDto = z.object({
-    userId: z
+  userId: z
     .string({ message: 'userId must be type of string' })
-    .transform((v) => {
-        const userIdBigInt = BigInt(v);
-        // Refine to ensure it's a valid BigInt and greater than 0
-        if (Number.isNaN(userIdBigInt) || userIdBigInt <= 0) {
-            throw new Error('userId must be a valid big int greater than 0');
-        }
-        return userIdBigInt;
-    })
+    .refine(
+      (v) => {
+        const { result, isValid } = Utils.parseBigInt(v);
+        return isValid && result > 0;
+      },
+      { message: 'userId must be type of big int and greater than 0' }
+    )
+    .transform((v) => BigInt(v))
     // @ts-ignore
     .openapi({
       type: 'bigint',
@@ -115,58 +163,50 @@ export const AcceptorRejectParamsDto = z.object({
 });
 
 export interface IAcceptorRejectParamsDto extends z.infer<typeof AcceptorRejectParamsDto> {}
-                                              
+
 //Request
 export const AcceptorRejectRequestBodyDto = {
-    content: {
-      'application/json': {
-        schema: z.object({
-          action: z
-            .enum(['accept', 'reject'])
-            .openapi({
-              description: 'Action to perform on the connection request',
-              example: 'accept',
-            }),
-          requestId: z
-            .number({ message: 'requestId must be a number' }) // Tipe awal adalah number
-            .int() // Pastikan bilangan bulat
-            .transform((v) => {
-                const requestIdBigInt = BigInt(v); // Transform menjadi BigInt
-                if (requestIdBigInt <= 0) {
-                throw new Error('requestId must be a valid big int greater than 0');
-                }
-                return requestIdBigInt;
-            })
-            .openapi({
-                type: 'integer', // OpenAPI mengharapkan integer di request
-                description: 'ID of the connection request',
-                example: 3, // Contoh requestId dalam bentuk integer
-            }),
+  content: {
+    'application/json': {
+      schema: z.object({
+        action: z.enum(['accept', 'reject']).openapi({
+          description: 'Action to perform on the connection request',
+          example: 'accept',
         }),
-      },
+        requestId: z
+          .number({ message: 'requestId must be a number' }) // Tipe awal adalah number
+          .int() // Pastikan bilangan bulat
+          .transform((v) => {
+            const requestIdBigInt = BigInt(v); // Transform menjadi BigInt
+            if (requestIdBigInt <= 0) {
+              throw new Error('requestId must be a valid big int greater than 0');
+            }
+            return requestIdBigInt;
+          })
+          .openapi({
+            type: 'integer', // OpenAPI mengharapkan integer di request
+            description: 'ID of the connection request',
+            example: 3, // Contoh requestId dalam bentuk integer
+          }),
+      }),
     },
-  };
-  
-
+  },
+};
 
 // Response
-export const  AcceptorRejectResponseBodyDto = z.object({
-    requestId: z
-        .string()
-        .openapi({
-            description: 'ID of the connection request',
-            example: '3',
-        }),
-    status: z
-    .string()
-    .openapi({
-        description: 'Status of the connection request (e.g., accepted, rejected)',
-        example: 'accepted',
-    }),
-
+export const AcceptorRejectResponseBodyDto = z.object({
+  requestId: z.string().openapi({
+    description: 'ID of the connection request',
+    example: '3',
+  }),
+  status: z.string().openapi({
+    description: 'Status of the connection request (e.g., accepted, rejected)',
+    example: 'accepted',
+  }),
 });
 
-export interface IAcceptorRejectResponseBodyDto extends z.infer<typeof AcceptorRejectResponseBodyDto> {}
+export interface IAcceptorRejectResponseBodyDto
+  extends z.infer<typeof AcceptorRejectResponseBodyDto> {}
 
 /**
  * Connection Request DTO (get list of connection request)
@@ -176,14 +216,14 @@ export interface IAcceptorRejectResponseBodyDto extends z.infer<typeof AcceptorR
 export const RequestConnectionBodyDTO = z.object({
   userId: z
     .string({ message: 'userId must be type of string' })
-    .transform((v) => {
-      const userIdBigInt = BigInt(v);
-      // Refine to ensure it's a valid BigInt and greater than 0
-      if (Number.isNaN(userIdBigInt) || userIdBigInt <= 0) {
-        throw new Error('userId must be a valid big int greater than 0');
-      }
-      return userIdBigInt;
-    })
+    .refine(
+      (v) => {
+        const { result, isValid } = Utils.parseBigInt(v);
+        return isValid && result > 0;
+      },
+      { message: 'userId must be type of big int and greater than 0' }
+    )
+    .transform((v) => BigInt(v))
     // @ts-ignore
     .openapi({
       type: 'bigint',

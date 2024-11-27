@@ -1,6 +1,7 @@
 import { z } from '@hono/zod-openapi';
 
 import { AVATAR_MAX_SIZE } from '@/utils/constants';
+import { Utils } from '@/utils/utils';
 
 /**
  * R
@@ -33,8 +34,14 @@ export const userIdRequestParamsDto = z.object({
   // cannot use coerce + bigint in zod + openapi, must manually transform + refine
   userId: z
     .string({ message: 'userId must be type of string' })
+    .refine(
+      (v) => {
+        const { result, isValid } = Utils.parseBigInt(v);
+        return isValid && result > 0;
+      },
+      { message: 'userId must be type of big int and greater than 0' }
+    )
     .transform((v) => BigInt(v))
-    .refine((v) => !Number.isNaN(v) && v > 0, { message: 'userId must be type of big int' })
     // @ts-ignore
     .openapi({
       type: 'bigint',
@@ -43,7 +50,7 @@ export const userIdRequestParamsDto = z.object({
         in: 'path',
         required: true,
         description: 'User ID to get the profile',
-        example: 7,
+        example: '7',
       },
     }),
 });
