@@ -15,7 +15,7 @@ import { cn, formatDate } from '@/lib/utils';
 import { getProfile } from '@/services/user';
 import { GetProfileErrorResponse, GetProfileSuccessResponse } from '@/types/api/user';
 
-export const Route = createFileRoute('/users/$userId/')({
+export const Route = createFileRoute('/users/$userId')({
   component: RouteComponent,
 });
 
@@ -38,7 +38,14 @@ function RouteComponent() {
   if (isPendingProfile) return <LoadingPage />;
 
   if (isErrorProfile)
-    return <ErrorPage statusText={errorProfile.response?.statusText} message={errorProfile?.response?.data.message} refetch={refetch} />;
+    return (
+      <ErrorPage
+        statusCode={errorProfile?.response?.status}
+        statusText={errorProfile.response?.statusText}
+        message={errorProfile?.response?.data.message}
+        refetch={refetch}
+      />
+    );
 
   return (
     <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
