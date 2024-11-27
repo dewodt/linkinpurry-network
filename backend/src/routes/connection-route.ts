@@ -21,6 +21,8 @@ import {
   type ICreateConnectionReqResponseBodyDto,
   type IGetConnectionListResponseBodyDto,
   type IGetPendingConnectionReqResponseBodyDto,
+  UnconnectRequestParamsDto,
+  UnconnectResponseBodyDto,
 } from '@/dto/connection-dto';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { ConnectionService } from '@/services/connection-service';
@@ -62,6 +64,7 @@ export class ConnectionRoute implements IRoute {
     this.decideConnectionRequest(app);
 
     // Unconnect user
+    this.unconnectUser(app);
   }
 
   /**
@@ -377,6 +380,69 @@ export class ConnectionRoute implements IRoute {
 
   /**
    * (Protected)
+   *
+   * Unconnect user
+   *
+   * @param app
    */
-  private unconnectUser(app: OpenAPIHono<IGlobalContext>) {}
+  private unconnectUser(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const unconnectUserRoute = createRoute({
+      tags: ['connections'],
+      method: 'delete',
+      path: '/api/connections/{toUserId}',
+      summary: 'Unconnect user',
+      description: 'API endpoint for unconnecting user',
+      request: {
+        params: UnconnectRequestParamsDto,
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessData(
+          'User unconnected successfully',
+          UnconnectResponseBodyDto
+        ),
+        400: OpenApiResponseFactory.jsonBadRequest('Invalid fields | unconnect self'),
+        404: OpenApiResponseFactory.jsonNotFound('Connection not found'),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while unconnecting user'
+        ),
+      },
+    });
+
+    // Register route
+    app.use(
+      unconnectUserRoute.getRoutingPath(),
+      this.authMiddleware.authorize({ isPublic: false })
+    );
+
+    app.openapi(unconnectUserRoute, async (c) => {
+      // Get validated params
+      const { toUserId } = c.req.valid('param');
+
+      // Get current user ID
+      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+
+      // Call service
+      try {
+        await this.ConnectionService.unconnectUser(currentUserId, toUserId);
+
+        // Map to dto
+        const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          'User unconnected successfully',
+          null
+        );
+
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof BadRequestException) return c.json(e.toResponseDto(), 400);
+        else if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+
+        // Other errors
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
 }

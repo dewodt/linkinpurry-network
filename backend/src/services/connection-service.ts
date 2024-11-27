@@ -487,6 +487,10 @@ export class ConnectionService implements IConnectionService {
     fromUserId: bigint,
     action: ConnectionRequestDecision
   ) {
+    // Check if the user is trying to accept/reject to themselves
+    if (currentUserId === fromUserId)
+      throw ExceptionFactory.badRequest('You cannot accept/reject to yourself');
+
     // Get request to current user from fromUserId
     let connectionRequest: Prisma.ConnectionRequestGetPayload<{}> | null = null;
 
@@ -604,7 +608,7 @@ export class ConnectionService implements IConnectionService {
       throw ExceptionFactory.internalServerError('Failed to check connection existence');
     }
 
-    if (!isConnectionExist) throw ExceptionFactory.badRequest('Connection not found');
+    if (!isConnectionExist) throw ExceptionFactory.notFound('Connection not found');
 
     // Remove the connection
     try {

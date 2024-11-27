@@ -245,3 +245,36 @@ export const DecideConnectionReqResponseBodyDto = z.literal(null).openapi({
 export type IDecideConnectionReqResponseBodyDto = z.infer<
   typeof DecideConnectionReqResponseBodyDto
 >;
+
+/**
+ * Unconnect DTO
+ */
+// Request params
+export const UnconnectRequestParamsDto = z.object({
+  toUserId: z
+    .string({ message: 'toUserId must be type of string' })
+    .refine((v) => Utils.parseBigIntId(v).isValid, {
+      message: 'toUserId must be type of big int and greater than 0',
+    })
+    .transform((v) => BigInt(v))
+    // @ts-ignore
+    .openapi({
+      type: 'bigint',
+      param: {
+        name: 'toUserId',
+        in: 'path',
+        required: true,
+        description: 'User ID to get the profile',
+        example: 1,
+      },
+    }),
+});
+
+export interface IUnconnectRequestParamsDto extends z.infer<typeof UnconnectRequestParamsDto> {}
+
+// Response
+export const UnconnectResponseBodyDto = z.literal(null).openapi({
+  description: 'Unconnect Response',
+});
+
+export type IUnconnectResponseBodyDto = z.infer<typeof UnconnectResponseBodyDto>;
