@@ -15,7 +15,7 @@ import { cn, formatDate } from '@/lib/utils';
 import { getProfile } from '@/services/user';
 import { GetProfileErrorResponse, GetProfileSuccessResponse } from '@/types/api/user';
 
-export const Route = createFileRoute('/users/$userId')({
+export const Route = createFileRoute('/users/$userId/')({
   component: RouteComponent,
 });
 

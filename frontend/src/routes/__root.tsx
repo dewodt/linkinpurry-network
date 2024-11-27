@@ -5,7 +5,6 @@ import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 // @ts-expect-error - babel resolver
 import * as React from 'react';
 
-import { Toaster } from '@/components/ui/sonner';
 import { SessionProvider } from '@/context/session-provider';
 import { ThemeProvider } from '@/context/theme-provider';
 import RootLayout from '@/layouts/root-layout';
@@ -19,14 +18,12 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <>
-      {/* Root layouting */}
+      {/* Register providers + root layout */}
       <QueryClientProvider client={queryClient}>
         <SessionProvider>
           <ThemeProvider defaultTheme="light" storageKey="linkinpurry-theme">
             <RootLayout>
               <Outlet />
-
-              <Toaster closeButton richColors theme="light" />
             </RootLayout>
           </ThemeProvider>
         </SessionProvider>
