@@ -10,9 +10,9 @@ import { Route as AuthImport } from './routes/_auth';
 import { Route as AuthAuthLoginImport } from './routes/_auth/auth/login';
 import { Route as AuthAuthRegisterImport } from './routes/_auth/auth/register';
 import { Route as IndexImport } from './routes/index';
-import { Route as MyNetworksUserIdImport } from './routes/my-networks/$userId';
-import { Route as MyNetworksConnectinRequestUserIdImport } from './routes/my-networks/connectin-request/$userId';
-import { Route as UsersUserIdImport } from './routes/users/$userId';
+import { Route as MyNetworkIndexImport } from './routes/my-network/index';
+import { Route as UsersUserIdConnectionsIndexImport } from './routes/users/$userId/connections/index';
+import { Route as UsersUserIdIndexImport } from './routes/users/$userId/index';
 
 // Create/Update Routes
 
@@ -27,21 +27,15 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any);
 
-const UsersUserIdRoute = UsersUserIdImport.update({
-  id: '/users/$userId',
-  path: '/users/$userId',
+const MyNetworkIndexRoute = MyNetworkIndexImport.update({
+  id: '/my-network/',
+  path: '/my-network/',
   getParentRoute: () => rootRoute,
 } as any);
 
-const MyNetworksUserIdRoute = MyNetworksUserIdImport.update({
-  id: '/my-networks/$userId',
-  path: '/my-networks/$userId',
-  getParentRoute: () => rootRoute,
-} as any);
-
-const MyNetworksConnectinRequestUserIdRoute = MyNetworksConnectinRequestUserIdImport.update({
-  id: '/my-networks/connectin-request/$userId',
-  path: '/my-networks/connectin-request/$userId',
+const UsersUserIdIndexRoute = UsersUserIdIndexImport.update({
+  id: '/users/$userId/',
+  path: '/users/$userId/',
   getParentRoute: () => rootRoute,
 } as any);
 
@@ -55,6 +49,12 @@ const AuthAuthLoginRoute = AuthAuthLoginImport.update({
   id: '/auth/login',
   path: '/auth/login',
   getParentRoute: () => AuthRoute,
+} as any);
+
+const UsersUserIdConnectionsIndexRoute = UsersUserIdConnectionsIndexImport.update({
+  id: '/users/$userId/connections/',
+  path: '/users/$userId/connections/',
+  getParentRoute: () => rootRoute,
 } as any);
 
 // Populate the FileRoutesByPath interface
@@ -75,18 +75,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthImport;
       parentRoute: typeof rootRoute;
     };
-    '/my-networks/$userId': {
-      id: '/my-networks/$userId';
-      path: '/my-networks/$userId';
-      fullPath: '/my-networks/$userId';
-      preLoaderRoute: typeof MyNetworksUserIdImport;
-      parentRoute: typeof rootRoute;
-    };
-    '/users/$userId': {
-      id: '/users/$userId';
-      path: '/users/$userId';
-      fullPath: '/users/$userId';
-      preLoaderRoute: typeof UsersUserIdImport;
+    '/my-network/': {
+      id: '/my-network/';
+      path: '/my-network';
+      fullPath: '/my-network';
+      preLoaderRoute: typeof MyNetworkIndexImport;
       parentRoute: typeof rootRoute;
     };
     '/_auth/auth/login': {
@@ -103,11 +96,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAuthRegisterImport;
       parentRoute: typeof AuthImport;
     };
-    '/my-networks/connectin-request/$userId': {
-      id: '/my-networks/connectin-request/$userId';
-      path: '/my-networks/connectin-request/$userId';
-      fullPath: '/my-networks/connectin-request/$userId';
-      preLoaderRoute: typeof MyNetworksConnectinRequestUserIdImport;
+    '/users/$userId/': {
+      id: '/users/$userId/';
+      path: '/users/$userId';
+      fullPath: '/users/$userId';
+      preLoaderRoute: typeof UsersUserIdIndexImport;
+      parentRoute: typeof rootRoute;
+    };
+    '/users/$userId/connections/': {
+      id: '/users/$userId/connections/';
+      path: '/users/$userId/connections';
+      fullPath: '/users/$userId/connections';
+      preLoaderRoute: typeof UsersUserIdConnectionsIndexImport;
       parentRoute: typeof rootRoute;
     };
   }
@@ -130,65 +130,57 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren);
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '': typeof AuthRouteWithChildren;
-  '/my-networks/$userId': typeof MyNetworksUserIdRoute;
-  '/users/$userId': typeof UsersUserIdRoute;
+  '/my-network': typeof MyNetworkIndexRoute;
   '/auth/login': typeof AuthAuthLoginRoute;
   '/auth/register': typeof AuthAuthRegisterRoute;
-  '/my-networks/connectin-request/$userId': typeof MyNetworksConnectinRequestUserIdRoute;
+  '/users/$userId': typeof UsersUserIdIndexRoute;
+  '/users/$userId/connections': typeof UsersUserIdConnectionsIndexRoute;
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '': typeof AuthRouteWithChildren;
-  '/my-networks/$userId': typeof MyNetworksUserIdRoute;
-  '/users/$userId': typeof UsersUserIdRoute;
+  '/my-network': typeof MyNetworkIndexRoute;
   '/auth/login': typeof AuthAuthLoginRoute;
   '/auth/register': typeof AuthAuthRegisterRoute;
-  '/my-networks/connectin-request/$userId': typeof MyNetworksConnectinRequestUserIdRoute;
+  '/users/$userId': typeof UsersUserIdIndexRoute;
+  '/users/$userId/connections': typeof UsersUserIdConnectionsIndexRoute;
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute;
   '/': typeof IndexRoute;
   '/_auth': typeof AuthRouteWithChildren;
-  '/my-networks/$userId': typeof MyNetworksUserIdRoute;
-  '/users/$userId': typeof UsersUserIdRoute;
+  '/my-network/': typeof MyNetworkIndexRoute;
   '/_auth/auth/login': typeof AuthAuthLoginRoute;
   '/_auth/auth/register': typeof AuthAuthRegisterRoute;
-  '/my-networks/connectin-request/$userId': typeof MyNetworksConnectinRequestUserIdRoute;
+  '/users/$userId/': typeof UsersUserIdIndexRoute;
+  '/users/$userId/connections/': typeof UsersUserIdConnectionsIndexRoute;
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '' | '/my-networks/$userId' | '/users/$userId' | '/auth/login' | '/auth/register' | '/my-networks/connectin-request/$userId';
+  fullPaths: '/' | '' | '/my-network' | '/auth/login' | '/auth/register' | '/users/$userId' | '/users/$userId/connections';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '' | '/my-networks/$userId' | '/users/$userId' | '/auth/login' | '/auth/register' | '/my-networks/connectin-request/$userId';
-  id:
-    | '__root__'
-    | '/'
-    | '/_auth'
-    | '/my-networks/$userId'
-    | '/users/$userId'
-    | '/_auth/auth/login'
-    | '/_auth/auth/register'
-    | '/my-networks/connectin-request/$userId';
+  to: '/' | '' | '/my-network' | '/auth/login' | '/auth/register' | '/users/$userId' | '/users/$userId/connections';
+  id: '__root__' | '/' | '/_auth' | '/my-network/' | '/_auth/auth/login' | '/_auth/auth/register' | '/users/$userId/' | '/users/$userId/connections/';
   fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AuthRoute: typeof AuthRouteWithChildren;
-  MyNetworksUserIdRoute: typeof MyNetworksUserIdRoute;
-  UsersUserIdRoute: typeof UsersUserIdRoute;
-  MyNetworksConnectinRequestUserIdRoute: typeof MyNetworksConnectinRequestUserIdRoute;
+  MyNetworkIndexRoute: typeof MyNetworkIndexRoute;
+  UsersUserIdIndexRoute: typeof UsersUserIdIndexRoute;
+  UsersUserIdConnectionsIndexRoute: typeof UsersUserIdConnectionsIndexRoute;
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
-  MyNetworksUserIdRoute: MyNetworksUserIdRoute,
-  UsersUserIdRoute: UsersUserIdRoute,
-  MyNetworksConnectinRequestUserIdRoute: MyNetworksConnectinRequestUserIdRoute,
+  MyNetworkIndexRoute: MyNetworkIndexRoute,
+  UsersUserIdIndexRoute: UsersUserIdIndexRoute,
+  UsersUserIdConnectionsIndexRoute: UsersUserIdConnectionsIndexRoute,
 };
 
 export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>();
@@ -201,9 +193,9 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
       "children": [
         "/",
         "/_auth",
-        "/my-networks/$userId",
-        "/users/$userId",
-        "/my-networks/connectin-request/$userId"
+        "/my-network/",
+        "/users/$userId/",
+        "/users/$userId/connections/"
       ]
     },
     "/": {
@@ -216,11 +208,8 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
         "/_auth/auth/register"
       ]
     },
-    "/my-networks/$userId": {
-      "filePath": "my-networks/$userId.tsx"
-    },
-    "/users/$userId": {
-      "filePath": "users/$userId.tsx"
+    "/my-network/": {
+      "filePath": "my-network/index.tsx"
     },
     "/_auth/auth/login": {
       "filePath": "_auth/auth/login.tsx",
@@ -230,8 +219,11 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
       "filePath": "_auth/auth/register.tsx",
       "parent": "/_auth"
     },
-    "/my-networks/connectin-request/$userId": {
-      "filePath": "my-networks/connectin-request/$userId.tsx"
+    "/users/$userId/": {
+      "filePath": "users/$userId/index.tsx"
+    },
+    "/users/$userId/connections/": {
+      "filePath": "users/$userId/connections/index.tsx"
     }
   }
 }

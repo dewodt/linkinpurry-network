@@ -27,7 +27,7 @@ const EditProfileDialog = ({ children, initialData }: EditProfileDialogProps) =>
   const [open, setIsOpen] = React.useState(false);
 
   // hooks
-  const { userId } = useParams({ from: '/users/$userId' });
+  const { userId } = useParams({ from: '/users/$userId/' });
   const queryClient = useQueryClient();
   const { updateSession } = useSession();
 

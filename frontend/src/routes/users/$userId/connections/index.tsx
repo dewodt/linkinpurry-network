@@ -1,13 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-router';
-import { Ellipsis, SearchIcon, UserCircle2 } from 'lucide-react';
+import { Link, createFileRoute, useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import { Clock4, Ellipsis, SearchIcon, UserCircle2 } from 'lucide-react';
+import { useDebouncedCallback } from 'use-debounce';
 
 import * as React from 'react';
 
+import { LinkedInTrashIcon } from '@/components/icons/linkedin-icons';
 import { ErrorPage } from '@/components/shared/error-page';
 import { LoadingPage } from '@/components/shared/loading-page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Pagination,
@@ -18,6 +21,8 @@ import {
   PaginationNumber,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import { useSession } from '@/hooks/use-session';
+import { ConnectionStatus } from '@/lib/enum';
 import { getConnectionsRequestQuery } from '@/lib/schemas/connection';
 import { getConnectionLists } from '@/services/connection';
 import { GetConnectionsErrorResponse, GetConnectionsSuccessResponse } from '@/types/api/connection';
@@ -28,6 +33,10 @@ export const Route = createFileRoute('/users/$userId/connections/')({
 });
 
 function RouteComponent() {
+  // hooks
+  const navigate = useNavigate();
+  const { session } = useSession();
+
   // path params
   const { userId } = useParams({ from: '/users/$userId/connections/' });
 
@@ -36,6 +45,16 @@ function RouteComponent() {
     from: '/users/$userId/connections/',
   });
 
+  // states
+  const [searchInput, setSearchInput] = React.useState(search);
+
+  // debounced for automatic submit
+  const debouncedSearchCallback = useDebouncedCallback(
+    (val: string) => navigate({ to: '/users/$userId/connections', params: { userId }, search: { search: val, page: 1 } }), // reset page to 1
+    500,
+  );
+
+  // Query
   const {
     data: connections,
     isPending: isPendingConnections,
@@ -46,6 +65,17 @@ function RouteComponent() {
     queryKey: ['users', userId, 'connections', search, page, limit],
     queryFn: () => getConnectionLists({ userId }, { search, page, limit }),
   });
+
+  // Handlers
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    // prevent blink
+    e.preventDefault();
+  };
+
+  // Everytime query params change, reset scroll state (page, limit, search)
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [search, page, limit]);
 
   if (isPendingConnections) return <LoadingPage />;
 
@@ -73,10 +103,7 @@ function RouteComponent() {
 
             {/* Search input */}
             <search>
-              <form
-                className="relative flex flex-1 sm:max-w-64"
-                // onSubmit={handleFormSubmit}
-              >
+              <form className="relative flex flex-1 sm:max-w-64" onSubmit={handleFormSubmit}>
                 <label htmlFor="search-connection" className="sr-only"></label>
                 <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -84,8 +111,11 @@ function RouteComponent() {
                   id="search-connection"
                   placeholder="Search connection"
                   className="h-8 bg-muted pl-9 text-xs"
-                  // value={searchQuery}
-                  // onChange={(e) => setSearchQuery(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => {
+                    setSearchInput(e.target.value);
+                    debouncedSearchCallback(e.target.value);
+                  }}
                 />
               </form>
             </search>
@@ -97,14 +127,14 @@ function RouteComponent() {
         <div>
           {connections.meta.totalItems === 0 ? (
             <div className="flex min-h-64 items-center justify-center p-5">
-              <p className="text-muted-foreground">No connections exists</p>
+              <p className="text-lg text-muted-foreground">No connections exists</p>
             </div>
           ) : (
             <ol>
               {connections.data.map((con) => {
                 return (
-                  <li className="flex flex-row items-center gap-3 border-b border-border px-5 py-4 sm:gap-5">
-                    <Link to={`/users/${con.user_id}`} className="flex flex-auto flex-row items-center gap-3.5">
+                  <li className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5">
+                    <Link to="/users/$userId" params={{ userId: con.user_id }} className="flex flex-auto flex-row items-center gap-3.5">
                       {/* Avatar */}
                       <Avatar className="size-14">
                         <AvatarImage src={con.profile_photo} alt={`${con.name}'s profile picture`} />
@@ -119,20 +149,61 @@ function RouteComponent() {
                       </div>
                     </Link>
 
-                    <div className="flex flex-row items-center gap-3">
-                      {/* Message */}
-                      <Button
-                        className="hidden h-8 rounded-full border-primary font-bold text-primary hover:text-primary sm:block"
-                        variant={'outline'}
-                        size={'sm'}
-                      >
-                        Message
-                      </Button>
+                    {/* TODO: Message logic */}
+                    <div className="flex flex-row items-center gap-2 self-end sm:self-auto">
+                      {session &&
+                        session.userId !== con.user_id &&
+                        (con.connection_status === ConnectionStatus.NONE ? (
+                          <Button
+                            className="h-8 rounded-full border-primary font-bold text-primary hover:text-primary"
+                            variant={'outline'}
+                            size={'sm'}
+                          >
+                            Connect
+                          </Button>
+                        ) : con.connection_status === ConnectionStatus.PENDING ? (
+                          <Button
+                            className="h-8 gap-1.5 rounded-full border-muted-foreground font-bold text-muted-foreground hover:text-muted-foreground"
+                            disabled
+                            variant={'outline'}
+                            size={'sm'}
+                          >
+                            <Clock4 className="size-4" />
+                            Pending
+                          </Button>
+                        ) : (
+                          // TODO: Connect message logic
+                          <Button
+                            className="h-8 rounded-full border-primary font-bold text-primary hover:text-primary"
+                            variant={'outline'}
+                            size={'sm'}
+                          >
+                            Message
+                          </Button>
+                        ))}
 
                       {/* Dropdown actions */}
-                      <Button size="icon" variant="ghost" className="rounded-full text-muted-foreground">
-                        <Ellipsis className="size-5" />
-                      </Button>
+                      {session && session.userId !== con.user_id && con.connection_status === ConnectionStatus.ACCEPTED && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="rounded-full text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+                            >
+                              <Ellipsis className="size-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+
+                          <DropdownMenuContent align="end">
+                            {/* Unconnect */}
+                            <DropdownMenuItem className="text-muted-foreground focus:text-muted-foreground">
+                              <LinkedInTrashIcon className="size-5 text-muted-foreground" />
+                              <span>Remove connection</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </li>
                 );
@@ -147,15 +218,15 @@ function RouteComponent() {
         {/* 1 ... 3 4 5 ... 10 */}
         {/* 1 ... 6 7 8 9 10 */}
         {connections.meta.totalItems > 0 && (
-          <div className="px-5 pb-5 pt-4">
+          <div className="p-5">
             <Pagination>
-              <PaginationContent className="gap-2">
+              <PaginationContent className="flex-wrap gap-2">
                 <PaginationItem>
                   <PaginationPrevious
                     to="/users/$userId/connections"
                     disabled={connections.meta.page === 1}
                     params={{ userId }}
-                    search={{ page: connections.meta.page - 1, limit: connections.meta.limit, search }}
+                    search={{ page: connections.meta.page - 1, limit, search }}
                   />
                 </PaginationItem>
 
@@ -165,7 +236,7 @@ function RouteComponent() {
                 </PaginationItem>
 
                 {/* Desktop */}
-                {connections.meta.totalPages < 7 ? (
+                {connections.meta.totalPages < 8 ? (
                   // Fill as many as possible
                   <>
                     {Array.from({ length: connections.meta.totalPages }).map((_, idx) => {
@@ -175,7 +246,7 @@ function RouteComponent() {
                             to="/users/$userId/connections"
                             isActive={connections.meta.page === idx + 1}
                             params={{ userId }}
-                            search={{ page: idx + 1, limit: connections.meta.limit, search }}
+                            search={{ page: idx + 1, limit, search }}
                           >
                             {idx + 1}
                           </PaginationNumber>
@@ -193,7 +264,7 @@ function RouteComponent() {
                             to="/users/$userId/connections"
                             isActive={connections.meta.page === idx + 1}
                             params={{ userId }}
-                            search={{ page: idx + 1, limit: connections.meta.limit, search }}
+                            search={{ page: idx + 1, limit, search }}
                           >
                             {idx + 1}
                           </PaginationNumber>
@@ -201,14 +272,14 @@ function RouteComponent() {
                       );
                     })}
 
-                    <PaginationEllipsis />
+                    <PaginationEllipsis className="hidden md:flex" />
 
                     <PaginationItem className="hidden md:block">
                       <PaginationNumber
                         to="/users/$userId/connections"
                         isActive={connections.meta.page === connections.meta.totalPages}
                         params={{ userId }}
-                        search={{ page: connections.meta.totalPages, limit: connections.meta.limit, search }}
+                        search={{ page: connections.meta.totalPages, limit, search }}
                       >
                         {connections.meta.totalPages}
                       </PaginationNumber>
@@ -222,25 +293,25 @@ function RouteComponent() {
                         to="/users/$userId/connections"
                         isActive={connections.meta.page === 1}
                         params={{ userId }}
-                        search={{ page: 1, limit: connections.meta.limit, search }}
+                        search={{ page: 1, limit, search }}
                       >
                         1
                       </PaginationNumber>
                     </PaginationItem>
 
-                    <PaginationEllipsis />
+                    <PaginationEllipsis className="hidden md:flex" />
 
                     {Array.from({ length: 5 }).map((_, idx) => {
-                      const pg = connections.meta.page + idx + 1;
+                      const pg = connections.meta.totalPages - 5 + 1 + idx;
                       return (
                         <PaginationItem key={idx} className="hidden md:block">
                           <PaginationNumber
                             to="/users/$userId/connections"
                             isActive={connections.meta.page === pg}
                             params={{ userId }}
-                            search={{ page: connections.meta.page + pg, limit: connections.meta.limit, search }}
+                            search={{ page: pg, limit, search }}
                           >
-                            {connections.meta.page + pg}
+                            {pg}
                           </PaginationNumber>
                         </PaginationItem>
                       );
@@ -255,31 +326,32 @@ function RouteComponent() {
                         to="/users/$userId/connections"
                         isActive={connections.meta.page === 1}
                         params={{ userId }}
-                        search={{ page: 1, limit: connections.meta.limit, search }}
+                        search={{ page: 1, limit, search }}
                       >
                         1
                       </PaginationNumber>
                     </PaginationItem>
 
-                    <PaginationEllipsis />
+                    <PaginationEllipsis className="hidden md:flex" />
 
                     {/* Page n-4 elements */}
                     {Array.from({ length: 7 - 4 }).map((_, idx) => {
+                      const pg = connections.meta.page - 2 + idx + 1;
                       return (
                         <PaginationItem key={idx} className="hidden md:block">
                           <PaginationNumber
                             to="/users/$userId/connections"
-                            isActive={connections.meta.page === idx + 1}
+                            isActive={connections.meta.page === pg}
                             params={{ userId }}
-                            search={{ page: idx + connections.meta.page - 2, limit: connections.meta.limit, search }}
+                            search={{ page: pg, limit, search }}
                           >
-                            {idx + connections.meta.page - 2}
+                            {pg}
                           </PaginationNumber>
                         </PaginationItem>
                       );
                     })}
 
-                    <PaginationEllipsis />
+                    <PaginationEllipsis className="hidden md:flex" />
 
                     {/* Last page elements */}
                     <PaginationItem className="hidden md:block">
@@ -287,7 +359,7 @@ function RouteComponent() {
                         to="/users/$userId/connections"
                         isActive={connections.meta.page === connections.meta.totalPages}
                         params={{ userId }}
-                        search={{ page: connections.meta.totalPages, limit: connections.meta.limit, search }}
+                        search={{ page: connections.meta.totalPages, limit, search }}
                       >
                         {connections.meta.totalPages}
                       </PaginationNumber>
@@ -299,7 +371,7 @@ function RouteComponent() {
                   <PaginationNext
                     to="/users/$userId/connections"
                     params={{ userId }}
-                    search={{ page: connections.meta.page + 1, limit: connections.meta.limit, search }}
+                    search={{ page: connections.meta.page + 1, limit, search }}
                     disabled={connections.meta.page === connections.meta.totalPages}
                   />
                 </PaginationItem>

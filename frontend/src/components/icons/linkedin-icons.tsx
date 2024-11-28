@@ -116,3 +116,20 @@ export function LinkedInFindUserIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function LinkedInTrashIcon({ className }: IconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      id="trash-medium"
+      aria-hidden="true"
+      role="none"
+      data-supported-dps="24x24"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M20 4v1H4V4a1 1 0 011-1h4a1 1 0 011-1h4a1 1 0 011 1h4a1 1 0 011 1zM5 6h14v13a3 3 0 01-3 3H8a3 3 0 01-3-3zm9 12h1V8h-1zm-5 0h1V8H9z"></path>
+    </svg>
+  );
+}
