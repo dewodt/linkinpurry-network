@@ -57,7 +57,7 @@ export class Database {
      * *
      */
     logger.info('Creating users');
-    const totalUsers = 80;
+    const totalUsers = 400;
     const users: Prisma.UserCreateManyInput[] = [];
     const hashedPassword = await bcrypt.hash('Password1!', 10);
 
@@ -115,7 +115,7 @@ export class Database {
 
     for (let i = 0; i < totalUsers; i++) {
       // Connection
-      const endJ = Math.floor(totalUsers / 2);
+      const endJ = Math.floor((totalUsers * 3) / 4);
       for (let j = i + 1; j < endJ; j++) {
         const date = faker.date.recent();
         const id1 = i + 1;
@@ -160,33 +160,48 @@ export class Database {
     logger.info('Creating chats');
     const totalChatsPerConnectedUser = 50;
     const chats: Prisma.ChatCreateManyInput[] = [];
-    for (const connection of connections) {
-      for (let j = 0; j < totalChatsPerConnectedUser; j++) {
-        chats.push({
-          fromId: connection.fromId,
-          toId: connection.toId,
-          message: faker.lorem.sentence(),
-          timestamp: faker.date.recent(),
-        });
-      }
-    }
+    // for (const connection of connections) {
+    //   for (let j = 0; j < totalChatsPerConnectedUser; j++) {
+    //     chats.push({
+    //       fromId: connection.fromId,
+    //       toId: connection.toId,
+    //       message: faker.lorem.sentence(),
+    //       timestamp: faker.date.recent(),
+    //     });
+    //   }
+    // }
 
     logger.info('Seeding database');
-    await this.prisma.$transaction([
-      // Delete all data
-      this.prisma.chat.deleteMany({}),
-      this.prisma.connection.deleteMany({}),
-      this.prisma.connectionRequest.deleteMany({}),
-      this.prisma.feed.deleteMany({}),
-      this.prisma.user.deleteMany({}),
+    await this.prisma.$transaction(
+      async (tx) => {
+        // Delete all
+        await tx.chat.deleteMany({});
+        await tx.connection.deleteMany({});
+        await tx.connectionRequest.deleteMany({});
+        await tx.feed.deleteMany({});
+        await tx.user.deleteMany({});
 
-      // Create data
-      this.prisma.user.createMany({ data: users }),
-      this.prisma.feed.createMany({ data: feeds }),
-      this.prisma.connection.createMany({ data: connections }),
-      this.prisma.connectionRequest.createMany({ data: connectionRequests }),
-      this.prisma.chat.createMany({ data: chats }),
-    ]);
+        // Create meny
+        await tx.user.createMany({ data: users });
+        await tx.feed.createMany({ data: feeds });
+        await tx.connection.createMany({ data: connections });
+        await tx.connectionRequest.createMany({ data: connectionRequests });
+        await tx.chat.createMany({ data: chats });
+
+        // Update users_id_seq
+        await tx.$executeRaw`
+          SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
+      `;
+
+        // Update feeds_id_seq
+        await tx.$executeRaw`
+          SELECT setval(pg_get_serial_sequence('feed', 'id'), (SELECT MAX(id) FROM feed));
+      `;
+      },
+      {
+        timeout: 120 * 1000,
+      }
+    );
     logger.info('Seeding database done');
   }
 }

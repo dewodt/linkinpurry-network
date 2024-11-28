@@ -72,30 +72,25 @@ export interface IGetConnectionListRequestParamsDto
 
 // Enhancement: Create using pagination also
 // Request query
-export const GetConnectionListRequestQueryDto = z.object({
-  search: z.string({ message: 'search must be type of string' }).optional().openapi({
-    description: 'Search query for filtering connections',
-    example: 'John Doe',
-  }),
-  page: z.coerce
-    .number({ message: 'page must be type of number' })
-    .int({ message: 'page must be an integer' })
-    .gte(1, { message: 'page must be greater than or equal to 1' })
-    .default(1)
-    .openapi({
+export const GetConnectionListRequestQueryDto = z
+  .object({
+    search: z.string({ message: 'search must be type of string' }).optional().openapi({
+      description: 'Search query for filtering connections',
+      example: 'John Doe',
+    }),
+    page: z.string({ message: 'page must be type of string' }).optional().openapi({
       description: 'Page number for pagination',
-      example: 1,
+      example: '1',
     }),
-  limit: z.coerce
-    .number({ message: 'limit must be type of number' })
-    .int({ message: 'limit must be an integer' })
-    .gte(1, { message: 'limit must be greater than or equal to 1' })
-    .default(15)
-    .openapi({
+    limit: z.string({ message: 'limit must be type of string' }).optional().openapi({
       description: 'Limit for pagination',
-      example: 15,
+      example: '15',
     }),
-});
+  })
+  .transform(({ page, limit, search }) => ({
+    search,
+    ...Utils.parsePagePagination({ page, limit }),
+  }));
 
 export interface IGetConnectionListRequestQueryDto
   extends z.infer<typeof GetConnectionListRequestQueryDto> {}
@@ -146,26 +141,18 @@ export interface IGetConnectionListResponseBodyDto
  * Get pending connection requests DTO
  */
 // Request query  (pagination)
-export const GetPendingConnectionReqRequestQueryDto = z.object({
-  page: z.coerce
-    .number({ message: 'page must be type of number' })
-    .int({ message: 'page must be an integer' })
-    .gte(1, { message: 'page must be greater than or equal to 1' })
-    .default(1)
-    .openapi({
+export const GetPendingConnectionReqRequestQueryDto = z
+  .object({
+    page: z.string({ message: 'page must be type of string' }).optional().openapi({
       description: 'Page number for pagination',
-      example: 1,
+      example: '1',
     }),
-  limit: z.coerce
-    .number({ message: 'limit must be type of number' })
-    .int({ message: 'limit must be an integer' })
-    .gte(1, { message: 'limit must be greater than or equal to 1' })
-    .default(15)
-    .openapi({
+    limit: z.string({ message: 'limit must be type of string' }).optional().openapi({
       description: 'Limit for pagination',
-      example: 15,
+      example: '15',
     }),
-});
+  })
+  .transform(({ page, limit }) => Utils.parsePagePagination({ page, limit }));
 
 // Response
 export const GetPendingConnectionReqResponseBodyDto = z.array(

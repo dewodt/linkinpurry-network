@@ -15,7 +15,7 @@ import { cn, formatDate } from '@/lib/utils';
 import { getProfile } from '@/services/user';
 import { GetProfileErrorResponse, GetProfileSuccessResponse } from '@/types/api/user';
 
-export const Route = createFileRoute('/users/$userId')({
+export const Route = createFileRoute('/users/$userId/')({
   component: RouteComponent,
 });
 
@@ -79,7 +79,7 @@ function RouteComponent() {
             <p className="text-base font-medium text-muted-foreground">@{profile.data.username}</p>
 
             {/* Connection count */}
-            <Link to={`/my-networks/${userId}`} className="text-sm font-semibold text-primary decoration-2 underline-offset-2 hover:underline">
+            <Link to={`/users/${userId}/connections`} className="text-sm font-semibold text-primary decoration-2 underline-offset-2 hover:underline">
               {profile.data.connection_count > 500 ? '500+ connections' : `${profile.data.connection_count} connections`}
             </Link>
           </div>

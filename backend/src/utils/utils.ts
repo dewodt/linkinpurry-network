@@ -44,28 +44,31 @@ export class Utils {
     }
   };
 
-  static parsePagePagination = (
-    val: string
-  ): { isValid: true; result: number } | { isValid: false; result: null } => {
-    try {
-      const result = parseInt(val);
-      const isValid = result > 0n;
+  /**
+   * If number is valid & > 0 , return number. Else return default value
+   * @param val
+   * @returns
+   */
+  static parsePagePagination = ({
+    page,
+    limit,
+    defaultPage = 1,
+    defaultLimit = 15,
+  }: {
+    page: string | undefined;
+    limit: string | undefined;
+    defaultPage?: number;
+    defaultLimit?: number;
+  }) => {
+    const pageResult = isNaN(Number(page)) || Number(page) <= 0 ? defaultPage : Number(page);
+    const limitResult =
+      isNaN(Number(limit)) || Number(limit) <= 0 || Number(limit) > 50 // upperboundary for limit
+        ? defaultLimit
+        : Number(limit);
 
-      if (!isValid)
-        return {
-          isValid: false,
-          result: null,
-        };
-
-      return {
-        isValid: true,
-        result,
-      };
-    } catch {
-      return {
-        isValid: false,
-        result: null,
-      };
-    }
+    return {
+      page: pageResult,
+      limit: limitResult,
+    };
   };
 }

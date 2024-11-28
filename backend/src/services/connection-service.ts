@@ -285,8 +285,12 @@ export class ConnectionService implements IConnectionService {
         },
       });
 
+      // Empty, early return
+      if (totalItems === 0)
+        return { connections: [], meta: { page, limit, totalItems, totalPages: 0 } };
+
       // Validate upper bound of page
-      let totalPages = Math.ceil(totalItems / limit);
+      const totalPages = Math.ceil(totalItems / limit);
       if (page > totalPages) page = totalPages;
 
       const rawConnections = await this.prisma.connection.findMany({
@@ -416,8 +420,12 @@ export class ConnectionService implements IConnectionService {
         },
       });
 
+      // Empty, early return
+      if (totalItems === 0)
+        return { requests: [], meta: { page, limit, totalItems, totalPages: 0 } };
+
       // Validate upper bound of page
-      let totalPages = Math.ceil(totalItems / limit);
+      const totalPages = Math.ceil(totalItems / limit);
       if (page > totalPages) page = totalPages;
 
       // Get all pending connection request to current user (paginated)
