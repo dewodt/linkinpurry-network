@@ -53,15 +53,10 @@ export function UnConnectDialog({
       toast.dismiss();
       toast.success('Success', { description: data.message });
 
-      // invalidateQueries() is much easier than setQueryData() for pagination data
-
       // current user
       // the connection list + number of conn changes
       queryClient.invalidateQueries({
-        queryKey: ['users', session?.userId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['users', session?.userId, 'connections'],
+        queryKey: ['users', session?.userId], // prefix
       });
 
       // the seen user page (to change to connect again)
@@ -76,10 +71,7 @@ export function UnConnectDialog({
       // the connected user (if fetched before)
       // the connection list + number of conn changes
       queryClient.invalidateQueries({
-        queryKey: ['users', unConnectToUserId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['users', unConnectToUserId, 'connections'],
+        queryKey: ['users', unConnectToUserId], // prefix
       });
     },
   });
@@ -91,14 +83,14 @@ export function UnConnectDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Unconnect to {unConnectToUsername}</DialogTitle>
-          <DialogDescription>You will have to reconnect to {unConnectToUsername} to see their posts and chat with them.</DialogDescription>
+          <DialogTitle>Remove Connection</DialogTitle>
+          <DialogDescription>Are you sure you want to remove {unConnectToUsername} from your network?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button
             type="button"
-            className="gap-1.5 rounded-full border-muted-foreground px-4 font-bold text-muted-foreground hover:text-muted-foreground"
-            variant="outline"
+            className="rounded-full font-bold"
+            variant="outline-muted"
             size="sm"
             onClick={() => {
               setUnConnectOpen(false);
@@ -108,15 +100,8 @@ export function UnConnectDialog({
             Cancel
           </Button>
 
-          <Button
-            type="button"
-            variant="destructive"
-            className="rounded-full px-4 font-bold"
-            size="sm"
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-          >
-            Unconnect
+          <Button type="button" className="rounded-full font-bold" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            Remove
           </Button>
         </DialogFooter>
       </DialogContent>

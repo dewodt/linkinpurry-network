@@ -155,31 +155,18 @@ function RouteComponent() {
                         session.userId !== con.user_id &&
                         (con.connection_status === ConnectionStatus.NONE ? (
                           <ConnectDialog currentSeenUserId={userId} connectToUserId={con.user_id} connectToUsername={con.username}>
-                            <Button
-                              className="h-8 rounded-full border-primary font-bold text-primary hover:text-primary"
-                              variant={'outline'}
-                              size={'sm'}
-                            >
+                            <Button className="rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
                               Connect
                             </Button>
                           </ConnectDialog>
                         ) : con.connection_status === ConnectionStatus.PENDING ? (
-                          <Button
-                            className="h-8 gap-1.5 rounded-full border-muted-foreground font-bold text-muted-foreground hover:text-muted-foreground"
-                            disabled
-                            variant={'outline'}
-                            size={'sm'}
-                          >
+                          <Button className="gap-1.5 rounded-full font-bold" variant={'ghost'} size={'xs'} disabled>
                             <Clock4 className="size-4" />
                             Pending
                           </Button>
                         ) : (
                           // TODO: Connect message logic
-                          <Button
-                            className="h-8 rounded-full border-primary font-bold text-primary hover:text-primary"
-                            variant={'outline'}
-                            size={'sm'}
-                          >
+                          <Button className="rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
                             Message
                           </Button>
                         ))}
@@ -188,7 +175,7 @@ function RouteComponent() {
                       {session && session.userId !== con.user_id && con.connection_status === ConnectionStatus.ACCEPTED && (
                         <UnConnectDropdown unConnectToUserId={con.user_id} unConnectToUsername={con.username} currentSeenUserId={userId}>
                           <Button
-                            size="icon"
+                            size="icon-xs"
                             variant="ghost"
                             className="rounded-full text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
                           >

@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
+import { useSearch } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 import React from 'react';
@@ -6,31 +7,38 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useSession } from '@/hooks/use-session';
+import { ConnectionRequestDecision } from '@/lib/enum';
 import { queryClient } from '@/lib/query';
-import { connectUser } from '@/services/connection';
-import { ConnectUserErrorResponse, ConnectUserSuccessResponse } from '@/types/api/connection';
+import { toTitleCase } from '@/lib/utils';
+import { decideConnection } from '@/services/connection';
+import { DecideConnectionReqErrorResponse, DecideConnectionReqSuccessResponse } from '@/types/api/connection';
 
-interface ConnectDialogProps {
+interface DecideDialogProps {
   children: React.ReactNode;
 
+  // types
+  type: ConnectionRequestDecision;
+
   // user data
-  currentSeenUserId?: string | undefined;
-  connectToUserId: string;
-  connectToUsername: string;
+  decideToUserId: string;
+  decideToUsername: string;
 }
-export function ConnectDialog({ children, currentSeenUserId, connectToUserId, connectToUsername }: ConnectDialogProps) {
+
+export function DecideDialog({ children, decideToUserId, decideToUsername, type }: DecideDialogProps) {
   // hooks
   const { session } = useSession();
 
+  const { page } = useSearch({ from: '/my-network/grow/' });
+
   // states
-  const [connectOpen, setConnectOpen] = React.useState(false);
+  const [decideOpen, setDecideOpen] = React.useState(false);
 
   // Mutation hooks for connect
-  const mutation = useMutation<ConnectUserSuccessResponse, ConnectUserErrorResponse>({
-    mutationFn: async () => connectUser({ toUserId: connectToUserId }),
+  const mutation = useMutation<DecideConnectionReqSuccessResponse, DecideConnectionReqErrorResponse>({
+    mutationFn: async () => decideConnection({ fromUserId: decideToUserId }, { decision: type }),
     onMutate: () => {
       toast.loading('Loading...', { description: 'Please wait', duration: Infinity });
-      setConnectOpen(false);
+      setDecideOpen(false);
     },
     onError: (error) => {
       toast.dismiss();
@@ -46,40 +54,38 @@ export function ConnectDialog({ children, currentSeenUserId, connectToUserId, co
         queryKey: ['users', session?.userId], // prefix
       });
 
-      // the seen user (to change from connect to message)
-      if (currentSeenUserId) {
-        // defined for the connections list page,
-        // undefined for the profile page (handled by the next section)
-        queryClient.invalidateQueries({
-          queryKey: ['users', currentSeenUserId, 'connections'],
-        });
-      }
-
       // the connected user (if fetched before)
       // the connection list + number of conn changes
       queryClient.invalidateQueries({
-        queryKey: ['users', connectToUserId], // prefix
+        queryKey: ['users', decideToUserId],
+      });
+
+      // revalidate the query at that exact filter
+      queryClient.invalidateQueries({
+        queryKey: ['my-networks', page], // prefix
       });
     },
   });
 
   return (
-    <Dialog open={connectOpen} onOpenChange={setConnectOpen}>
+    <Dialog open={decideOpen} onOpenChange={setDecideOpen}>
       <DialogTrigger asChild disabled={mutation.isPending}>
         {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Request Connection</DialogTitle>
-          <DialogDescription>Connect to {connectToUsername} to see their posts and chat with them.</DialogDescription>
+          <DialogTitle>Decide Connection Request</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to {type} {decideToUsername}?
+          </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button type="button" className="rounded-full font-bold" variant="outline-muted" size="sm" onClick={() => setConnectOpen(false)}>
+        <DialogFooter className="pt-1">
+          <Button type="button" className="rounded-full font-bold" variant="outline-muted" size="sm" onClick={() => setDecideOpen(false)}>
             Cancel
           </Button>
 
           <Button type="button" className="rounded-full font-bold" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-            Connect
+            {toTitleCase(type)}
           </Button>
         </DialogFooter>
       </DialogContent>

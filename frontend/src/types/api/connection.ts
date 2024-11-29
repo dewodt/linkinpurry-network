@@ -47,15 +47,17 @@ export type GetConnectionsErrorResponse = AxiosErrorResponse;
  */
 export type GetConnectionReqsRequestQuery = z.infer<typeof getConnectionReqsRequestQuery>;
 
-export type GetConnectionReqsResponseBody = Array<{
+export type GetConnectionReqsResponseBody = {
   user_id: string;
   username: string;
   name: string;
   profile_photo: string;
   work_history: string | null;
-}>;
+};
 
 export type GetConnectionReqsSuccessResponse = SuccessPagePaginationResponse<GetConnectionReqsResponseBody>;
+
+export type GetConnectionReqsErrorResponse = AxiosErrorResponse;
 
 /**
  * Decide connection request

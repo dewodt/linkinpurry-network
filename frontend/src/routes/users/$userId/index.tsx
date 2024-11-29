@@ -97,31 +97,30 @@ function RouteComponent() {
             session.userId !== userId &&
             (profile.data.connection_status === ConnectionStatus.NONE ? (
               <ConnectDialog connectToUserId={userId} connectToUsername={profile.data.username}>
-                <Button className="h-8 gap-1.5 rounded-full font-bold" size="sm">
+                <Button className="gap-1.5 rounded-full font-bold" size="xs">
                   <LinkedInConnectIcon className="size-4" />
                   Connect
                 </Button>
               </ConnectDialog>
             ) : profile.data.connection_status === ConnectionStatus.PENDING ? (
-              <Button
-                className="h-8 gap-1.5 rounded-full font-bold disabled:border-muted-foreground disabled:text-muted-foreground disabled:opacity-100 disabled:hover:text-muted-foreground"
-                variant="outline"
-                size="sm"
-                disabled
-              >
+              <Button className="gap-1.5 rounded-full font-bold" variant="outline-muted" size="xs" disabled>
                 <LinkedInClockIcon className="size-4" />
                 Pending
               </Button>
             ) : (
               <div className="flex flex-row items-center gap-2">
                 {/* Message */}
-                <Button className="rounded-full px-5 font-semibold" size="sm">
+                <Button className="rounded-full px-5 font-bold" size="xs">
                   Message
                 </Button>
 
                 {/* More (for unconenct) */}
                 <UnConnectDropdown unConnectToUserId={userId} unConnectToUsername={profile.data.username}>
-                  <Button size="icon" variant="ghost" className="rounded-full text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0">
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    className="rounded-full text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+                  >
                     <Ellipsis className="size-5" />
                   </Button>
                 </UnConnectDropdown>

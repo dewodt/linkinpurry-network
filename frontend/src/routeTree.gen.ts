@@ -10,7 +10,7 @@ import { Route as AuthImport } from './routes/_auth';
 import { Route as AuthAuthLoginImport } from './routes/_auth/auth/login';
 import { Route as AuthAuthRegisterImport } from './routes/_auth/auth/register';
 import { Route as IndexImport } from './routes/index';
-import { Route as MyNetworkIndexImport } from './routes/my-network/index';
+import { Route as MyNetworkGrowIndexImport } from './routes/my-network/grow/index';
 import { Route as UsersUserIdConnectionsIndexImport } from './routes/users/$userId/connections/index';
 import { Route as UsersUserIdIndexImport } from './routes/users/$userId/index';
 
@@ -27,15 +27,15 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any);
 
-const MyNetworkIndexRoute = MyNetworkIndexImport.update({
-  id: '/my-network/',
-  path: '/my-network/',
-  getParentRoute: () => rootRoute,
-} as any);
-
 const UsersUserIdIndexRoute = UsersUserIdIndexImport.update({
   id: '/users/$userId/',
   path: '/users/$userId/',
+  getParentRoute: () => rootRoute,
+} as any);
+
+const MyNetworkGrowIndexRoute = MyNetworkGrowIndexImport.update({
+  id: '/my-network/grow/',
+  path: '/my-network/grow/',
   getParentRoute: () => rootRoute,
 } as any);
 
@@ -75,13 +75,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthImport;
       parentRoute: typeof rootRoute;
     };
-    '/my-network/': {
-      id: '/my-network/';
-      path: '/my-network';
-      fullPath: '/my-network';
-      preLoaderRoute: typeof MyNetworkIndexImport;
-      parentRoute: typeof rootRoute;
-    };
     '/_auth/auth/login': {
       id: '/_auth/auth/login';
       path: '/auth/login';
@@ -95,6 +88,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/register';
       preLoaderRoute: typeof AuthAuthRegisterImport;
       parentRoute: typeof AuthImport;
+    };
+    '/my-network/grow/': {
+      id: '/my-network/grow/';
+      path: '/my-network/grow';
+      fullPath: '/my-network/grow';
+      preLoaderRoute: typeof MyNetworkGrowIndexImport;
+      parentRoute: typeof rootRoute;
     };
     '/users/$userId/': {
       id: '/users/$userId/';
@@ -130,9 +130,9 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren);
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '': typeof AuthRouteWithChildren;
-  '/my-network': typeof MyNetworkIndexRoute;
   '/auth/login': typeof AuthAuthLoginRoute;
   '/auth/register': typeof AuthAuthRegisterRoute;
+  '/my-network/grow': typeof MyNetworkGrowIndexRoute;
   '/users/$userId': typeof UsersUserIdIndexRoute;
   '/users/$userId/connections': typeof UsersUserIdConnectionsIndexRoute;
 }
@@ -140,9 +140,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '': typeof AuthRouteWithChildren;
-  '/my-network': typeof MyNetworkIndexRoute;
   '/auth/login': typeof AuthAuthLoginRoute;
   '/auth/register': typeof AuthAuthRegisterRoute;
+  '/my-network/grow': typeof MyNetworkGrowIndexRoute;
   '/users/$userId': typeof UsersUserIdIndexRoute;
   '/users/$userId/connections': typeof UsersUserIdConnectionsIndexRoute;
 }
@@ -151,26 +151,34 @@ export interface FileRoutesById {
   __root__: typeof rootRoute;
   '/': typeof IndexRoute;
   '/_auth': typeof AuthRouteWithChildren;
-  '/my-network/': typeof MyNetworkIndexRoute;
   '/_auth/auth/login': typeof AuthAuthLoginRoute;
   '/_auth/auth/register': typeof AuthAuthRegisterRoute;
+  '/my-network/grow/': typeof MyNetworkGrowIndexRoute;
   '/users/$userId/': typeof UsersUserIdIndexRoute;
   '/users/$userId/connections/': typeof UsersUserIdConnectionsIndexRoute;
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '' | '/my-network' | '/auth/login' | '/auth/register' | '/users/$userId' | '/users/$userId/connections';
+  fullPaths: '/' | '' | '/auth/login' | '/auth/register' | '/my-network/grow' | '/users/$userId' | '/users/$userId/connections';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '' | '/my-network' | '/auth/login' | '/auth/register' | '/users/$userId' | '/users/$userId/connections';
-  id: '__root__' | '/' | '/_auth' | '/my-network/' | '/_auth/auth/login' | '/_auth/auth/register' | '/users/$userId/' | '/users/$userId/connections/';
+  to: '/' | '' | '/auth/login' | '/auth/register' | '/my-network/grow' | '/users/$userId' | '/users/$userId/connections';
+  id:
+    | '__root__'
+    | '/'
+    | '/_auth'
+    | '/_auth/auth/login'
+    | '/_auth/auth/register'
+    | '/my-network/grow/'
+    | '/users/$userId/'
+    | '/users/$userId/connections/';
   fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AuthRoute: typeof AuthRouteWithChildren;
-  MyNetworkIndexRoute: typeof MyNetworkIndexRoute;
+  MyNetworkGrowIndexRoute: typeof MyNetworkGrowIndexRoute;
   UsersUserIdIndexRoute: typeof UsersUserIdIndexRoute;
   UsersUserIdConnectionsIndexRoute: typeof UsersUserIdConnectionsIndexRoute;
 }
@@ -178,7 +186,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
-  MyNetworkIndexRoute: MyNetworkIndexRoute,
+  MyNetworkGrowIndexRoute: MyNetworkGrowIndexRoute,
   UsersUserIdIndexRoute: UsersUserIdIndexRoute,
   UsersUserIdConnectionsIndexRoute: UsersUserIdConnectionsIndexRoute,
 };
@@ -193,7 +201,7 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
       "children": [
         "/",
         "/_auth",
-        "/my-network/",
+        "/my-network/grow/",
         "/users/$userId/",
         "/users/$userId/connections/"
       ]
@@ -208,9 +216,6 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
         "/_auth/auth/register"
       ]
     },
-    "/my-network/": {
-      "filePath": "my-network/index.tsx"
-    },
     "/_auth/auth/login": {
       "filePath": "_auth/auth/login.tsx",
       "parent": "/_auth"
@@ -218,6 +223,9 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
     "/_auth/auth/register": {
       "filePath": "_auth/auth/register.tsx",
       "parent": "/_auth"
+    },
+    "/my-network/grow/": {
+      "filePath": "my-network/grow/index.tsx"
     },
     "/users/$userId/": {
       "filePath": "users/$userId/index.tsx"

@@ -104,7 +104,7 @@ export const Navbar = () => {
                 </li>
 
                 <li>
-                  <NavLink href="/my-networks" icon={LinkedInNetworkIcon}>
+                  <NavLink href="/my-network/grow" icon={LinkedInNetworkIcon}>
                     My Networks
                   </NavLink>
                 </li>
