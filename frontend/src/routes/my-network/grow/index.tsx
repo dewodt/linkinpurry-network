@@ -6,6 +6,7 @@ import * as React from 'react';
 
 import { DecideDialog } from '@/components/connections/decide-dialog';
 import { ErrorFill } from '@/components/shared/error-fill';
+import { HelmetTemplate } from '@/components/shared/helmet';
 import { LoadingFill } from '@/components/shared/loading-fill';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,8 @@ function RouteComponent() {
 
   return (
     <AuthGuardLayout level="authenticated-only">
+      {isSuccessConnections && <HelmetTemplate title={`${connections.meta.totalItems} Pending Connections | LinkinPurry`} />}
+
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
         <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-md">
           {/* Header */}
