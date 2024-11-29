@@ -104,7 +104,7 @@ export const Navbar = () => {
                 </li>
 
                 <li>
-                  <NavLink href="/my-networks" icon={LinkedInNetworkIcon}>
+                  <NavLink href="/my-network/grow" icon={LinkedInNetworkIcon}>
                     My Networks
                   </NavLink>
                 </li>
@@ -281,7 +281,7 @@ function UserDropdown({ session }: { session: Session }) {
     <DropdownMenu open={open} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger className="flex flex-col items-center gap-[1px] focus:outline-none">
         <Avatar className="size-8 md:size-6">
-          <AvatarImage src={session.avatarUrl} alt="Profile picture" />
+          <AvatarImage src={session.profilePhoto} alt="Profile picture" />
           <AvatarFallback>
             <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
           </AvatarFallback>
@@ -297,7 +297,7 @@ function UserDropdown({ session }: { session: Session }) {
         <DropdownMenuGroup>
           <div className="flex items-center gap-3 p-3">
             <Avatar className="size-14">
-              <AvatarImage src={session.avatarUrl} alt="Profile picture" />
+              <AvatarImage src={session.profilePhoto} alt="Profile picture" />
               <AvatarFallback>
                 <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
               </AvatarFallback>
@@ -309,7 +309,7 @@ function UserDropdown({ session }: { session: Session }) {
             </div>
           </div>
 
-          <Link to={`/users/${session.userId}`}>
+          <Link to="/users/$userId" params={{ userId: session.userId }}>
             <div className="mt-1 flex w-full px-3.5">
               <Button variant="secondary" size={'sm'} className="flex-auto">
                 View Profile

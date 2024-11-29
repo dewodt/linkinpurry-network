@@ -24,6 +24,9 @@ fe-dev:
 fe-prod:
 	docker compose --env-file ./frontend/.env.docker up --build linkinpurry-fe-prod
 
+seeder:
+	docker compose --env-file ./backend/.env.docker up --build linkinpurry-seeder
+
 stop-be-dev:
 	docker stop linkinpurry-be-dev
 	docker rm linkinpurry-be-dev

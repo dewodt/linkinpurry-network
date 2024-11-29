@@ -1,51 +1,86 @@
-import { AxiosErrorResponse, SuccessResponse } from './common';
+import { z } from 'zod';
+
+import { ConnectionRequestDecision, ConnectionStatus } from '@/lib/enum';
+import { getConnectionReqsRequestQuery, getConnectionsRequestQuery } from '@/lib/schemas/connection';
+
+import { AxiosErrorResponse, SuccessPagePaginationResponse, SuccessResponse } from './common';
 
 /**
- * List Connection
+ * Connect to a user
  */
-// Params
-export interface ListConnectionRequestParams {
+export interface ConnectUserRequestBody {
+  toUserId: string;
+}
+
+export interface ConnectUserResponseBody {
+  finalState: ConnectionStatus.ACCEPTED | ConnectionStatus.PENDING;
+}
+
+export type ConnectUserSuccessResponse = SuccessResponse<ConnectUserResponseBody>;
+
+export type ConnectUserErrorResponse = AxiosErrorResponse;
+
+/**
+ * Get connection lists
+ */
+export interface GetConnectionsRequestParams {
   userId: string;
 }
 
-// Response
-export interface ListConnectionResponseBody {
-  connections: {
-    userID: string; // ID of the connected user
-    username: string;
-    name: string;
-    profile_photo: string;
-    is_connected: boolean;
-    work_history: string | null;
-    skills: string | null;
-  }[];
+export type GetConnectionsRequestQuery = z.infer<typeof getConnectionsRequestQuery>;
+
+export interface GetConnectionsResponseBody {
+  user_id: string;
+  username: string;
+  name: string;
+  profile_photo: string;
+  work_history: string | null;
+  connection_status: ConnectionStatus;
 }
 
-export type ListConnectionSuccessResponse = SuccessResponse<ListConnectionResponseBody>;
+export type GetConnectionsSuccessResponse = SuccessPagePaginationResponse<GetConnectionsResponseBody>;
 
-export type ListConnectionErrorResponse = AxiosErrorResponse;
+export type GetConnectionsErrorResponse = AxiosErrorResponse;
+
 /**
- * List of Requested Connection
+ * Get conneciton requests
  */
-// Params
-export interface ConnectionRequestParams {
-  requestId: string;
+export type GetConnectionReqsRequestQuery = z.infer<typeof getConnectionReqsRequestQuery>;
+
+export type GetConnectionReqsResponseBody = {
+  user_id: string;
+  username: string;
+  name: string;
+  profile_photo: string;
+  work_history: string | null;
+};
+
+export type GetConnectionReqsSuccessResponse = SuccessPagePaginationResponse<GetConnectionReqsResponseBody>;
+
+export type GetConnectionReqsErrorResponse = AxiosErrorResponse;
+
+/**
+ * Decide connection request
+ */
+export interface DecideConnectionReqRequestParams {
+  fromUserId: string;
 }
 
-// Response
-export interface ConnectionRequestResponseBody {
-  requestsList: {
-    userId: string; 
-    requestId: string;
-    username: string;
-    name: string;
-    profile_photo: string;
-    is_connected: boolean;
-    work_history: string | null;
-    skills: string | null;
-  }[];
+export interface DecideConnectionReqRequestBody {
+  decision: ConnectionRequestDecision;
 }
 
-export type ConnectionRequestSuccessResponse = SuccessResponse<ConnectionRequestResponseBody>;
+export type DecideConnectionReqSuccessResponse = SuccessResponse<null>;
 
-export type ConnectionRequestErrorResponse = AxiosErrorResponse;
+export type DecideConnectionReqErrorResponse = AxiosErrorResponse;
+
+/**
+ * Unconnect to a user
+ */
+export interface UnConnectUserRequestParams {
+  toUserId: string;
+}
+
+export type UnConnectUserSuccessResponse = SuccessResponse<null>;
+
+export type UnConnectUserErrorResponse = AxiosErrorResponse;

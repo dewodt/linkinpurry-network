@@ -35,7 +35,14 @@ export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
     }
 
     if (isErrorSession && errorSession?.response?.status !== 401) {
-      return <ErrorPage statusText={errorSession?.response?.statusText} message={errorSession?.response?.data.message} refetch={refetchSession} />;
+      return (
+        <ErrorPage
+          statusCode={errorSession?.response?.status}
+          statusText={errorSession?.response?.statusText}
+          message={errorSession?.response?.data.message}
+          refetch={refetchSession}
+        />
+      );
     }
 
     if (isSuccessSession && session) {
@@ -47,7 +54,14 @@ export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
     }
 
     if (isErrorSession && errorSession?.response?.status !== 401) {
-      return <ErrorPage statusText={errorSession?.response?.statusText} message={errorSession?.response?.data.message} refetch={refetchSession} />;
+      return (
+        <ErrorPage
+          statusCode={errorSession?.response?.status}
+          statusText={errorSession?.response?.statusText}
+          message={errorSession?.response?.data.message}
+          refetch={refetchSession}
+        />
+      );
     }
 
     if (isErrorSession && errorSession?.response?.status === 401) {

@@ -17,16 +17,16 @@ type BaseResponseDto = z.infer<typeof zodBaseResponseDto>;
 /**
  * Base paginated success response
  */
-const zodBasePaginationResponseMetaDto = z.object({
+const zodBasePaginationResponseMeta = z.object({
   limit: z.number().openapi({
     description: 'Number of items per page',
     example: 10,
   }),
 });
 
-type BasePaginationResponseMetaDto = z.infer<typeof zodBasePaginationResponseMetaDto>;
+type BasePaginationResponseMeta = z.infer<typeof zodBasePaginationResponseMeta>;
 
-export const zodPagePaginationResponseMetaDto = zodBasePaginationResponseMetaDto.extend({
+export const zodPagePaginationResponseMeta = zodBasePaginationResponseMeta.extend({
   page: z.number().openapi({
     description: 'Current page number',
     example: 1,
@@ -41,9 +41,9 @@ export const zodPagePaginationResponseMetaDto = zodBasePaginationResponseMetaDto
   }),
 });
 
-export type PagePaginationResponseMetaDto = z.infer<typeof zodPagePaginationResponseMetaDto>;
+export type PagePaginationResponseMeta = z.infer<typeof zodPagePaginationResponseMeta>;
 
-export const zodOffsetPaginationResponseMetaDto = zodBasePaginationResponseMetaDto.extend({
+export const zodOffsetPaginationResponseMeta = zodBasePaginationResponseMeta.extend({
   offset: z.number().openapi({
     description: 'Offset of the first item in the current page',
     example: 0,
@@ -54,9 +54,9 @@ export const zodOffsetPaginationResponseMetaDto = zodBasePaginationResponseMetaD
   }),
 });
 
-export type OffsetPaginationResponseMetaDto = z.infer<typeof zodOffsetPaginationResponseMetaDto>;
+export type OffsetPaginationResponseMeta = z.infer<typeof zodOffsetPaginationResponseMeta>;
 
-export const zodCursorPaginationResponseMetaDto = zodBasePaginationResponseMetaDto.extend({
+export const zodCursorPaginationResponseMeta = zodBasePaginationResponseMeta.extend({
   cursor: z.string().nullable().openapi({
     description: 'Cursor for the next page',
     example: '1',
@@ -67,7 +67,7 @@ export const zodCursorPaginationResponseMetaDto = zodBasePaginationResponseMetaD
   }), // null for the last page
 });
 
-export type CursorPaginationResponseMetaDto = z.infer<typeof zodCursorPaginationResponseMetaDto>;
+export type CursorPaginationResponseMeta = z.infer<typeof zodCursorPaginationResponseMeta>;
 
 /**
  * Non-paginated success response
@@ -80,14 +80,14 @@ export interface SuccessResponseDto<T> extends BaseResponseDto {
 /**
  * Page pagination success response
  */
-interface SuccessPaginationResponseDto<T, M extends BasePaginationResponseMetaDto>
+interface SuccessPaginationResponseDto<T, M extends BasePaginationResponseMeta>
   extends SuccessResponseDto<T[]> {
   meta: M;
 }
 
 export type SuccessPagePaginationResponseDto<T> = SuccessPaginationResponseDto<
   T,
-  PagePaginationResponseMetaDto
+  PagePaginationResponseMeta
 >;
 
 /**
@@ -95,7 +95,7 @@ export type SuccessPagePaginationResponseDto<T> = SuccessPaginationResponseDto<
  */
 export type SuccessOffsetPaginationResponseDto<T> = SuccessPaginationResponseDto<
   T,
-  OffsetPaginationResponseMetaDto
+  OffsetPaginationResponseMeta
 >;
 
 /**
@@ -103,7 +103,7 @@ export type SuccessOffsetPaginationResponseDto<T> = SuccessPaginationResponseDto
  */
 export type SuccessCursorPaginationResponseDto<T> = SuccessPaginationResponseDto<
   T,
-  CursorPaginationResponseMetaDto
+  CursorPaginationResponseMeta
 >;
 
 /**
@@ -155,7 +155,7 @@ export class ResponseDtoFactory {
   static createSuccessPagePaginationResponseDto<T>(
     message: string,
     data: T[],
-    meta: PagePaginationResponseMetaDto
+    meta: PagePaginationResponseMeta
   ): SuccessPagePaginationResponseDto<T> {
     return {
       success: true,
@@ -168,7 +168,7 @@ export class ResponseDtoFactory {
   static createSuccessOffsetPaginationResponseDto<T>(
     message: string,
     data: T[],
-    meta: OffsetPaginationResponseMetaDto
+    meta: OffsetPaginationResponseMeta
   ): SuccessOffsetPaginationResponseDto<T> {
     return {
       success: true,
@@ -181,7 +181,7 @@ export class ResponseDtoFactory {
   static createSuccessCursorPaginationResponseDto<T>(
     message: string,
     data: T[],
-    meta: CursorPaginationResponseMetaDto
+    meta: CursorPaginationResponseMeta
   ): SuccessCursorPaginationResponseDto<T> {
     return {
       success: true,
@@ -332,7 +332,7 @@ export class OpenApiResponseFactory {
               example: true,
             }),
             data,
-            meta: zodPagePaginationResponseMetaDto,
+            meta: zodPagePaginationResponseMeta,
           }),
         },
       },
@@ -350,7 +350,7 @@ export class OpenApiResponseFactory {
               example: true,
             }),
             data,
-            meta: zodOffsetPaginationResponseMetaDto,
+            meta: zodOffsetPaginationResponseMeta,
           }),
         },
       },
@@ -368,7 +368,7 @@ export class OpenApiResponseFactory {
               example: true,
             }),
             data,
-            meta: zodCursorPaginationResponseMetaDto,
+            meta: zodCursorPaginationResponseMeta,
           }),
         },
       },

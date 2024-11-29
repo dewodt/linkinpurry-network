@@ -86,6 +86,20 @@ services:
     networks:
       - linkinpurry-network
 
+  # Seeder
+  linkinpurry-seeder:
+    container_name: linkinpurry-seeder
+    build:
+      context: .
+      target: seeder
+      dockerfile: ./backend/Dockerfile.run
+    env_file:
+      - ./backend/.env.docker
+    networks:
+      - linkinpurry-network
+    depends_on:
+      - linkinpurry-db
+
 volumes:
   db-data:
     name: linkinpurry-db-data
