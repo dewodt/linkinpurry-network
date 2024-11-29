@@ -15,6 +15,7 @@ import { AuthRoute } from '@/routes/auth-route';
 import { ConnectionRoute } from '@/routes/connection-route';
 import type { IRoute } from '@/routes/route';
 import { UserRoute } from '@/routes/user-route';
+import { ConnectionRoute } from '@/routes/connection-route';
 
 import { Utils } from './../utils/utils';
 import { Config } from './config';

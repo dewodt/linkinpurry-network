@@ -144,6 +144,9 @@ export const updateProfileRequestBodyDto = z.object({
     .string({ message: 'Username is required' })
     .min(1, { message: 'Username is required' })
     .max(255, { message: 'Username maximum length is 255' })
+    .regex(new RegExp('^[a-z0-9_]*$'), {
+      message: 'Username must contain only lower case letters, numbers, and underscores',
+    })
     .openapi({
       description: 'Username of the user',
       example: 'dewodt',
@@ -170,6 +173,7 @@ export const updateProfileRequestBodyDto = z.object({
     }),
   work_history: z
     .string({ message: 'Work history must be a string' })
+    .trim()
     .optional()
     .openapi({
       description: 'Work history of the user (in rich text)',
@@ -182,6 +186,7 @@ export const updateProfileRequestBodyDto = z.object({
     }),
   skills: z
     .string({ message: 'Skills must be a string' })
+    .trim()
     .optional()
     .openapi({
       description: 'Skills of the user (rich text)',
