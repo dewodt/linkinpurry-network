@@ -1,6 +1,7 @@
 import { z } from '@hono/zod-openapi';
 
 import { AVATAR_MAX_SIZE } from '@/utils/constants';
+import { ConnectionStatus } from '@/utils/enum';
 import { Utils } from '@/utils/utils';
 
 /**
@@ -90,10 +91,12 @@ export const getProfileResponseBodyDto = z.object({
       description: 'Skills of the user',
       example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
     }),
-  is_connected: z.boolean().openapi({
-    description: 'Whether the current user is connected to the user',
-    example: true,
-  }),
+  connection_status: z
+    .enum([ConnectionStatus.ACCEPTED, ConnectionStatus.PENDING, ConnectionStatus.NONE])
+    .openapi({
+      description: 'Status of the connection',
+      example: ConnectionStatus.ACCEPTED,
+    }),
 
   // level 2
   relevant_posts: z

@@ -6,37 +6,33 @@ import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import type { IUpdateProfileRequestBodyDto } from '@/dto/user-dto';
 import { Database } from '@/infrastructures/database/database';
+import { ConnectionStatus } from '@/utils/enum';
 
 import { type Optional } from './../types/common';
 import type { IService } from './service';
 import { UploadService } from './upload-service';
 
 // todo: why this optional doesnt work
-type UserProfile = Optional<
-  Prisma.UserGetPayload<{
-    select: {
-      id: true;
-      username: true;
-      fullName: true;
-      profilePhotoPath: true;
-      _count: {
-        select: {
-          sentConnections: true;
-        };
-      };
-      workHistory: true;
-      skills: true;
-      feeds: {
-        select: {
-          id: true;
-          content: true;
-          createdAt: true;
-        };
-      };
-    };
-  }>,
-  'feeds'
->;
+interface UserProfile {
+  // level 1
+  id: bigint;
+  username: string;
+  fullName: string;
+  profilePhotoPath: string;
+  connectionCount: number;
+  workHistory: string | null;
+  skills: string | null;
+  connectionStatus: ConnectionStatus;
+
+  // level 2
+  feeds?:
+    | {
+        id: bigint;
+        content: string;
+        createdAt: Date;
+      }[]
+    | undefined;
+}
 
 type UpdateProfile = Prisma.UserGetPayload<{
   select: {
@@ -50,10 +46,7 @@ type UpdateProfile = Prisma.UserGetPayload<{
 }>;
 
 export interface IUserService extends IService {
-  getProfile(
-    currentUserId: bigint | undefined,
-    userId: bigint
-  ): Promise<{ profile: UserProfile; isConnected: boolean }>;
+  getProfile(currentUserId: bigint | undefined, userId: bigint): Promise<UserProfile>;
   updateProfile(
     currentUserId: bigint,
     userId: bigint,
@@ -109,59 +102,14 @@ export class UserService implements IUserService {
     // User not found
     if (!isUserExists) throw ExceptionFactory.notFound('User not found');
 
-    // Determine connection state
-    // actually should be done in 1 query, but really hard to achieve when using ORMs :D
-    let isConnected = false;
-    if (currentUserId) {
-      try {
-        const connection = await this.prisma.connection.findFirst({
-          where: {
-            OR: [
-              {
-                fromId: userId,
-                toId: currentUserId,
-              },
-              {
-                fromId: currentUserId,
-                toId: userId,
-              },
-            ],
-          },
-        });
-
-        if (connection) isConnected = true;
-      } catch (error) {
-        // Internal server error
-        if (error instanceof Error) logger.error(error.message);
-
-        throw ExceptionFactory.internalServerError('Failed to infer connection state');
-      }
-    }
-
     // Access level
-    const isLevel1 = true; // all public
+    // const isLevel1 = true; // all public
     const isLevel2 = currentUserId !== undefined; // authenticated
 
     try {
       const profile = await this.prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
-        select: {
-          // Level 1 or higher
-          id: isLevel1 || isLevel2,
-          username: isLevel1 || isLevel2,
-          fullName: isLevel1 || isLevel2,
-          profilePhotoPath: isLevel1 || isLevel2,
-          _count: {
-            select: {
-              sentConnections: isLevel1 || isLevel2,
-            },
-          },
-          workHistory: isLevel1 || isLevel2,
-          skills: isLevel1 || isLevel2,
-
-          // Level 2
+        where: { id: userId },
+        include: {
           feeds: isLevel2
             ? {
                 select: {
@@ -175,6 +123,30 @@ export class UserService implements IUserService {
                 },
               }
             : false,
+          _count: {
+            select: {
+              // for connection count
+              sentConnections: true,
+
+              // for connection status (only when authenticated)
+              // pending or no
+              receivedRequests: currentUserId
+                ? {
+                    where: {
+                      fromId: currentUserId,
+                    },
+                  }
+                : false,
+              // connected or no
+              receivedConnections: currentUserId
+                ? {
+                    where: {
+                      fromId: currentUserId,
+                    },
+                  }
+                : false,
+            },
+          },
         },
       });
 
@@ -186,13 +158,29 @@ export class UserService implements IUserService {
           ? `${this.config.get('BE_URL')}${profile.profilePhotoPath}`
           : '';
 
-      return {
-        isConnected,
-        profile: {
-          ...profile,
-          profilePhotoPath: fullURL,
-        },
+      // Map to temporary result + access lavel
+      const result: UserProfile = {
+        // level 1
+        id: profile.id,
+        username: profile.username,
+        fullName: profile.fullName || 'N/A',
+        skills: profile.skills,
+        workHistory: profile.workHistory,
+        profilePhotoPath: fullURL,
+        connectionCount: profile._count.sentConnections,
+        connectionStatus: currentUserId
+          ? profile._count.receivedConnections > 0
+            ? ConnectionStatus.ACCEPTED
+            : profile._count.receivedRequests > 0
+              ? ConnectionStatus.PENDING
+              : ConnectionStatus.NONE
+          : ConnectionStatus.NONE,
+
+        // Level 2
+        feeds: isLevel2 ? profile.feeds : undefined,
       };
+
+      return result;
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);

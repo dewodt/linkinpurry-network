@@ -338,6 +338,7 @@ export class ConnectionService implements IConnectionService {
               profilePhotoPath: true,
               workHistory: true,
 
+              // TODO: benchmark which is faster using count or take
               // find connection status of user to currentUser
               ...(currentUserId && {
                 receivedConnections: {

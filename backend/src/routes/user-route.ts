@@ -86,7 +86,7 @@ export class UserRoute implements IRoute {
 
       try {
         // Get user profile
-        const { profile, isConnected } = await this.userService.getProfile(currentUserId, userId);
+        const profile = await this.userService.getProfile(currentUserId, userId);
 
         // Map to dto
         const responseData: IGetProfileResponseBodyDto = {
@@ -94,8 +94,8 @@ export class UserRoute implements IRoute {
           username: profile.username,
           name: profile.fullName || '',
           profile_photo: profile.profilePhotoPath,
-          connection_count: profile._count.sentConnections,
-          is_connected: isConnected,
+          connection_count: profile.connectionCount,
+          connection_status: profile.connectionStatus,
           work_history: profile.workHistory,
           skills: profile.skills,
           // level 2

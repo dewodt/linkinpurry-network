@@ -1,16 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { Pencil, UserCircle2 } from 'lucide-react';
+import { Clock4, Pencil, UserCircle2 } from 'lucide-react';
 
 // @ts-expect-error - babel
 import * as React from 'react';
 
+import { ConnectDialog } from '@/components/connections/connect-dialog';
+import { LinkedInClockIcon, LinkedInConnectIcon } from '@/components/icons/linkedin-icons';
 import { ErrorPage } from '@/components/shared/error-page';
 import { LoadingPage } from '@/components/shared/loading-page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { EditProfileDialog } from '@/components/users/update-profile-dialog';
 import { useSession } from '@/hooks/use-session';
+import { ConnectionStatus } from '@/lib/enum';
 import { cn, formatDate } from '@/lib/utils';
 import { getProfile } from '@/services/user';
 import { GetProfileErrorResponse, GetProfileSuccessResponse } from '@/types/api/user';
@@ -91,14 +94,32 @@ function RouteComponent() {
           {/* Connect / unconnect button (for auth only + not current user) */}
           {session &&
             session.userId !== userId &&
-            (!profile.data.is_connected ? (
-              <Button className="rounded-full px-5 font-semibold" size="sm">
-                Connect
+            (profile.data.connection_status === ConnectionStatus.NONE ? (
+              <ConnectDialog connectToUserId={userId} connectToUsername={profile.data.username}>
+                <Button className="h-8 gap-1.5 rounded-full font-bold" size="sm">
+                  <LinkedInConnectIcon className="size-4" />
+                  Connect
+                </Button>
+              </ConnectDialog>
+            ) : profile.data.connection_status === ConnectionStatus.PENDING ? (
+              <Button
+                className="h-8 gap-1.5 rounded-full font-bold disabled:border-muted-foreground disabled:text-muted-foreground disabled:opacity-100 disabled:hover:text-muted-foreground"
+                variant="outline"
+                size="sm"
+                disabled
+              >
+                <LinkedInClockIcon className="size-4" />
+                Pending
               </Button>
             ) : (
-              <Button className="rounded-full px-5 font-semibold" size="sm">
-                Unconnect
-              </Button>
+              <div className="flex flex-row items-center gap-2">
+                {/* Message */}
+                <Button className="rounded-full px-5 font-semibold" size="sm">
+                  Message
+                </Button>
+
+                {/* More (for unconenct) */}
+              </div>
             ))}
         </div>
       </section>

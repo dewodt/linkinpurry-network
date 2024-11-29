@@ -5,6 +5,7 @@ import { useDebouncedCallback } from 'use-debounce';
 
 import * as React from 'react';
 
+import { ConnectDialog } from '@/components/connections/connect-dialog';
 import { LinkedInTrashIcon } from '@/components/icons/linkedin-icons';
 import { ErrorPage } from '@/components/shared/error-page';
 import { LoadingPage } from '@/components/shared/loading-page';
@@ -154,13 +155,15 @@ function RouteComponent() {
                       {session &&
                         session.userId !== con.user_id &&
                         (con.connection_status === ConnectionStatus.NONE ? (
-                          <Button
-                            className="h-8 rounded-full border-primary font-bold text-primary hover:text-primary"
-                            variant={'outline'}
-                            size={'sm'}
-                          >
-                            Connect
-                          </Button>
+                          <ConnectDialog currentSeenUserId={userId} connectToUserId={con.user_id} connectToUsername={con.username}>
+                            <Button
+                              className="h-8 rounded-full border-primary font-bold text-primary hover:text-primary"
+                              variant={'outline'}
+                              size={'sm'}
+                            >
+                              Connect
+                            </Button>
+                          </ConnectDialog>
                         ) : con.connection_status === ConnectionStatus.PENDING ? (
                           <Button
                             className="h-8 gap-1.5 rounded-full border-muted-foreground font-bold text-muted-foreground hover:text-muted-foreground"
