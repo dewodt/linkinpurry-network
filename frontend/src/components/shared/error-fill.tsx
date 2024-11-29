@@ -42,20 +42,19 @@ const ErrorFill = ({
                 Go Back Home
               </Button>
             </Link>
+          ) : statusCode === 401 ? (
+            <Link to="/auth/login">
+              <Button size="sm" className="px-4">
+                Login
+              </Button>
+            </Link>
           ) : (
-            statusCode === 401 && (
-              <Link to="/auth/login">
-                <Button size="sm" className="px-4">
-                  Login
-                </Button>
-              </Link>
+            refetch && (
+              <Button size="sm" className="px-4" onClick={refetch}>
+                <RotateCw className="size-4" />
+                <span>Retry</span>
+              </Button>
             )
-          )}
-          {refetch && (
-            <Button size="sm" className="px-4" onClick={refetch}>
-              <RotateCw className="size-4" />
-              <span>Retry</span>
-            </Button>
           )}
         </div>
       </div>

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 import React from 'react';
 
-import { LinkedInFindUserIcon, LinkedInHomeIcon, LinkedInLogo, LinkedInNetworkIcon } from '@/components/icons/linkedin-icons';
+import { LinkedInFindUserIcon, LinkedInHomeIcon, LinkedInLogo, LinkedInMessagingIcon, LinkedInNetworkIcon } from '@/components/icons/linkedin-icons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -93,7 +93,7 @@ export const Navbar = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-12 md:flex">
-          <ul className="flex items-center gap-9">
+          <ul className="mdLg flex items-center gap-9 md:gap-3">
             {/* Authorized */}
             {session && (
               <>
@@ -106,6 +106,12 @@ export const Navbar = () => {
                 <li>
                   <NavLink href="/my-network/grow" icon={LinkedInNetworkIcon}>
                     My Networks
+                  </NavLink>
+                </li>
+
+                <li>
+                  <NavLink href="/messaging" icon={LinkedInMessagingIcon}>
+                    Messaging
                   </NavLink>
                 </li>
               </>
@@ -169,6 +175,12 @@ export const Navbar = () => {
                         My Network
                       </NavLink>
                     </li>
+
+                    <li>
+                      <NavLink href="/messaging" icon={LinkedInMessagingIcon}>
+                        Messaging
+                      </NavLink>
+                    </li>
                   </>
                 )}
 
@@ -213,13 +225,19 @@ const NavLink = ({
     <Link
       to={href}
       className={cn(
-        'flex flex-row items-center gap-2.5 text-base font-medium tracking-wide text-muted-foreground transition-colors hover:text-primary md:flex-col md:gap-[1px] md:text-xs',
-        isActive && 'font-semibold text-primary',
+        'group relative flex flex-row items-center gap-2.5 text-base font-medium tracking-wide text-muted-foreground transition-colors hover:text-foreground md:flex-col md:gap-[1px] md:px-2 md:text-xs',
+        isActive && 'text-foreground',
         className,
       )}
     >
       <Icon className="size-6" />
       <span>{children}</span>
+      <span
+        className={cn(
+          'absolute left-0 hidden h-0.5 w-full bg-foreground opacity-0 md:-bottom-3 md:inline md:transition-opacity',
+          isActive && 'opacity-100',
+        )}
+      />
     </Link>
   );
 };

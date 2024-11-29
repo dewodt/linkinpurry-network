@@ -74,7 +74,7 @@ export class ConnectionRoute implements IRoute {
   private createConnectionRequest(app: OpenAPIHono<IGlobalContext>) {
     // Create route definition
     const createConnectionRequestRoute = createRoute({
-      tags: ['connections'],
+      tags: ['connection'],
       method: 'post',
       path: '/api/connections/requests',
       summary: 'Create connection request',
@@ -152,7 +152,7 @@ export class ConnectionRoute implements IRoute {
   private getConnectionsList(app: OpenAPIHono<IGlobalContext>) {
     // Create route definition
     const connectionListRoute = createRoute({
-      tags: ['connections'],
+      tags: ['connection'],
       method: 'get',
       path: '/api/users/{userId}/connections',
       summary: 'Get list of connections',
@@ -232,7 +232,7 @@ export class ConnectionRoute implements IRoute {
   private getPendingConnections(app: OpenAPIHono<IGlobalContext>) {
     // Create route definition
     const pendingConnectionsRoute = createRoute({
-      tags: ['connections'],
+      tags: ['connection'],
       method: 'get',
       path: '/api/connections/requests/pending',
       summary: 'Get list of pending connection requests',
@@ -310,7 +310,7 @@ export class ConnectionRoute implements IRoute {
   private decideConnectionRequest(app: OpenAPIHono<IGlobalContext>) {
     // Create route definition
     const decideConnectionRequestRoute = createRoute({
-      tags: ['connections'],
+      tags: ['connection'],
       method: 'post', // use POST (because PUT must be idempotent, and this is not)
       path: '/api/connections/requests/{fromUserId}/decision',
       summary: 'Decide connection request',
@@ -386,7 +386,7 @@ export class ConnectionRoute implements IRoute {
   private unconnectUser(app: OpenAPIHono<IGlobalContext>) {
     // Create route definition
     const unconnectUserRoute = createRoute({
-      tags: ['connections'],
+      tags: ['connection'],
       method: 'delete',
       path: '/api/connections/{toUserId}',
       summary: 'Unconnect user',
