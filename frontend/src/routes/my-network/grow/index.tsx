@@ -5,8 +5,8 @@ import { UserCircle2 } from 'lucide-react';
 import * as React from 'react';
 
 import { DecideDialog } from '@/components/connections/decide-dialog';
-import { ErrorPage } from '@/components/shared/error-page';
-import { LoadingPage } from '@/components/shared/loading-page';
+import { ErrorFill } from '@/components/shared/error-fill';
+import { LoadingFill } from '@/components/shared/loading-fill';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +38,7 @@ function RouteComponent() {
   // Query
   const {
     data: connections,
+    isSuccess: isSuccessConnections,
     isPending: isPendingConnections,
     error: errorConnections,
     isError: isErrorConnections,
@@ -52,25 +53,13 @@ function RouteComponent() {
     window.scrollTo(0, 0);
   }, [page, limit]);
 
-  if (isPendingConnections) return <LoadingPage />;
-
-  if (isErrorConnections)
-    return (
-      <ErrorPage
-        statusCode={errorConnections?.response?.status}
-        statusText={errorConnections.response?.statusText}
-        message={errorConnections?.response?.data.message}
-        refetch={refetch}
-      />
-    );
-
   return (
     <AuthGuardLayout level="authenticated-only">
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
         <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-md">
           {/* Header */}
           <header className="flex flex-col gap-2 border-b p-5 sm:gap-0">
-            <h1 className="text-lg font-semibold">{connections.meta.totalItems} Pending Connections</h1>
+            <h1 className="text-lg font-semibold">{isSuccessConnections && <>{connections.meta.totalItems}</>} Pending Connections</h1>
 
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-medium text-muted-foreground">
@@ -79,58 +68,75 @@ function RouteComponent() {
             </div>
           </header>
 
-          {/* Content */}
-          {/* Empty state */}
-          <div>
-            {connections.meta.totalItems === 0 ? (
-              <div className="flex min-h-64 items-center justify-center p-5">
-                <p className="text-lg text-muted-foreground">No pending connections</p>
-              </div>
-            ) : (
-              <ol>
-                {connections.data.map((con) => {
-                  return (
-                    <li className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5">
-                      <Link to="/users/$userId" params={{ userId: con.user_id }} className="flex flex-auto flex-row items-center gap-3.5">
-                        {/* Avatar */}
-                        <Avatar className="size-14">
-                          <AvatarImage src={con.profile_photo} alt={`${con.name}'s profile picture`} />
-                          <AvatarFallback>
-                            <UserCircle2 className="size-full stroke-gray-500 stroke-[1.25px]" />
-                          </AvatarFallback>
-                        </Avatar>
+          {/* Pending */}
+          {isPendingConnections && <LoadingFill className="min-h-[512px]" />}
 
-                        <div className="flex-auto">
-                          <h2 className="text-xl font-bold text-foreground decoration-2 underline-offset-2 hover:underline">{con.name}</h2>
-                          <p className="line-clamp-3 text-sm font-medium text-muted-foreground sm:line-clamp-2">{con.work_history}</p>
+          {/* Error */}
+          {isErrorConnections && (
+            <ErrorFill
+              className="min-h-[512px]"
+              statusCode={errorConnections?.response?.status}
+              statusText={errorConnections.response?.statusText}
+              message={errorConnections?.response?.data.message}
+              refetch={refetch}
+            />
+          )}
+
+          {/* Success */}
+          {isSuccessConnections && (
+            // Empty state
+            <div>
+              {connections.meta.totalItems === 0 ? (
+                <div className="flex min-h-64 items-center justify-center p-5">
+                  <p className="text-lg text-muted-foreground">No pending connections</p>
+                </div>
+              ) : (
+                // Data
+                <ol>
+                  {connections.data.map((con) => {
+                    return (
+                      <li className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5">
+                        <Link to="/users/$userId" params={{ userId: con.user_id }} className="flex flex-auto flex-row items-center gap-3.5">
+                          {/* Avatar */}
+                          <Avatar className="size-14">
+                            <AvatarImage src={con.profile_photo} alt={`${con.name}'s profile picture`} />
+                            <AvatarFallback>
+                              <UserCircle2 className="size-full stroke-gray-500 stroke-[1.25px]" />
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="flex-auto">
+                            <h2 className="text-xl font-bold text-foreground decoration-2 underline-offset-2 hover:underline">{con.name}</h2>
+                            <p className="line-clamp-3 text-sm font-medium text-muted-foreground sm:line-clamp-2">{con.work_history}</p>
+                          </div>
+                        </Link>
+
+                        {/* Accept or reject Action */}
+                        <div className="flex flex-row items-center gap-2 self-end sm:self-auto">
+                          {/* Reject */}
+                          <DecideDialog type={ConnectionRequestDecision.DECLINE} decideToUserId={con.user_id} decideToUsername={con.username}>
+                            <Button className="w-20 rounded-full font-bold" variant={'ghost'} size={'xs'}>
+                              Reject
+                            </Button>
+                          </DecideDialog>
+
+                          {/* Accept */}
+                          <DecideDialog type={ConnectionRequestDecision.ACCEPT} decideToUserId={con.user_id} decideToUsername={con.username}>
+                            <Button className="w-20 rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
+                              Accept
+                            </Button>
+                          </DecideDialog>
                         </div>
-                      </Link>
-
-                      {/* Accept or reject Action */}
-                      <div className="flex flex-row items-center gap-2 self-end sm:self-auto">
-                        {/* Reject */}
-                        <DecideDialog type={ConnectionRequestDecision.DECLINE} decideToUserId={con.user_id} decideToUsername={con.username}>
-                          <Button className="w-20 rounded-full font-bold" variant={'ghost'} size={'xs'}>
-                            Reject
-                          </Button>
-                        </DecideDialog>
-
-                        {/* Accept */}
-                        <DecideDialog type={ConnectionRequestDecision.ACCEPT} decideToUserId={con.user_id} decideToUsername={con.username}>
-                          <Button className="w-20 rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
-                            Accept
-                          </Button>
-                        </DecideDialog>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
-            )}
-          </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+            </div>
+          )}
 
           {/* Pagination */}
-          {connections.meta.totalItems > 0 && (
+          {isSuccessConnections && connections.meta.totalItems > 0 && (
             <div className="p-5">
               <Pagination>
                 <PaginationContent className="flex-wrap gap-2">

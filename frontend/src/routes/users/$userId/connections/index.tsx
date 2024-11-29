@@ -7,8 +7,8 @@ import * as React from 'react';
 
 import { ConnectDialog } from '@/components/connections/connect-dialog';
 import { UnConnectDropdown } from '@/components/connections/unconnect-dropdown';
-import { ErrorPage } from '@/components/shared/error-page';
-import { LoadingPage } from '@/components/shared/loading-page';
+import { ErrorFill } from '@/components/shared/error-fill';
+import { LoadingFill } from '@/components/shared/loading-fill';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,6 +57,7 @@ function RouteComponent() {
   // Query
   const {
     data: connections,
+    isSuccess: isSuccessConnections,
     isPending: isPendingConnections,
     error: errorConnections,
     isError: isErrorConnections,
@@ -77,24 +78,12 @@ function RouteComponent() {
     window.scrollTo(0, 0);
   }, [search, page, limit]);
 
-  if (isPendingConnections) return <LoadingPage />;
-
-  if (isErrorConnections)
-    return (
-      <ErrorPage
-        statusCode={errorConnections?.response?.status}
-        statusText={errorConnections.response?.statusText}
-        message={errorConnections?.response?.data.message}
-        refetch={refetch}
-      />
-    );
-
   return (
     <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
       <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-md">
         {/* Header */}
         <header className="flex flex-col gap-2 border-b p-5 sm:gap-0">
-          <h1 className="text-lg font-semibold">{connections.meta.totalItems} Connections</h1>
+          <h1 className="text-lg font-semibold">{isSuccessConnections && <>{connections.meta.totalItems}</>} Connections</h1>
 
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-medium text-muted-foreground">
@@ -122,81 +111,96 @@ function RouteComponent() {
           </div>
         </header>
 
+        {/* Pending */}
+        {isPendingConnections && <LoadingFill className="min-h-[512px]" />}
+
+        {/* Error */}
+        {isErrorConnections && (
+          <ErrorFill
+            className="min-h-[512px]"
+            statusCode={errorConnections?.response?.status}
+            statusText={errorConnections.response?.statusText}
+            message={errorConnections?.response?.data.message}
+            refetch={refetch}
+          />
+        )}
+
         {/* Content */}
-        {/* Empty state */}
-        <div>
-          {connections.meta.totalItems === 0 ? (
-            <div className="flex min-h-64 items-center justify-center p-5">
-              <p className="text-lg text-muted-foreground">No connections exists</p>
-            </div>
-          ) : (
-            <ol>
-              {connections.data.map((con) => {
-                return (
-                  <li className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5">
-                    <Link to="/users/$userId" params={{ userId: con.user_id }} className="flex flex-auto flex-row items-center gap-3.5">
-                      {/* Avatar */}
-                      <Avatar className="size-14">
-                        <AvatarImage src={con.profile_photo} alt={`${con.name}'s profile picture`} />
-                        <AvatarFallback>
-                          <UserCircle2 className="size-full stroke-gray-500 stroke-[1.25px]" />
-                        </AvatarFallback>
-                      </Avatar>
+        {isSuccessConnections && (
+          <div>
+            {connections.meta.totalItems === 0 ? (
+              <div className="flex min-h-64 items-center justify-center p-5">
+                <p className="text-lg text-muted-foreground">No connections exists</p>
+              </div>
+            ) : (
+              <ol>
+                {connections.data.map((con) => {
+                  return (
+                    <li className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5">
+                      <Link to="/users/$userId" params={{ userId: con.user_id }} className="flex flex-auto flex-row items-center gap-3.5">
+                        {/* Avatar */}
+                        <Avatar className="size-14">
+                          <AvatarImage src={con.profile_photo} alt={`${con.name}'s profile picture`} />
+                          <AvatarFallback>
+                            <UserCircle2 className="size-full stroke-gray-500 stroke-[1.25px]" />
+                          </AvatarFallback>
+                        </Avatar>
 
-                      <div className="flex-auto">
-                        <h2 className="text-xl font-bold text-foreground decoration-2 underline-offset-2 hover:underline">{con.name}</h2>
-                        <p className="line-clamp-3 text-sm font-medium text-muted-foreground sm:line-clamp-2">{con.work_history}</p>
-                      </div>
-                    </Link>
+                        <div className="flex-auto">
+                          <h2 className="text-xl font-bold text-foreground decoration-2 underline-offset-2 hover:underline">{con.name}</h2>
+                          <p className="line-clamp-3 text-sm font-medium text-muted-foreground sm:line-clamp-2">{con.work_history}</p>
+                        </div>
+                      </Link>
 
-                    {/* TODO: Message logic */}
-                    <div className="flex flex-row items-center gap-2 self-end sm:self-auto">
-                      {session &&
-                        session.userId !== con.user_id &&
-                        (con.connection_status === ConnectionStatus.NONE ? (
-                          <ConnectDialog currentSeenUserId={userId} connectToUserId={con.user_id} connectToUsername={con.username}>
-                            <Button className="rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
-                              Connect
+                      {/* TODO: Message logic */}
+                      <div className="flex flex-row items-center gap-2 self-end sm:self-auto">
+                        {session &&
+                          session.userId !== con.user_id &&
+                          (con.connection_status === ConnectionStatus.NONE ? (
+                            <ConnectDialog currentSeenUserId={userId} connectToUserId={con.user_id} connectToUsername={con.username}>
+                              <Button className="rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
+                                Connect
+                              </Button>
+                            </ConnectDialog>
+                          ) : con.connection_status === ConnectionStatus.PENDING ? (
+                            <Button className="gap-1.5 rounded-full font-bold" variant={'ghost'} size={'xs'} disabled>
+                              <Clock4 className="size-4" />
+                              Pending
                             </Button>
-                          </ConnectDialog>
-                        ) : con.connection_status === ConnectionStatus.PENDING ? (
-                          <Button className="gap-1.5 rounded-full font-bold" variant={'ghost'} size={'xs'} disabled>
-                            <Clock4 className="size-4" />
-                            Pending
-                          </Button>
-                        ) : (
-                          // TODO: Connect message logic
-                          <Button className="rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
-                            Message
-                          </Button>
-                        ))}
+                          ) : (
+                            // TODO: Connect message logic
+                            <Button className="rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
+                              Message
+                            </Button>
+                          ))}
 
-                      {/* Dropdown actions */}
-                      {session && session.userId !== con.user_id && con.connection_status === ConnectionStatus.ACCEPTED && (
-                        <UnConnectDropdown unConnectToUserId={con.user_id} unConnectToUsername={con.username} currentSeenUserId={userId}>
-                          <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            className="rounded-full text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
-                          >
-                            <Ellipsis className="size-5" />
-                          </Button>
-                        </UnConnectDropdown>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          )}
-        </div>
+                        {/* Dropdown actions */}
+                        {session && session.userId !== con.user_id && con.connection_status === ConnectionStatus.ACCEPTED && (
+                          <UnConnectDropdown unConnectToUserId={con.user_id} unConnectToUsername={con.username} currentSeenUserId={userId}>
+                            <Button
+                              size="icon-xs"
+                              variant="ghost"
+                              className="rounded-full text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+                            >
+                              <Ellipsis className="size-5" />
+                            </Button>
+                          </UnConnectDropdown>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </div>
+        )}
 
         {/* Pagination */}
         {/* 1 2 3 4 5 6 7 */}
         {/* 1 2 3 4 5 ... 10 */}
         {/* 1 ... 3 4 5 ... 10 */}
         {/* 1 ... 6 7 8 9 10 */}
-        {connections.meta.totalItems > 0 && (
+        {isSuccessConnections && connections.meta.totalItems > 0 && (
           <div className="p-5">
             <Pagination>
               <PaginationContent className="flex-wrap gap-2">

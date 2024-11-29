@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { CircleAlert, FileQuestion, RotateCw } from 'lucide-react';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 import { Button } from '../ui/button';
@@ -44,6 +44,12 @@ export function ErrorPage({
               <Link to="/">
                 <Button className="px-6" variant="default">
                   Go Back Home
+                </Button>
+              </Link>
+            ) : statusCode === 401 ? (
+              <Link to="/auth/login">
+                <Button className="px-6" variant="default">
+                  Login
                 </Button>
               </Link>
             ) : (
