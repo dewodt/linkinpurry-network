@@ -3,10 +3,10 @@ import { createFileRoute } from '@tanstack/react-router';
 // @ts-expect-error - babel resolver
 import * as React from 'react';
 
-import { LogInForm } from '@/components/auth/login-form';
+import { RegisterForm } from '@/components/auth/register-form';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
-export const Route = createFileRoute('/_auth/auth/login')({
+export const Route = createFileRoute('/_auth/auth/register/')({
   component: RouteComponent,
 });
 
@@ -16,12 +16,12 @@ function RouteComponent() {
       <Card className="w-full max-w-sm shadow-md">
         {/* Title */}
         <CardHeader>
-          <h1 className="text-center text-2xl font-bold text-primary lg:text-3xl">Login</h1>
+          <h1 className="text-center text-2xl font-bold text-primary lg:text-3xl">Register</h1>
         </CardHeader>
 
         {/* Form */}
         <CardContent>
-          <LogInForm />
+          <RegisterForm />
         </CardContent>
       </Card>
     </main>

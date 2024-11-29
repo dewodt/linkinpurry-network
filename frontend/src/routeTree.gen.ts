@@ -7,8 +7,8 @@
 // Import Routes
 import { Route as rootRoute } from './routes/__root';
 import { Route as AuthImport } from './routes/_auth';
-import { Route as AuthAuthLoginImport } from './routes/_auth/auth/login';
-import { Route as AuthAuthRegisterImport } from './routes/_auth/auth/register';
+import { Route as AuthAuthLoginIndexImport } from './routes/_auth/auth/login/index';
+import { Route as AuthAuthRegisterIndexImport } from './routes/_auth/auth/register/index';
 import { Route as IndexImport } from './routes/index';
 import { Route as MyNetworkGrowIndexImport } from './routes/my-network/grow/index';
 import { Route as UsersUserIdConnectionsIndexImport } from './routes/users/$userId/connections/index';
@@ -39,22 +39,22 @@ const MyNetworkGrowIndexRoute = MyNetworkGrowIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any);
 
-const AuthAuthRegisterRoute = AuthAuthRegisterImport.update({
-  id: '/auth/register',
-  path: '/auth/register',
-  getParentRoute: () => AuthRoute,
-} as any);
-
-const AuthAuthLoginRoute = AuthAuthLoginImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
-  getParentRoute: () => AuthRoute,
-} as any);
-
 const UsersUserIdConnectionsIndexRoute = UsersUserIdConnectionsIndexImport.update({
   id: '/users/$userId/connections/',
   path: '/users/$userId/connections/',
   getParentRoute: () => rootRoute,
+} as any);
+
+const AuthAuthRegisterIndexRoute = AuthAuthRegisterIndexImport.update({
+  id: '/auth/register/',
+  path: '/auth/register/',
+  getParentRoute: () => AuthRoute,
+} as any);
+
+const AuthAuthLoginIndexRoute = AuthAuthLoginIndexImport.update({
+  id: '/auth/login/',
+  path: '/auth/login/',
+  getParentRoute: () => AuthRoute,
 } as any);
 
 // Populate the FileRoutesByPath interface
@@ -75,20 +75,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthImport;
       parentRoute: typeof rootRoute;
     };
-    '/_auth/auth/login': {
-      id: '/_auth/auth/login';
-      path: '/auth/login';
-      fullPath: '/auth/login';
-      preLoaderRoute: typeof AuthAuthLoginImport;
-      parentRoute: typeof AuthImport;
-    };
-    '/_auth/auth/register': {
-      id: '/_auth/auth/register';
-      path: '/auth/register';
-      fullPath: '/auth/register';
-      preLoaderRoute: typeof AuthAuthRegisterImport;
-      parentRoute: typeof AuthImport;
-    };
     '/my-network/grow/': {
       id: '/my-network/grow/';
       path: '/my-network/grow';
@@ -103,6 +89,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UsersUserIdIndexImport;
       parentRoute: typeof rootRoute;
     };
+    '/_auth/auth/login/': {
+      id: '/_auth/auth/login/';
+      path: '/auth/login';
+      fullPath: '/auth/login';
+      preLoaderRoute: typeof AuthAuthLoginIndexImport;
+      parentRoute: typeof AuthImport;
+    };
+    '/_auth/auth/register/': {
+      id: '/_auth/auth/register/';
+      path: '/auth/register';
+      fullPath: '/auth/register';
+      preLoaderRoute: typeof AuthAuthRegisterIndexImport;
+      parentRoute: typeof AuthImport;
+    };
     '/users/$userId/connections/': {
       id: '/users/$userId/connections/';
       path: '/users/$userId/connections';
@@ -116,13 +116,13 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface AuthRouteChildren {
-  AuthAuthLoginRoute: typeof AuthAuthLoginRoute;
-  AuthAuthRegisterRoute: typeof AuthAuthRegisterRoute;
+  AuthAuthLoginIndexRoute: typeof AuthAuthLoginIndexRoute;
+  AuthAuthRegisterIndexRoute: typeof AuthAuthRegisterIndexRoute;
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthAuthLoginRoute: AuthAuthLoginRoute,
-  AuthAuthRegisterRoute: AuthAuthRegisterRoute,
+  AuthAuthLoginIndexRoute: AuthAuthLoginIndexRoute,
+  AuthAuthRegisterIndexRoute: AuthAuthRegisterIndexRoute,
 };
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren);
@@ -130,20 +130,20 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren);
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '': typeof AuthRouteWithChildren;
-  '/auth/login': typeof AuthAuthLoginRoute;
-  '/auth/register': typeof AuthAuthRegisterRoute;
   '/my-network/grow': typeof MyNetworkGrowIndexRoute;
   '/users/$userId': typeof UsersUserIdIndexRoute;
+  '/auth/login': typeof AuthAuthLoginIndexRoute;
+  '/auth/register': typeof AuthAuthRegisterIndexRoute;
   '/users/$userId/connections': typeof UsersUserIdConnectionsIndexRoute;
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '': typeof AuthRouteWithChildren;
-  '/auth/login': typeof AuthAuthLoginRoute;
-  '/auth/register': typeof AuthAuthRegisterRoute;
   '/my-network/grow': typeof MyNetworkGrowIndexRoute;
   '/users/$userId': typeof UsersUserIdIndexRoute;
+  '/auth/login': typeof AuthAuthLoginIndexRoute;
+  '/auth/register': typeof AuthAuthRegisterIndexRoute;
   '/users/$userId/connections': typeof UsersUserIdConnectionsIndexRoute;
 }
 
@@ -151,26 +151,26 @@ export interface FileRoutesById {
   __root__: typeof rootRoute;
   '/': typeof IndexRoute;
   '/_auth': typeof AuthRouteWithChildren;
-  '/_auth/auth/login': typeof AuthAuthLoginRoute;
-  '/_auth/auth/register': typeof AuthAuthRegisterRoute;
   '/my-network/grow/': typeof MyNetworkGrowIndexRoute;
   '/users/$userId/': typeof UsersUserIdIndexRoute;
+  '/_auth/auth/login/': typeof AuthAuthLoginIndexRoute;
+  '/_auth/auth/register/': typeof AuthAuthRegisterIndexRoute;
   '/users/$userId/connections/': typeof UsersUserIdConnectionsIndexRoute;
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '' | '/auth/login' | '/auth/register' | '/my-network/grow' | '/users/$userId' | '/users/$userId/connections';
+  fullPaths: '/' | '' | '/my-network/grow' | '/users/$userId' | '/auth/login' | '/auth/register' | '/users/$userId/connections';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '' | '/auth/login' | '/auth/register' | '/my-network/grow' | '/users/$userId' | '/users/$userId/connections';
+  to: '/' | '' | '/my-network/grow' | '/users/$userId' | '/auth/login' | '/auth/register' | '/users/$userId/connections';
   id:
     | '__root__'
     | '/'
     | '/_auth'
-    | '/_auth/auth/login'
-    | '/_auth/auth/register'
     | '/my-network/grow/'
     | '/users/$userId/'
+    | '/_auth/auth/login/'
+    | '/_auth/auth/register/'
     | '/users/$userId/connections/';
   fileRoutesById: FileRoutesById;
 }
@@ -212,23 +212,23 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
     "/_auth": {
       "filePath": "_auth.tsx",
       "children": [
-        "/_auth/auth/login",
-        "/_auth/auth/register"
+        "/_auth/auth/login/",
+        "/_auth/auth/register/"
       ]
-    },
-    "/_auth/auth/login": {
-      "filePath": "_auth/auth/login.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/auth/register": {
-      "filePath": "_auth/auth/register.tsx",
-      "parent": "/_auth"
     },
     "/my-network/grow/": {
       "filePath": "my-network/grow/index.tsx"
     },
     "/users/$userId/": {
       "filePath": "users/$userId/index.tsx"
+    },
+    "/_auth/auth/login/": {
+      "filePath": "_auth/auth/login/index.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/auth/register/": {
+      "filePath": "_auth/auth/register/index.tsx",
+      "parent": "/_auth"
     },
     "/users/$userId/connections/": {
       "filePath": "users/$userId/connections/index.tsx"
