@@ -16,6 +16,7 @@
     "@hono/swagger-ui": "^0.4.1",
     "@hono/zod-openapi": "^0.18.0",
     "@prisma/client": "^5.22.0",
+    "backend": "file:",
     "bcryptjs": "^2.4.3",
     "hono": "^4.6.11",
     "inversify": "^6.1.4",
