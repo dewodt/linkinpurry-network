@@ -6,12 +6,11 @@ import { useDebouncedCallback } from 'use-debounce';
 import * as React from 'react';
 
 import { ConnectDialog } from '@/components/connections/connect-dialog';
-import { LinkedInTrashIcon } from '@/components/icons/linkedin-icons';
+import { UnConnectDropdown } from '@/components/connections/unconnect-dropdown';
 import { ErrorPage } from '@/components/shared/error-page';
 import { LoadingPage } from '@/components/shared/loading-page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Pagination,
@@ -187,25 +186,15 @@ function RouteComponent() {
 
                       {/* Dropdown actions */}
                       {session && session.userId !== con.user_id && con.connection_status === ConnectionStatus.ACCEPTED && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="rounded-full text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
-                            >
-                              <Ellipsis className="size-5" />
-                            </Button>
-                          </DropdownMenuTrigger>
-
-                          <DropdownMenuContent align="end">
-                            {/* Unconnect */}
-                            <DropdownMenuItem className="text-muted-foreground focus:text-muted-foreground">
-                              <LinkedInTrashIcon className="size-5 text-muted-foreground" />
-                              <span>Remove connection</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <UnConnectDropdown unConnectToUserId={con.user_id} unConnectToUsername={con.username} currentSeenUserId={userId}>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="rounded-full text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+                          >
+                            <Ellipsis className="size-5" />
+                          </Button>
+                        </UnConnectDropdown>
                       )}
                     </div>
                   </li>

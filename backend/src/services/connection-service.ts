@@ -339,31 +339,31 @@ export class ConnectionService implements IConnectionService {
               workHistory: true,
 
               // TODO: benchmark which is faster using count or take
-              // find connection status of user to currentUser
-              ...(currentUserId && {
-                receivedConnections: {
-                  select: {
-                    fromId: true, // or toId, is ok
-                  },
-                  where: {
-                    fromId: currentUserId, // or toId, is ok
-                  },
-                  take: 1,
-                },
-              }),
+              ...(currentUserId
+                ? {
+                    _count: {
+                      select: {
+                        // find the connection status (pending/no)
+                        receivedRequests: currentUserId
+                          ? {
+                              where: {
+                                fromId: currentUserId,
+                              },
+                            }
+                          : undefined,
 
-              // find connection status of currentUser to user
-              ...(currentUserId && {
-                sentConnections: {
-                  select: {
-                    fromId: true,
-                  },
-                  where: {
-                    fromId: currentUserId, // pending defintiion: from the PoV of sender
-                  },
-                  take: 1,
-                },
-              }),
+                        // find the connection status (connected/no)
+                        receivedConnections: currentUserId
+                          ? {
+                              where: {
+                                fromId: currentUserId,
+                              },
+                            }
+                          : undefined,
+                      },
+                    },
+                  }
+                : {}),
             },
           },
         },
@@ -390,9 +390,9 @@ export class ConnectionService implements IConnectionService {
           profilePhotoPath: fullURL,
           workHistory: toUser.workHistory,
           connectionStatus: currentUserId
-            ? toUser.receivedConnections.length > 0
+            ? toUser._count.receivedConnections > 0
               ? ConnectionStatus.ACCEPTED
-              : toUser.sentConnections.length > 0
+              : toUser._count.receivedRequests > 0
                 ? ConnectionStatus.PENDING
                 : ConnectionStatus.NONE
             : ConnectionStatus.NONE,

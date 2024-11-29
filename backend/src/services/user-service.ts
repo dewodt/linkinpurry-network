@@ -137,6 +137,7 @@ export class UserService implements IUserService {
                     },
                   }
                 : false,
+
               // connected or no
               receivedConnections: currentUserId
                 ? {

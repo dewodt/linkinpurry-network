@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { Clock4, Pencil, UserCircle2 } from 'lucide-react';
+import { Clock4, Ellipsis, Pencil, UserCircle2 } from 'lucide-react';
 
 // @ts-expect-error - babel
 import * as React from 'react';
 
 import { ConnectDialog } from '@/components/connections/connect-dialog';
+import { UnConnectDropdown } from '@/components/connections/unconnect-dropdown';
 import { LinkedInClockIcon, LinkedInConnectIcon } from '@/components/icons/linkedin-icons';
 import { ErrorPage } from '@/components/shared/error-page';
 import { LoadingPage } from '@/components/shared/loading-page';
@@ -119,6 +120,11 @@ function RouteComponent() {
                 </Button>
 
                 {/* More (for unconenct) */}
+                <UnConnectDropdown unConnectToUserId={userId} unConnectToUsername={profile.data.username}>
+                  <Button size="icon" variant="ghost" className="rounded-full text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0">
+                    <Ellipsis className="size-5" />
+                  </Button>
+                </UnConnectDropdown>
               </div>
             ))}
         </div>
