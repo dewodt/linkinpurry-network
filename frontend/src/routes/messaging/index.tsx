@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 import { SearchIcon, SquarePen } from 'lucide-react';
 
 import { useState } from 'react';
@@ -9,10 +9,12 @@ import { HelmetTemplate } from '@/components/shared/helmet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { useSession } from '@/context/session-provider';
 import { useMediaQuery } from '@/hooks/use-mediaquery';
 import { AuthGuardLayout } from '@/layouts/auth-guard-layout';
 import { inboxMocks } from '@/lib/mocks/inbox';
+import { mockMessages } from '@/lib/mocks/messages';
 import { getRelativeTime } from '@/lib/utils';
 
 export const Route = createFileRoute('/messaging/')({
@@ -26,6 +28,8 @@ function RouteComponent() {
   // hooks
   const { session } = useSession();
   const isSm = useMediaQuery('(min-width: 640px');
+
+  // Perform group operations in the message
 
   return (
     <AuthGuardLayout level="authenticated-only">
@@ -69,23 +73,23 @@ function RouteComponent() {
             </div>
           </header>
 
-          <div>
+          <div className="flex h-[576px] flex-row sm:h-[768px]">
             {/* Inbox */}
             {inboxMocks.length === 0 ? (
-              <div className="flex h-[576px] w-full items-center justify-center sm:h-[768px] sm:max-w-[312px] sm:border-r">
+              <div className="flex w-full items-center justify-center sm:max-w-[312px] sm:border-r">
                 <p className="text-base text-muted-foreground">Inbox Empty</p>
               </div>
             ) : (
-              <ScrollArea className="h-[576px] w-full sm:h-[768px] sm:max-w-[312px] sm:border-r">
+              <ScrollArea className="w-full sm:max-w-[312px] sm:border-r">
                 <ol>
                   {inboxMocks.map((inbox) => (
                     <li className="flex h-24 items-center border-b border-border bg-background px-3.5 transition-colors hover:bg-muted">
-                      <button className="flex flex-auto flex-row items-center gap-3" onClick={() => setSelectedChat(inbox.user_id)}>
+                      <button className="flex flex-auto flex-row items-start gap-3" onClick={() => setSelectedChat(inbox.user_id)}>
                         {/* Avatar */}
-                        <AvatarUser src={inbox.profile_photo} alt={`${inbox.name}'s profile picture`} classNameAvatar="size-14" />
+                        <AvatarUser src={inbox.profile_photo} alt={`${inbox.name}'s profile picture`} classNameAvatar="size-14 self-center" />
 
                         {/* Name & message preview */}
-                        <div className="flex flex-auto flex-col self-start text-left">
+                        <div className="flex flex-auto flex-col text-left">
                           <div className="flex flex-auto flex-row items-center justify-between gap-1">
                             <h2 className="line-clamp-1 text-lg font-semibold text-foreground">{inbox.name}</h2>
 
@@ -102,7 +106,65 @@ function RouteComponent() {
             )}
 
             {/* Chat view */}
-            <div></div>
+            <div className="flex flex-auto flex-col">
+              {/* Chat header */}
+              <Link to="/users/$userId" params={{ userId: '1' }}>
+                <div className="w-full space-y-0.5 border-b bg-background px-4 py-2.5">
+                  {/* name */}
+                  <h1 className="text-sm font-bold text-foreground">Dewo</h1>
+
+                  {/* Status */}
+                  <p className="text-xs font-medium text-muted-foreground">Online</p>
+                </div>
+              </Link>
+
+              {/* Chat */}
+              {mockMessages.length === 0 ? (
+                <div className="flex w-full items-center justify-center sm:max-w-[312px] sm:border-r">
+                  <p className="text-base text-muted-foreground">Send a message to start chatting</p>
+                </div>
+              ) : (
+                <ScrollArea className="flex-auto py-4">
+                  <ol className="flex flex-col gap-3">
+                    {mockMessages.map((message) => (
+                      <li className="flex flex-row items-start gap-3 bg-background px-4 py-2">
+                        {/* Avatar */}
+                        <AvatarUser src={message.fromProfilePhoto} alt={`${message.fromUsername}'s profile picture`} classNameAvatar="size-10" />
+
+                        {/* Message */}
+                        <div className="flex flex-auto flex-col gap-1">
+                          <div className="flex flex-row items-center gap-2">
+                            {/* Name */}
+                            <p className="text-sm font-bold text-foreground">{message.fromUsername}</p>
+
+                            <p className="text-xs font-medium text-muted-foreground">{getRelativeTime(new Date(message.createdAt))}</p>
+                          </div>
+
+                          {/* Message */}
+                          <p className="text-sm">{message.message}</p>
+                        </div>
+
+                        {/* Status */}
+                        <div></div>
+                      </li>
+                    ))}
+                  </ol>
+                </ScrollArea>
+              )}
+
+              {/* Input & send */}
+              <div className="flex flex-col gap-3 border-t-2 p-4">
+                {/* Text area */}
+                <Textarea placeholder="Write a message..." className="max-h-52 bg-muted"></Textarea>
+
+                {/* Options */}
+                <div className="flex flex-auto justify-end">
+                  <Button variant="default" size="xs" className="rounded-full px-3.5">
+                    Send
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
