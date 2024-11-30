@@ -14,7 +14,7 @@ import { LoadingPage } from '@/components/shared/loading-page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { EditProfileDialog } from '@/components/users/update-profile-dialog';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/context/session-provider';
 import { ConnectionStatus } from '@/lib/enum';
 import { cn, formatDate } from '@/lib/utils';
 import { getProfile } from '@/services/user';

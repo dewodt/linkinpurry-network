@@ -19,8 +19,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useSession } from '@/context/session-provider';
 import { useTheme } from '@/context/theme-provider';
-import { useSession } from '@/hooks/use-session';
 import { cn } from '@/lib/utils';
 import { logout } from '@/services/auth';
 import { LogoutErrorResponse, LogoutSuccessResponse } from '@/types/api/auth';

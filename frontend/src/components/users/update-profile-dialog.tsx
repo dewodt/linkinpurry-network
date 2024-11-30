@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/context/session-provider';
 import { updateProfileRequestBody } from '@/lib/schemas/user';
 import { updateProfile } from '@/services/user';
 import { GetProfileSuccessResponse, UpdateProfileErrorResponse, UpdateProfileRequestBody, UpdateProfileSuccessResponse } from '@/types/api/user';

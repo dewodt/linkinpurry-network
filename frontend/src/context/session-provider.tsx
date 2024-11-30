@@ -1,6 +1,6 @@
 import { UseQueryResult, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { getSession } from '@/services/auth';
 import { SessionErrorResponse, SessionSuccessResponse } from '@/types/api/auth';
@@ -49,4 +49,26 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   };
 
   return <SessionContext.Provider value={{ sessionQuery, deleteSession, updateSession }}>{children}</SessionContext.Provider>;
+}
+
+export function useSession() {
+  const context = useContext(SessionContext);
+
+  if (!context) {
+    throw new Error('useSession must be used within an AuthProvider');
+  }
+
+  const { sessionQuery, updateSession, deleteSession } = context;
+
+  return {
+    session: sessionQuery.data?.data,
+    isSuccessSession: sessionQuery.isSuccess,
+    isLoadingSession: sessionQuery.isLoading,
+    isPendingSession: sessionQuery.isPending,
+    isErrorSession: sessionQuery.isError,
+    errorSession: sessionQuery.error,
+    refetchSession: sessionQuery.refetch,
+    updateSession,
+    deleteSession,
+  };
 }

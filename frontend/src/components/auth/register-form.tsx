@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/context/session-provider';
 import { registerRequestBody } from '@/lib/schemas/auth';
 import { register } from '@/services/auth';
 import { RegisterErrorResponse, RegisterRequestBody, RegisterSuccessResponse } from '@/types/api/auth';

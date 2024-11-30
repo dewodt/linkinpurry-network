@@ -22,7 +22,7 @@ import {
   PaginationNumber,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/context/session-provider';
 import { ConnectionStatus } from '@/lib/enum';
 import { getConnectionsRequestQuery } from '@/lib/schemas/connection';
 import { getConnectionLists } from '@/services/connection';
