@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Prisma, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { subHours } from 'date-fns';
 import { injectable } from 'inversify';
 
 import { logger } from '@/core/logger';
@@ -226,16 +227,18 @@ export class Database {
       logger.info('Creating chats...');
       let processedConnections = 0;
 
+      const baseDate = new Date(); // now
+
       for (const connectionKey of connectionSet) {
         const chatBatch: Prisma.ChatCreateManyInput[] = [];
         const [fromId, toId] = connectionKey.split('-').map((id) => BigInt(id));
         const messageCount = 50 + Math.floor(Math.random() * MAX_CHAT_MESSAGES);
-        const baseDate = faker.date.past();
 
         for (let i = 0; i < messageCount; i++) {
           const isFromFirst = Math.random() > 0.5;
-          const newDate = new Date(baseDate);
-          newDate.setMinutes(baseDate.getMinutes() + i * 5);
+
+          // minus days using date-fns
+          const newDate = subHours(baseDate, processedConnections);
 
           chatBatch.push({
             fromId: isFromFirst ? fromId : toId,
@@ -252,6 +255,11 @@ export class Database {
         processedConnections++;
         if (processedConnections % 100 === 0) {
           logger.info(`Created chats for ${processedConnections} connections`);
+        }
+
+        // make seeder fast
+        if (processedConnections === 20) {
+          break;
         }
       }
 

@@ -71,4 +71,19 @@ export class Utils {
       limit: limitResult,
     };
   };
+
+  static parseLimitPagination = ({
+    limit,
+    defaultLimit = 15,
+  }: {
+    limit: string | undefined;
+    defaultLimit?: number;
+  }) => {
+    const limitResult =
+      isNaN(Number(limit)) || Number(limit) <= 0 || Number(limit) > 50 // upperboundary for limit
+        ? defaultLimit
+        : Number(limit);
+
+    return limitResult;
+  };
 }
