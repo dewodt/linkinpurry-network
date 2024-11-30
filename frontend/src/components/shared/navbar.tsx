@@ -1,12 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate, useRouter } from '@tanstack/react-router';
-import { ChevronDown, FileText, LogOut, Menu, Moon, Search as SearchIcon, Sun, UserCircle2, X } from 'lucide-react';
+import { ChevronDown, FileText, LogOut, Menu, Moon, Search as SearchIcon, Sun, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import React from 'react';
 
 import { LinkedInFindUserIcon, LinkedInHomeIcon, LinkedInLogo, LinkedInMessagingIcon, LinkedInNetworkIcon } from '@/components/icons/linkedin-icons';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarUser } from '@/components/shared/avatar-user';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -298,12 +298,7 @@ function UserDropdown({ session }: { session: Session }) {
   return (
     <DropdownMenu open={open} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger className="flex flex-col items-center gap-[1px] focus:outline-none">
-        <Avatar className="size-8 md:size-6">
-          <AvatarImage src={session.profilePhoto} alt="Profile picture" />
-          <AvatarFallback>
-            <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
-          </AvatarFallback>
-        </Avatar>
+        <AvatarUser src={session.profilePhoto} alt={`${session.name}'s profile picture`} classNameAvatar="size-8 md:size-6" />
 
         <div className="hidden flex-row items-center text-muted-foreground hover:text-primary md:flex">
           <p className="text-xs font-medium tracking-wide transition-colors">Me</p>
@@ -314,12 +309,7 @@ function UserDropdown({ session }: { session: Session }) {
       <DropdownMenuContent className="w-72" align="end" sideOffset={20}>
         <DropdownMenuGroup>
           <div className="flex items-center gap-3 p-3">
-            <Avatar className="size-14">
-              <AvatarImage src={session.profilePhoto} alt="Profile picture" />
-              <AvatarFallback>
-                <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
-              </AvatarFallback>
-            </Avatar>
+            <AvatarUser src={session.profilePhoto} alt={`${session.name}'s profile picture`} classNameAvatar="size-14" />
 
             <div className="flex-1">
               <h3 className="font-semibold">{session.name}</h3>

@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { SearchIcon, SquarePen, UserCircle2 } from 'lucide-react';
+import { SearchIcon, SquarePen } from 'lucide-react';
 
 import { useState } from 'react';
 
+import { NewChatDialog } from '@/components/messaging/new-chat-dialog';
+import { AvatarUser } from '@/components/shared/avatar-user';
 import { HelmetTemplate } from '@/components/shared/helmet';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -33,7 +34,7 @@ function RouteComponent() {
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
         <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-md">
           {/* Header */}
-          <header className="flex flex-col gap-2 border-b p-5 sm:flex-row sm:items-center sm:gap-6">
+          <header className="flex flex-col gap-3 border-b p-5 sm:flex-row sm:items-center sm:gap-6">
             <h1 className="text-lg font-semibold">Messaging</h1>
 
             <div className="flex flex-row items-center gap-3 sm:flex-auto sm:justify-between">
@@ -49,7 +50,7 @@ function RouteComponent() {
                     type="search"
                     id="search-messages"
                     placeholder="Search messages"
-                    className="h-8 bg-muted pl-9 text-xs"
+                    className="h-9 bg-muted pl-9 text-sm"
                     // value={searchInput}
                     // onChange={(e) => {
                     //   setSearchInput(e.target.value);
@@ -60,9 +61,11 @@ function RouteComponent() {
               </search>
 
               {/* New chat dialog */}
-              <Button size="icon-sm" className="rounded-full" variant="ghost">
-                <SquarePen className="size-6" />
-              </Button>
+              <NewChatDialog>
+                <Button size="icon-sm" className="rounded-full" variant="ghost">
+                  <SquarePen className="size-6" />
+                </Button>
+              </NewChatDialog>
             </div>
           </header>
 
@@ -79,12 +82,7 @@ function RouteComponent() {
                     <li className="flex h-24 items-center border-b border-border bg-background px-3.5 transition-colors hover:bg-muted">
                       <button className="flex flex-auto flex-row items-center gap-3" onClick={() => setSelectedChat(inbox.user_id)}>
                         {/* Avatar */}
-                        <Avatar className="size-14">
-                          <AvatarImage src={inbox.profile_photo} alt={`${inbox.name}'s profile picture`} />
-                          <AvatarFallback>
-                            <UserCircle2 className="size-full stroke-gray-500 stroke-[1.25px]" />
-                          </AvatarFallback>
-                        </Avatar>
+                        <AvatarUser src={inbox.profile_photo} alt={`${inbox.name}'s profile picture`} classNameAvatar="size-14" />
 
                         {/* Name & message preview */}
                         <div className="flex flex-auto flex-col self-start text-left">

@@ -29,6 +29,7 @@ export async function getConnectionLists(
   params: GetConnectionsRequestParams,
   query: GetConnectionsRequestQuery,
 ): Promise<GetConnectionsSuccessResponse> {
+  // await new Promise((resolve) => setTimeout(resolve, 5000));
   const axiosResponse = await api.get<GetConnectionsSuccessResponse>(`/api/users/${params.userId}/connections`, {
     params: query,
   });
