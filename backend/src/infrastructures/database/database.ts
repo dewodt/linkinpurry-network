@@ -45,163 +45,230 @@ export class Database {
     logger.info('Disconnected from database');
   }
 
-  /**
-   * Database seeder
-   * @returns void
-   */
-  public async seed(): Promise<void> {
-    /**
-     * Users
-     * create 100 users
-     * (X, userX, userX@mail.com, Password1!, User First Last X, ex-Software Engineer @ (Random Companies), 2020-2025),React, django, ''>
-     * *
-     */
-    logger.info('Creating users');
-    const totalUsers = 400;
-    const users: Prisma.UserCreateManyInput[] = [];
-    const hashedPassword = await bcrypt.hash('Password1!', 10);
-
-    for (let id = 1n; id <= totalUsers; id++) {
-      const companies = [];
-      for (let j = 0; j < faker.number.int({ min: 0, max: 5 }); j++) {
-        companies.push(faker.company.name());
-      }
-      const finalCompanies = companies.length > 0 ? companies.join(', ') : null;
-
-      const skills = [];
-      for (let j = 0; j < faker.number.int({ min: 0, max: 5 }); j++) {
-        skills.push(faker.person.jobTitle());
-      }
-      const finalSkills = skills.length > 0 ? skills.join(', ') : null;
-
-      users.push({
-        id: id,
-        username: `user${id}`,
-        email: `user${id}@mail.com`,
-        passwordHash: hashedPassword,
-        fullName: faker.person.fullName(),
-        workHistory: finalCompanies ? `ex-Software Engineer @ (${finalCompanies})` : null,
-        skills: finalSkills,
-        profilePhotoPath: '',
-      });
+  private async batchProcess<T>(
+    items: T[],
+    batchSize: number,
+    processFunction: (batch: T[]) => Promise<void>
+  ) {
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      await processFunction(batch);
     }
+  }
 
-    /**
-     * Feeds
-     * every user have 50 feeds
-     *
-     */
-    logger.info('Creating feeds');
-    const totalFeedsPerUser = 50;
-    const feeds: Prisma.FeedCreateManyInput[] = [];
-    for (let userId = 1n; userId <= totalUsers; userId++) {
-      for (let j = 0; j < totalFeedsPerUser; j++) {
-        feeds.push({
-          content: faker.lorem.sentence(),
-          userId,
-          createdAt: faker.date.recent(),
-        });
+  public async seed({
+    BATCH_SIZE = 100,
+    USER_COUNT = 400,
+    MAX_FEED_COUNT = 26,
+    MAX_CONNECTION_COUNT = 201,
+    MAX_REQUEST_COUNT = 31,
+    MAX_CHAT_MESSAGES = 51,
+  }): Promise<void> {
+    try {
+      // Delete all existing data first
+      logger.info('Deleting existing data...');
+      await this.prisma.$transaction([
+        this.prisma.chat.deleteMany(),
+        this.prisma.connection.deleteMany(),
+        this.prisma.connectionRequest.deleteMany(),
+        this.prisma.feed.deleteMany(),
+        this.prisma.user.deleteMany(),
+      ]);
+
+      // Create users in batches
+      logger.info('Creating users...');
+      const hashedPassword = await bcrypt.hash('Password1!', 10);
+
+      for (let batch = 0; batch < USER_COUNT; batch += BATCH_SIZE) {
+        const endIndex = Math.min(batch + BATCH_SIZE, USER_COUNT);
+        const userBatch = Array.from({ length: endIndex - batch }, (_, i) => ({
+          id: BigInt(batch + i + 1),
+          username: `user${batch + i + 1}`,
+          email: `user${batch + i + 1}@example.com`,
+          passwordHash: hashedPassword,
+          fullName: faker.person.fullName(),
+          workHistory: faker.lorem.paragraphs(),
+          skills: faker.lorem.words(5),
+          profilePhotoPath: faker.image.avatar(),
+          createdAt: faker.date.past(),
+        }));
+
+        await this.prisma.user.createMany({ data: userBatch });
+        logger.info(`Created users ${batch + 1} to ${endIndex}`);
       }
-    }
 
-    /**
-     * Connections & Connection requests
-     * Note that connections are mutual, so we need to create 2 rows
-     */
-    logger.info('Creating connections and connection requests');
-
-    const connections: Prisma.ConnectionCreateManyInput[] = [];
-    const connectionRequests: Prisma.ConnectionRequestCreateManyInput[] = [];
-
-    for (let i = 0; i < totalUsers; i++) {
-      // Connection
-      const endJ = Math.floor((totalUsers * 3) / 4);
-      for (let j = i + 1; j < endJ; j++) {
-        const date = faker.date.recent();
-        const id1 = i + 1;
-        const id2 = j + 1;
-
-        connections.push(
-          { fromId: id1, toId: id2, createdAt: date },
-          { fromId: id2, toId: id1, createdAt: date }
+      // Create feeds in batches
+      logger.info('Creating feeds...');
+      for (let userBatch = 1; userBatch <= USER_COUNT; userBatch += BATCH_SIZE) {
+        const feedBatch = [];
+        for (
+          let userId = userBatch;
+          userId < userBatch + BATCH_SIZE && userId <= USER_COUNT;
+          userId++
+        ) {
+          const feedCount = Math.floor(Math.random() * MAX_FEED_COUNT);
+          for (let i = 0; i < feedCount; i++) {
+            feedBatch.push({
+              userId: BigInt(userId),
+              content: faker.lorem.paragraph(),
+              createdAt: faker.date.past(),
+            });
+          }
+        }
+        await this.prisma.feed.createMany({ data: feedBatch });
+        logger.info(
+          `Created feeds for users ${userBatch} to ${Math.min(userBatch + BATCH_SIZE - 1, USER_COUNT)}`
         );
       }
 
-      // The rest is for connection request
-      for (let j = 0; j < Math.floor(i / 2); j++) {
-        const date = faker.date.recent();
-        const id1 = i + 1;
-        const id2 = j + 1;
+      // Create connections in batches
+      logger.info('Creating connections...');
+      const connectionSet = new Set<string>();
 
-        connectionRequests.push({
-          fromId: id1,
-          toId: id2,
-          createdAt: date,
-        });
+      for (let userBatch = 1; userBatch <= USER_COUNT; userBatch += BATCH_SIZE) {
+        const connectionBatch: Prisma.ConnectionCreateManyInput[] = [];
+
+        for (
+          let userId = userBatch;
+          userId < userBatch + BATCH_SIZE && userId <= USER_COUNT;
+          userId++
+        ) {
+          const connectionCount = Math.floor(Math.random() * MAX_CONNECTION_COUNT);
+          let currentConnections = 0;
+
+          while (currentConnections < connectionCount) {
+            const potentialConnection = BigInt(Math.floor(Math.random() * USER_COUNT) + 1);
+            const connectionKey = `${userId}-${potentialConnection}`;
+            const reverseKey = `${potentialConnection}-${userId}`;
+
+            if (
+              potentialConnection !== BigInt(userId) &&
+              !connectionSet.has(connectionKey) &&
+              !connectionSet.has(reverseKey)
+            ) {
+              connectionSet.add(connectionKey);
+              connectionBatch.push(
+                {
+                  fromId: BigInt(userId),
+                  toId: potentialConnection,
+                  createdAt: faker.date.past(),
+                },
+                {
+                  fromId: potentialConnection,
+                  toId: BigInt(userId),
+                  createdAt: faker.date.past(),
+                }
+              );
+              currentConnections++;
+            }
+          }
+        }
+
+        if (connectionBatch.length > 0) {
+          await this.batchProcess(connectionBatch, 1000, async (batch) => {
+            await this.prisma.connection.createMany({ data: batch });
+          });
+        }
+        logger.info(
+          `Created connections for users ${userBatch} to ${Math.min(userBatch + BATCH_SIZE - 1, USER_COUNT)}`
+        );
       }
-      for (let j = endJ; j < totalUsers; j++) {
-        const date = faker.date.recent();
 
-        const id1 = i + 1;
-        const id2 = j + 1;
+      // Create connection requests in batches
+      logger.info('Creating connection requests...');
+      const requestSet = new Set<string>();
 
-        connectionRequests.push({
-          fromId: id1,
-          toId: id2,
-          createdAt: date,
-        });
+      for (let userBatch = 1; userBatch <= USER_COUNT; userBatch += BATCH_SIZE) {
+        const requestBatch: Prisma.ConnectionRequestCreateManyInput[] = [];
+
+        for (
+          let userId = userBatch;
+          userId < userBatch + BATCH_SIZE && userId <= USER_COUNT;
+          userId++
+        ) {
+          const requestCount = Math.floor(Math.random() * MAX_REQUEST_COUNT);
+          let currentRequests = 0;
+
+          while (currentRequests < requestCount) {
+            const potentialRequest = BigInt(Math.floor(Math.random() * USER_COUNT) + 1);
+            const requestKey = `${userId}-${potentialRequest}`;
+            const reverseKey = `${potentialRequest}-${userId}`;
+
+            if (
+              potentialRequest !== BigInt(userId) &&
+              !connectionSet.has(requestKey) &&
+              !connectionSet.has(reverseKey) &&
+              !requestSet.has(requestKey) &&
+              !requestSet.has(reverseKey)
+            ) {
+              requestSet.add(requestKey);
+              requestBatch.push({
+                fromId: BigInt(userId),
+                toId: potentialRequest,
+                createdAt: faker.date.past(),
+              });
+              currentRequests++;
+            }
+          }
+        }
+
+        if (requestBatch.length > 0) {
+          await this.batchProcess(requestBatch, 1000, async (batch) => {
+            await this.prisma.connectionRequest.createMany({ data: batch });
+          });
+        }
+        logger.info(
+          `Created connection requests for users ${userBatch} to ${Math.min(userBatch + BATCH_SIZE - 1, USER_COUNT)}`
+        );
       }
+
+      // Create chats in batches
+      logger.info('Creating chats...');
+      let processedConnections = 0;
+
+      for (const connectionKey of connectionSet) {
+        const chatBatch: Prisma.ChatCreateManyInput[] = [];
+        const [fromId, toId] = connectionKey.split('-').map((id) => BigInt(id));
+        const messageCount = 50 + Math.floor(Math.random() * MAX_CHAT_MESSAGES);
+        const baseDate = faker.date.past();
+
+        for (let i = 0; i < messageCount; i++) {
+          const isFromFirst = Math.random() > 0.5;
+          const newDate = new Date(baseDate);
+          newDate.setMinutes(baseDate.getMinutes() + i * 5);
+
+          chatBatch.push({
+            fromId: isFromFirst ? fromId : toId,
+            toId: isFromFirst ? toId : fromId,
+            message: faker.lorem.sentence(),
+            timestamp: newDate,
+          });
+        }
+
+        await this.batchProcess(chatBatch, 1000, async (batch) => {
+          await this.prisma.chat.createMany({ data: batch });
+        });
+
+        processedConnections++;
+        if (processedConnections % 100 === 0) {
+          logger.info(`Created chats for ${processedConnections} connections`);
+        }
+      }
+
+      // Update sequences
+      logger.info('Updating sequences...');
+      await this.prisma.$executeRaw`
+        SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
+      `;
+      await this.prisma.$executeRaw`
+        SELECT setval(pg_get_serial_sequence('feed', 'id'), (SELECT MAX(id) FROM feed));
+      `;
+
+      logger.info('Seeding database completed successfully');
+    } catch (error) {
+      if (error instanceof Error)
+        logger.error('Error seeding database:', error.stack ?? '', error.message);
+      throw error;
     }
-
-    /**
-     * Chats
-     * for every connected user, generate 50 messages
-     */
-    logger.info('Creating chats');
-    const totalChatsPerConnectedUser = 50;
-    const chats: Prisma.ChatCreateManyInput[] = [];
-    // for (const connection of connections) {
-    //   for (let j = 0; j < totalChatsPerConnectedUser; j++) {
-    //     chats.push({
-    //       fromId: connection.fromId,
-    //       toId: connection.toId,
-    //       message: faker.lorem.sentence(),
-    //       timestamp: faker.date.recent(),
-    //     });
-    //   }
-    // }
-
-    logger.info('Seeding database');
-    await this.prisma.$transaction(
-      async (tx) => {
-        // Delete all
-        await tx.chat.deleteMany({});
-        await tx.connection.deleteMany({});
-        await tx.connectionRequest.deleteMany({});
-        await tx.feed.deleteMany({});
-        await tx.user.deleteMany({});
-
-        // Create meny
-        await tx.user.createMany({ data: users });
-        await tx.feed.createMany({ data: feeds });
-        await tx.connection.createMany({ data: connections });
-        await tx.connectionRequest.createMany({ data: connectionRequests });
-        await tx.chat.createMany({ data: chats });
-
-        // Update users_id_seq
-        await tx.$executeRaw`
-          SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
-      `;
-
-        // Update feeds_id_seq
-        await tx.$executeRaw`
-          SELECT setval(pg_get_serial_sequence('feed', 'id'), (SELECT MAX(id) FROM feed));
-      `;
-      },
-      {
-        timeout: 120 * 1000,
-      }
-    );
-    logger.info('Seeding database done');
   }
 }

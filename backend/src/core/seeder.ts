@@ -19,7 +19,15 @@ export class Seeder {
   }
 
   public async run(): Promise<void> {
-    await this.database.seed();
+    // Modify as needed
+    await this.database.seed({
+      BATCH_SIZE: 100,
+      USER_COUNT: 400,
+      MAX_FEED_COUNT: 26,
+      MAX_CONNECTION_COUNT: 201,
+      MAX_REQUEST_COUNT: 31,
+      MAX_CHAT_MESSAGES: 51,
+    });
   }
 }
 

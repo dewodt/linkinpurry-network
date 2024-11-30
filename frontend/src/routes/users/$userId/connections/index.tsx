@@ -162,7 +162,7 @@ function RouteComponent() {
                                 </Button>
                               </ConnectDialog>
                             ) : con.connection_status === ConnectionStatus.PENDING ? (
-                              <Button className="gap-1.5 rounded-full font-bold" variant={'ghost'} size={'xs'} disabled>
+                              <Button className="gap-1.5 rounded-full font-bold" variant={'outline-muted'} size={'xs'} disabled>
                                 <Clock4 className="size-4" />
                                 Pending
                               </Button>
