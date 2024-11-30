@@ -11,6 +11,7 @@ import { UploadService } from '@/services/upload-service';
 import { UserService } from '@/services/user-service';
 
 import { Config } from './config';
+import { WebSocketServer } from './websocket';
 
 export class DependencyContainer {
   private container: Container;
@@ -29,6 +30,7 @@ export class DependencyContainer {
       bind(Config.Key).to(Config).inSingletonScope();
       bind(Database.Key).to(Database).inSingletonScope();
       bind(UploadService.Key).to(UploadService).inSingletonScope();
+      bind(WebSocketServer.Key).to(WebSocketServer).inSingletonScope();
     });
 
     // Auth module

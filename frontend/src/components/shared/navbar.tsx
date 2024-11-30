@@ -341,15 +341,29 @@ function UserDropdown({ session }: { session: Session }) {
         {/* Atur atur sebutuhny delete/tambah/edit */}
         <DropdownMenuGroup>
           <DropdownMenuLabel className="px-3 font-semibold text-foreground">Manage</DropdownMenuLabel>
-          <DropdownMenuItem className="px-3 py-2">
-            <FileText className="size-4" />
-            <span>Posts</span>
-          </DropdownMenuItem>
+
+          {/* Posts */}
+          <Link>
+            <DropdownMenuItem className="px-3 py-2">
+              <FileText className="size-4" />
+              <span>Posts</span>
+            </DropdownMenuItem>
+          </Link>
+
+          {/*  Connections */}
+          <Link to="/users/$userId/connections" params={{ userId: session.userId }}>
+            <DropdownMenuItem className="px-3 py-2">
+              <LinkedInNetworkIcon />
+              <span>Connections</span>
+            </DropdownMenuItem>
+          </Link>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
+          <DropdownMenuLabel className="px-3 font-semibold text-foreground">Settings</DropdownMenuLabel>
+
           {/* Theme */}
           <DropdownMenuItem className="px-3 py-2" onSelect={handleToggle}>
             <Sun className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

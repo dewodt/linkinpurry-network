@@ -7,6 +7,7 @@ import { logger as honoLogger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import { Container } from 'inversify';
 import 'reflect-metadata';
+import { Server } from 'socket.io';
 
 import type { JWTPayload } from '@/dto/auth-dto';
 import { ResponseDtoFactory } from '@/dto/common';
@@ -20,6 +21,7 @@ import { Utils } from './../utils/utils';
 import { Config } from './config';
 import { DependencyContainer } from './container';
 import { logger } from './logger';
+import { WebSocketServer } from './websocket';
 
 /**
  * Global Hono Generic Config
@@ -39,6 +41,7 @@ export class App {
 
   private config: Config;
   private database: Database;
+  private webSocketServer: WebSocketServer;
 
   constructor() {
     this.app = new OpenAPIHono<IGlobalContext>({
@@ -55,6 +58,7 @@ export class App {
 
     this.config = this.container.get<Config>(Config.Key);
     this.database = this.container.get<Database>(Database.Key);
+    this.webSocketServer = this.container.get<WebSocketServer>(WebSocketServer.Key);
 
     // Setup
     this.setup();
@@ -144,11 +148,14 @@ export class App {
     const config = this.container.get<Config>(Config.Key);
     const port = config.get('PORT');
 
-    // Start server
-    serve({
+    // Start http server
+    const httpServer = serve({
       fetch: this.app.fetch,
       port,
     });
+
+    // Initialize socket.io server
+    this.webSocketServer.initialize(httpServer);
   }
 
   /**

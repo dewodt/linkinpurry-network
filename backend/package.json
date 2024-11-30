@@ -21,6 +21,7 @@
     "hono": "^4.6.11",
     "inversify": "^6.1.4",
     "reflect-metadata": "^0.2.2",
+    "socket.io": "^4.8.1",
     "winston": "^3.17.0",
     "zod": "^3.23.8"
   },
