@@ -105,7 +105,7 @@ export const UserList = ({ debouncedSearch, isOpen, setIsOpen }: UserListProps) 
 
   // Query
   const limit = 10;
-  const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = useInfiniteQuery<
+  const { data, isPending, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = useInfiniteQuery<
     GetConnectionsSuccessResponse,
     GetConnectionsErrorResponse,
     InfiniteData<GetConnectionsSuccessResponse>,
@@ -165,41 +165,39 @@ export const UserList = ({ debouncedSearch, isOpen, setIsOpen }: UserListProps) 
     );
   }
 
-  if (isLoading) return <LoadingFill className="h-80" />;
+  if (isPending) return <LoadingFill className="h-80" />;
 
   if (isError) return <ErrorFill className="h-80" statusText={error.response?.statusText} message={error.response?.data.message} refetch={refetch} />;
 
   if (allUsers.length === 0) return <WarningFill className="h-80" message="No users found" />;
 
   return (
-    <div ref={rootRef}>
-      <ScrollArea className="h-80">
-        <ul className="grid grid-cols-1">
-          {allUsers.map((user, index) => (
-            <li key={user.user_id} className="flex">
-              <button
-                className={cn(
-                  'flex flex-auto flex-row items-center gap-3 px-5 py-3 transition-all hover:bg-muted lg:px-5',
-                  index === allUsers.length - 1 ? 'border-none' : 'border-b',
-                )}
-                // onClick={() => mutate(user.id)}
-                // disabled={isMutating}
-              >
-                <AvatarUser classNameAvatar="size-12" src={user.profile_photo} alt={`${user.username}'s profile picture`} />
-                <div className="space-y-1">
-                  <h4 className="line-clamp-1 text-start text-base font-medium leading-tight">{user.name}</h4>
-                  <p className="line-clamp-1 text-start text-sm leading-tight text-muted-foreground">@{user.username}</p>
-                </div>
-              </button>
-            </li>
-          ))}
-
-          <li ref={sentinelRef} className="flex items-center justify-center">
-            {isFetchingNextPage && <LoadingFill className="border-t py-5" />}
+    <ScrollArea className="h-80" ref={rootRef}>
+      <ul className="grid grid-cols-1">
+        {allUsers.map((user, index) => (
+          <li key={user.user_id} className="flex">
+            <button
+              className={cn(
+                'flex flex-auto flex-row items-center gap-3 px-5 py-3 transition-all hover:bg-muted lg:px-5',
+                index === allUsers.length - 1 ? 'border-none' : 'border-b',
+              )}
+              // onClick={() => mutate(user.id)}
+              // disabled={isMutating}
+            >
+              <AvatarUser classNameAvatar="size-12" src={user.profile_photo} alt={`${user.username}'s profile picture`} />
+              <div className="space-y-1">
+                <h4 className="line-clamp-1 text-start text-base font-medium leading-tight">{user.name}</h4>
+                <p className="line-clamp-1 text-start text-sm leading-tight text-muted-foreground">@{user.username}</p>
+              </div>
+            </button>
           </li>
-        </ul>
-      </ScrollArea>
-    </div>
+        ))}
+
+        <li ref={sentinelRef} className="flex items-center justify-center">
+          {isFetchingNextPage && <LoadingFill className="border-t py-5" />}
+        </li>
+      </ul>
+    </ScrollArea>
   );
 };
 

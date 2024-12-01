@@ -258,7 +258,7 @@ export class Database {
         }
 
         // make seeder fast
-        if (processedConnections === 20) {
+        if (processedConnections === 1000) {
           break;
         }
       }
