@@ -26,7 +26,7 @@ export class AuthMiddleware implements IAuthMiddleware {
   static readonly Key = Symbol.for('AuthMiddleware');
 
   // Dependency injected
-  constructor(@inject(AuthService.Key) private authService: AuthService) {}
+  constructor(@inject(AuthService.Key) private readonly authService: AuthService) {}
 
   /**
    * Authorize middleware

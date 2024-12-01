@@ -1,7 +1,6 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
 
-import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import { Database } from '@/infrastructures/database/database';
@@ -90,10 +89,7 @@ export class ChatService implements IChatService {
 
   private prisma: PrismaClient;
 
-  constructor(
-    @inject(Config.Key) private config: Config,
-    @inject(Database.Key) private database: Database
-  ) {
+  constructor(@inject(Database.Key) private readonly database: Database) {
     this.prisma = this.database.getPrisma();
   }
 
@@ -185,27 +181,15 @@ export class ChatService implements IChatService {
       const fromUser = connection.fromUser;
       const toUser = connection.toUser;
 
-      const fromUserFullURL =
-        fromUser.profilePhotoPath.length > 0
-          ? `${this.config.get('BE_URL')}${fromUser.profilePhotoPath}`
-          : '';
-
-      const toUserFullURL =
-        toUser.profilePhotoPath.length > 0
-          ? `${this.config.get('BE_URL')}${toUser.profilePhotoPath}`
-          : '';
-
       return {
         ...newChat,
         fromUser: {
           ...fromUser,
           fullName: fromUser.fullName || '',
-          profilePhotoPath: fromUserFullURL,
         },
         toUser: {
           ...toUser,
           fullName: toUser.fullName || '',
-          profilePhotoPath: toUserFullURL,
         },
         roomId: this.getRoomId(fromUser.id, toUser.id),
       };
@@ -353,8 +337,6 @@ export class ChatService implements IChatService {
     //   cursor: cursor ? { id: cursor } : undefined,
     //   take: limit + 1,
     // });
-
-    const bucketURL = this.config.get('BE_URL');
 
     try {
       const inboxes = await this.prisma.$queryRaw<

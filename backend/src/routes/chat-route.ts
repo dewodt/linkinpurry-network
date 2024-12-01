@@ -29,8 +29,8 @@ export class ChatRoute implements IRoute {
 
   // Dependencies
   constructor(
-    @inject(AuthMiddleware.Key) private authMiddleware: AuthMiddleware,
-    @inject(ChatService.Key) private chatService: ChatService
+    @inject(AuthMiddleware.Key) private readonly authMiddleware: AuthMiddleware,
+    @inject(ChatService.Key) private readonly chatService: ChatService
   ) {}
 
   /**

@@ -31,8 +31,8 @@ export class AuthRoute implements IRoute {
 
   // Dependencies
   constructor(
-    @inject(AuthMiddleware.Key) private authMiddleware: AuthMiddleware,
-    @inject(AuthService.Key) private authService: AuthService
+    @inject(AuthMiddleware.Key) private readonly authMiddleware: AuthMiddleware,
+    @inject(AuthService.Key) private readonly authService: AuthService
   ) {}
 
   /**

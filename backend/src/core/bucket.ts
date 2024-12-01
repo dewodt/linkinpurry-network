@@ -1,28 +1,28 @@
 import fs from 'fs/promises';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import type { IService } from './service';
+import { Config } from './config';
 
-export interface IUploadService extends IService {
+export interface IBucket {
   uploadFile(directoryFromBucket: string, file: File): Promise<string>;
   deleteFile(pathFromPublic: string): Promise<void>;
 }
 
 @injectable()
-export class UploadService implements IUploadService {
+export class Bucket implements IBucket {
   // IoC Key
-  static readonly Key = Symbol.for('UploadService');
+  static readonly Key = Symbol.for('Bucket');
 
   // Dependencies
-  constructor() {}
+  constructor(@inject(Config.Key) private readonly config: Config) {}
 
   /**
-   * uploads a file and returns the path from public
+   * uploads a file and returns the the path (complete with the host name)
    *
    * @param file
-   * @returns
+   * @returns string
    * @throws Error
    */
   async uploadFile(pathFromBucket: string, file: File): Promise<string> {
@@ -47,24 +47,27 @@ export class UploadService implements IUploadService {
       // Save to storage
       await fs.writeFile(targetPath, Buffer.from(buffer));
 
-      return pathFromPublic;
+      const fullURL = `${this.config.get('BE_URL')}${pathFromPublic}`;
+
+      return fullURL;
     } catch (error) {
       throw error;
     }
   }
 
   /**
-   * Delete file from a given path (from public)
+   * Delete file from a full url
    *
    * @param pathFromBucket
    * @returns void
    * @throws Error
    */
-  async deleteFile(pathFromBucket: string): Promise<void> {
+  async deleteFile(fullURL: string): Promise<void> {
     try {
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
 
+      const pathFromBucket = fullURL.replace(`${this.config.get('BE_URL')}`, '');
       const targetPath = path.join(__dirname, '../public/bucket', pathFromBucket);
 
       // Delete file

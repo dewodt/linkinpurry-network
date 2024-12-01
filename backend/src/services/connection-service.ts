@@ -1,7 +1,6 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
 
-import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import type { PagePaginationResponseMeta } from '@/dto/common';
@@ -72,10 +71,7 @@ export class ConnectionService implements IConnectionService {
   private prisma: PrismaClient;
 
   // Inject dependencies
-  constructor(
-    @inject(Config.Key) private config: Config,
-    @inject(Database.Key) private database: Database
-  ) {
+  constructor(@inject(Database.Key) private readonly database: Database) {
     this.prisma = this.database.getPrisma();
   }
 
@@ -378,16 +374,12 @@ export class ConnectionService implements IConnectionService {
 
       const connections = rawConnections.map((connection) => {
         const toUser = connection.toUser;
-        const fullURL =
-          toUser.profilePhotoPath.length > 0
-            ? `${this.config.get('BE_URL')}${toUser.profilePhotoPath}`
-            : '';
 
         return {
           id: toUser.id,
           username: toUser.username,
           fullName: toUser.fullName || 'N/A',
-          profilePhotoPath: fullURL,
+          profilePhotoPath: toUser.profilePhotoPath,
           workHistory: toUser.workHistory,
           connectionStatus: currentUserId
             ? toUser._count.receivedConnections > 0
@@ -462,16 +454,12 @@ export class ConnectionService implements IConnectionService {
 
       const requests = rawRequests.map((request) => {
         const fromUser = request.fromUser;
-        const fullURL =
-          fromUser.profilePhotoPath.length > 0
-            ? `${this.config.get('BE_URL')}${fromUser.profilePhotoPath}`
-            : '';
 
         return {
           id: fromUser.id,
           username: fromUser.username,
           fullName: fromUser.fullName || 'N/A',
-          profilePhotoPath: fullURL,
+          profilePhotoPath: fromUser.profilePhotoPath,
           workHistory: fromUser.workHistory,
         };
       });

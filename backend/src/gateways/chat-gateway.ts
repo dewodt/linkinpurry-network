@@ -28,7 +28,7 @@ export class ChatGateway implements IWebSocketGateway {
   // 1 user id can have multiple socket ids
   private userSocketsMap = new Map<bigint, Set<string>>();
 
-  constructor(@inject(ChatService.Key) private chatService: ChatService) {}
+  constructor(@inject(ChatService.Key) private readonly chatService: ChatService) {}
 
   /**
    * Handle connection

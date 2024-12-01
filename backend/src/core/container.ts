@@ -10,9 +10,9 @@ import { UserRoute } from '@/routes/user-route';
 import { AuthService } from '@/services/auth-service';
 import { ChatService } from '@/services/chat-service';
 import { ConnectionService } from '@/services/connection-service';
-import { UploadService } from '@/services/upload-service';
 import { UserService } from '@/services/user-service';
 
+import { Bucket } from './bucket';
 import { Config } from './config';
 import { WebSocketServer } from './websocket';
 
@@ -33,7 +33,7 @@ export class DependencyContainer {
     this.coreModule = new ContainerModule((bind) => {
       bind(Config.Key).to(Config).inSingletonScope();
       bind(Database.Key).to(Database).inSingletonScope();
-      bind(UploadService.Key).to(UploadService).inSingletonScope();
+      bind(Bucket.Key).to(Bucket).inSingletonScope();
       bind(WebSocketServer.Key).to(WebSocketServer).inSingletonScope();
     });
 
