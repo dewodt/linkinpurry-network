@@ -2,9 +2,17 @@ import { type OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { inject, injectable } from 'inversify';
 
 import type { IGlobalContext } from '@/core/app';
-import { InternalServerErrorException, UnauthorizedException } from '@/core/exception';
 import {
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@/core/exception';
+import {
+  type IGetChatHistoryResponseBodyDto,
   type IGetChatInboxResponseBodyDto,
+  getChatHistoryRequestParamsDto,
+  getChatHistoryRequestQueryDto,
+  getChatHistoryResponseBodyDto,
   getChatInboxRequestQueryDto,
   getChatInboxResponseBodyDto,
 } from '@/dto/chat-dto';
@@ -35,6 +43,9 @@ export class ChatRoute implements IRoute {
   registerRoutes(app: OpenAPIHono<IGlobalContext>): void {
     // Get chat inbox
     this.getChatInbox(app);
+
+    // Get chat history
+    this.getChatHistory(app);
   }
 
   /**
@@ -113,6 +124,95 @@ export class ChatRoute implements IRoute {
         else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
         // Unexpected error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
+
+  /**
+   * Get chat history
+   */
+  private getChatHistory(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const getChatHistoryRoute = createRoute({
+      tags: ['chat'],
+      method: 'get',
+      path: '/api/chat/{otherUserId}/history',
+      summary: 'Get chat history',
+      description: 'API endpoint for getting chat history',
+      request: {
+        params: getChatHistoryRequestParamsDto,
+        query: getChatHistoryRequestQueryDto,
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessCursorPagination(
+          'Get chat history successful',
+          getChatHistoryResponseBodyDto
+        ),
+        400: OpenApiResponseFactory.jsonBadRequest('Trying to get chat history of yourself'),
+        401: OpenApiResponseFactory.jsonUnauthorized('Unauthorized'),
+        404: OpenApiResponseFactory.jsonNotFound('Other user not found'),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'Unexpected error occurred while getting chat history'
+        ),
+      },
+    });
+
+    // Register route
+    app.use(
+      getChatHistoryRoute.getRoutingPath(),
+      this.authMiddleware.authorize({ isPublic: false })
+    );
+    app.openapi(getChatHistoryRoute, async (c) => {
+      // Get validated params
+      const { otherUserId } = c.req.valid('param');
+
+      // Get validated query
+      const { cursor, limit } = c.req.valid('query');
+
+      // Get current user id
+      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+
+      // Call service
+      try {
+        const { history, meta } = await this.chatService.getChatHistory(
+          currentUserId,
+          otherUserId,
+          cursor,
+          limit
+        );
+
+        // Map response to dto
+        const responseData: IGetChatHistoryResponseBodyDto = history.map((chat) => {
+          return {
+            chat_id: chat.id.toString(),
+            from_user_id: chat.fromId.toString(),
+            timestamp: chat.timestamp.toISOString(),
+            message: chat.message,
+          };
+        });
+
+        const metaDto: CursorPaginationResponseMeta = {
+          cursor: cursor ? cursor.toString() : null,
+          nextCursor: meta.nextCursor ? meta.nextCursor.toString() : null,
+          limit,
+        };
+
+        const responseDto = ResponseDtoFactory.createSuccessCursorPaginationResponseDto(
+          'Get chat history successful',
+          responseData,
+          metaDto
+        );
+
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof UnauthorizedException) return c.json(e.toResponseDto(), 401);
+        else if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+
+        // Other errors
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
         return c.json(responseDto, 500);
       }

@@ -29,6 +29,26 @@ export interface IChatService extends IService {
       limit: number;
     };
   }>;
+
+  getChatHistory(
+    currentUserId: bigint,
+    otherUserId: bigint,
+    cursor: bigint | undefined,
+    limit: number
+  ): Promise<{
+    history: {
+      id: bigint;
+      message: string;
+      fromId: bigint;
+      toId: bigint;
+      timestamp: Date;
+    }[];
+    meta: {
+      cursor: bigint | undefined;
+      nextCursor: bigint | undefined;
+      limit: number;
+    };
+  }>;
 }
 
 @injectable()
@@ -59,6 +79,18 @@ export class ChatService implements IChatService {
     cursor: bigint | undefined,
     limit: number
   ) {
+    // await this.prisma.chat.findMany({
+    //   where: {
+    //     OR: [{ fromId: currentUserId }, { toId: currentUserId }],
+    //   },
+    //   orderBy: {
+
+    //     id: 'desc', // higher id means higher timestamp
+    //   },
+    //   cursor: cursor ? { id: cursor } : undefined,
+    //   take: limit + 1,
+    // });
+
     try {
       const inboxes = await this.prisma.$queryRaw<
         Array<{
@@ -155,7 +187,77 @@ export class ChatService implements IChatService {
    */
   async getChatHistory(
     currentUserId: bigint,
+    otherUserId: bigint,
     cursor: bigint | undefined,
     limit: number
-  ): Promise<void> {}
+  ) {
+    //  Check if the user is trying to get chat history of themselves
+    if (currentUserId === otherUserId)
+      throw ExceptionFactory.badRequest('You cannot get chat history of yourself');
+
+    // Check if other user exists or no
+    let isOtherUserExist = false;
+
+    try {
+      const otherUser = await this.prisma.user.findUnique({
+        where: {
+          id: otherUserId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (otherUser) isOtherUserExist = true;
+    } catch (error) {
+      // Internal server error
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to check other user existence');
+    }
+
+    if (!isOtherUserExist) throw ExceptionFactory.notFound('Other user not found');
+
+    try {
+      const history = await this.prisma.chat.findMany({
+        select: {
+          id: true,
+          message: true,
+          fromId: true,
+          toId: true,
+          timestamp: true,
+        },
+        where: {
+          OR: [
+            { fromId: currentUserId, toId: otherUserId },
+            { fromId: otherUserId, toId: currentUserId },
+          ],
+        },
+        orderBy: {
+          id: 'desc', // higher id means higher timestamp
+        },
+        cursor: cursor ? { id: cursor } : undefined,
+        take: limit + 1,
+      });
+
+      let nextCursor: bigint | undefined;
+      if (history.length > limit) {
+        const nextHistory = history.pop();
+        if (nextHistory) nextCursor = nextHistory.id;
+      }
+
+      return {
+        history,
+        meta: {
+          cursor,
+          nextCursor,
+          limit,
+        },
+      };
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to fetch chat history');
+    }
+  }
 }

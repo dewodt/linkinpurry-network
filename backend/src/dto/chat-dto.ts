@@ -133,7 +133,7 @@ export interface IGetChatInboxResponseBodyDto extends z.infer<typeof getChatInbo
 
 // Request params
 export const getChatHistoryRequestParamsDto = z.object({
-  withUserId: z
+  otherUserId: z
     .string({ message: 'withUserId must be type of string' })
     .refine(
       (v) => {
@@ -164,12 +164,15 @@ export interface IGetChatHistoryRequestParamsDto
 export const getChatHistoryRequestQueryDto = z.object({
   cursor: z
     .string({ message: 'cursor must be a string, bigint' })
-    .refine((v) => Utils.parseBigIntId(v).isValid, { message: 'cursor must be a string, bigint' })
-    .transform((val) => BigInt(val))
+    .optional()
+    .refine((v) => v === undefined || Utils.parseBigIntId(v).isValid, {
+      message: 'cursor must be a string, bigint',
+    })
+    .transform((val) => (val !== undefined ? BigInt(val) : undefined))
     .openapi({
       description: 'Cursor for the next page',
       example: '1',
-    }),
+    }), // Convert string to BigInt
   limit: z
     .string({ message: 'limit must be a string' })
     .optional()
@@ -186,11 +189,15 @@ export interface IGetChatHistoryRequestQueryDto
 // Response
 export const getChatHistoryResponseBodyDto = z.array(
   z.object({
+    chat_id: z.string().openapi({
+      description: 'ID of the chat',
+      example: '1',
+    }),
     message: z.string().openapi({
       description: 'Message of the chat',
       example: 'Hello, world! 1',
     }),
-    created_at: z.string().openapi({
+    timestamp: z.string().openapi({
       description: 'Timestamp of the message',
       example: '2021-09-01T00:00:00.000Z',
     }),
