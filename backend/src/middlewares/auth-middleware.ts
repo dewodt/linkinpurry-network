@@ -96,6 +96,8 @@ export class AuthMiddleware implements IAuthMiddleware {
           }
         }
       }
+
+      next();
     };
   }
 

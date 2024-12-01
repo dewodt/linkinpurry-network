@@ -52,28 +52,14 @@ export class WebSocketServer {
       },
     });
 
-    // this.io.on('connection', (socket: TSocket) => {
-    //   logger.info(`New socket connection from ${socket.handshake.address}`);
-
-    //   socket.on('disconnect', () => {
-    //     logger.info(`Socket disconnected from ${socket.handshake.address}`);
-    //   });
-    // });
-
     // Initialize chat namespace
     this.chatNamespace = this.io.of('/chat');
     this.chatNamespace.use(this.authMiddleware.authorizeSocket({ isPublic: false }));
-    this.chatNamespace.on('connection', (socket: TSocket) => {
-      // Handle connection
-      logger.info(`New chat connection | ID:${socket.id} | FROM: ${socket.handshake.address}`);
-      this.chatGateway.handleConnection(socket, this.io!);
+    this.chatNamespace.on('connection', (socket: TSocket) =>
+      this.chatGateway.handleConnection(socket, this.io!)
+    );
 
-      // Handle disconnect
-      socket.on('disconnect', () => {
-        logger.info(`Chat disconnected | ID:${socket.id} | FROM: ${socket.handshake.address}`);
-        this.chatGateway.handleDisconnect(socket, this.io!);
-      });
-    });
+    // Add more if needed
   }
 
   /**

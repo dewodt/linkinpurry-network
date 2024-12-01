@@ -72,6 +72,11 @@ export class ChatService implements IChatService {
     this.prisma = this.database.getPrisma();
   }
 
+  getRoomId(user1: bigint, user2: bigint) {
+    const roomId = [user1, user2].sort().join('-');
+    return roomId;
+  }
+
   /**
    * Save new message
    */
@@ -124,6 +129,27 @@ export class ChatService implements IChatService {
 
       throw ExceptionFactory.internalServerError('Failed to save message');
     }
+  }
+
+  /**
+   *
+   * @param currentUserId
+   * @param onlineUserIds
+   * @returns
+   */
+  async getCurrentUserOnlineRoomIds(currentUserId: bigint, onlineUserIds: bigint[]) {
+    // Get connecttions that intersect with otherUserIds
+    const connections = await this.prisma.connection.findMany({
+      where: {
+        OR: onlineUserIds.map((onlineUserId) => ({
+          fromId: currentUserId,
+          toId: onlineUserId,
+        })),
+      },
+      select: { fromId: true, toId: true },
+    });
+
+    return connections.map((connection) => this.getRoomId(connection.fromId, connection.toId));
   }
 
   /**
