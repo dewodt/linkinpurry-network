@@ -4,8 +4,10 @@ import { logger } from '@/core/logger';
 import type { TSocket, TSocketServer } from '@/core/websocket';
 import {
   type IGetStatusResponseDataDto,
+  type ISendMessageResponseDataDto,
   getStatusRequestDataDto,
   joinChatRoomsRequestDataDto,
+  sendMessageRequestDataDto,
 } from '@/dto/chat-dto';
 import { ResponseDtoFactory } from '@/dto/common';
 import { ChatService } from '@/services/chat-service';
@@ -38,11 +40,13 @@ export class ChatGateway implements IWebSocketGateway {
     // Notify that current user is online
     this.notifyOnline(socket, io);
 
-    // Register other events
+    // Disconnect
     socket.on('disconnect', () => this.handleDisconnect(socket, io));
+
+    // Other events
     socket.on('joinChatRooms', this.handleJoinChatRooms(socket, io));
     socket.on('getStatus', this.handleGetStatus(socket, io));
-    // socket.on('sendMessage', this.handleSendMessage(socket, io));
+    socket.on('sendMessage', this.handleSendMessage(socket, io));
     // socket.on('sendTyping', this.handleSendTyping(socket, io));
     // socket.on('stopTyping', this.handleStopTyping(socket, io));
   }
@@ -151,7 +155,7 @@ export class ChatGateway implements IWebSocketGateway {
       try {
         // Join chat rooms
         const currentUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
-        const targetUserIds = joinChatRoomsRequestData.data.userIds;
+        const targetUserIds = joinChatRoomsRequestData.data.user_ids;
 
         const roomIds = await this.chatService.getChatRooms(currentUserId, targetUserIds);
         socket.join(roomIds);
@@ -185,7 +189,7 @@ export class ChatGateway implements IWebSocketGateway {
       // Check if user can access chat & get room id
       try {
         const currentUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
-        const otherUserId = getStatusRequestData.data.userId;
+        const otherUserId = getStatusRequestData.data.user_id;
 
         await this.chatService.getChatRoom(currentUserId, otherUserId);
 
@@ -214,9 +218,72 @@ export class ChatGateway implements IWebSocketGateway {
     };
   }
 
-  private async handleSendMessage(socket: TSocket, io: TSocketServer) {}
+  private handleSendMessage(socket: TSocket, io: TSocketServer): SocketListenerFunction {
+    return async (data: unknown, callback: SocketCallbackFunction) => {
+      // Validate data
+      const sendMessageRequestData = await sendMessageRequestDataDto.safeParseAsync(data);
+      if (!sendMessageRequestData.success) {
+        const { message, errorFields } = Utils.parseZodErrorResult(sendMessageRequestData.error);
+        const responseDto = ResponseDtoFactory.createErrorResponseDto(message, errorFields);
+        callback(responseDto);
+        return;
+      }
 
-  private async handleSendTyping(socket: TSocket, io: TSocketServer) {}
+      try {
+        // Send message
+        const fromUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
+        const toUserId = sendMessageRequestData.data.to_user_id;
 
-  private async handleStopTyping(socket: TSocket, io: TSocketServer) {}
+        const { message, timestamp, fromUser, toUser, roomId } = await this.chatService.sendMessage(
+          fromUserId,
+          toUserId,
+          sendMessageRequestData.data.message
+        );
+
+        // To receiver
+        const toUserResponseData: ISendMessageResponseDataDto = {
+          other_user_id: fromUserId.toString(),
+          other_user_username: fromUser.username,
+          other_user_full_name: fromUser.fullName,
+          other_user_profile_photo_path: fromUser.profilePhotoPath,
+          message,
+          timestamp: timestamp.toISOString(),
+        };
+        const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          'Send message successful',
+          toUserResponseData
+        );
+        socket.to(roomId).emit('newMessage', responseDto);
+
+        // To sender
+        const fromUserResponseData: ISendMessageResponseDataDto = {
+          other_user_id: toUserId.toString(),
+          other_user_username: toUser.username,
+          other_user_full_name: toUser.fullName,
+          other_user_profile_photo_path: toUser.profilePhotoPath,
+          message,
+          timestamp: timestamp.toISOString(),
+        };
+        const fromUserResponseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          'Send message successful',
+          fromUserResponseData
+        );
+
+        callback(fromUserResponseDto);
+      } catch (error) {
+        if (error instanceof Error) {
+          const responseDto = ResponseDtoFactory.createErrorResponseDto(error.message);
+          callback(responseDto);
+          return;
+        }
+
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Unknown error');
+        callback(responseDto);
+      }
+    };
+  }
+
+  private handleSendTyping(socket: TSocket, io: TSocketServer) {}
+
+  private handleStopTyping(socket: TSocket, io: TSocketServer) {}
 }

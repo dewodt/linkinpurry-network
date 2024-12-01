@@ -1,6 +1,7 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
 
+import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import { Database } from '@/infrastructures/database/database';
@@ -8,11 +9,32 @@ import { Database } from '@/infrastructures/database/database';
 import type { IService } from './service';
 
 export interface IChatService extends IService {
-  saveMessage(
+  sendMessage(
     currentUserId: bigint,
     otherUserId: bigint,
     message: string
-  ): Promise<Prisma.ChatGetPayload<{}>>;
+  ): Promise<
+    Prisma.ChatGetPayload<{
+      include: {
+        fromUser: {
+          select: {
+            id: true;
+            username: true;
+            fullName: true;
+            profilePhotoPath: true;
+          };
+        };
+        toUser: {
+          select: {
+            id: true;
+            username: true;
+            fullName: true;
+            profilePhotoPath: true;
+          };
+        };
+      };
+    }>
+  >;
 
   getChatRoom(currentUserId: bigint, otherUserId: bigint): Promise<string>;
 
@@ -68,7 +90,10 @@ export class ChatService implements IChatService {
 
   private prisma: PrismaClient;
 
-  constructor(@inject(Database.Key) private database: Database) {
+  constructor(
+    @inject(Config.Key) private config: Config,
+    @inject(Database.Key) private database: Database
+  ) {
     this.prisma = this.database.getPrisma();
   }
 
@@ -80,26 +105,60 @@ export class ChatService implements IChatService {
   /**
    * Save new message
    */
-  async saveMessage(currentUserId: bigint, otherUserId: bigint, message: string) {
+  async sendMessage(currentUserId: bigint, otherUserId: bigint, message: string) {
     // Try to message themselves
     if (currentUserId === otherUserId)
       throw ExceptionFactory.badRequest('You cannot send message to yourself');
 
     // Check if user is connected to other user
-    let isConnected = false;
+    let connection: Prisma.ConnectionGetPayload<{
+      include: {
+        fromUser: {
+          select: {
+            id: true;
+            username: true;
+            fullName: true;
+            profilePhotoPath: true;
+          };
+        };
+        toUser: {
+          select: {
+            id: true;
+            username: true;
+            fullName: true;
+            profilePhotoPath: true;
+          };
+        };
+      };
+    }> | null = null;
 
     try {
-      const connection = await this.prisma.connection.findFirst({
+      connection = await this.prisma.connection.findFirst({
         where: {
           OR: [
             { fromId: currentUserId, toId: otherUserId },
             { fromId: otherUserId, toId: currentUserId },
           ],
         },
-        select: { fromId: true, toId: true },
+        include: {
+          fromUser: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              profilePhotoPath: true,
+            },
+          },
+          toUser: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              profilePhotoPath: true,
+            },
+          },
+        },
       });
-
-      if (connection) isConnected = true;
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);
@@ -107,7 +166,7 @@ export class ChatService implements IChatService {
       throw ExceptionFactory.internalServerError('Failed to check connection existence');
     }
 
-    if (!isConnected)
+    if (!connection)
       throw ExceptionFactory.badRequest(
         'You are not connected to other user or other user does not exist'
       );
@@ -122,7 +181,34 @@ export class ChatService implements IChatService {
         },
       });
 
-      return newChat;
+      // current user must be fromUser
+      const fromUser = connection.fromUser;
+      const toUser = connection.toUser;
+
+      const fromUserFullURL =
+        fromUser.profilePhotoPath.length > 0
+          ? `${this.config.get('BE_URL')}${fromUser.profilePhotoPath}`
+          : '';
+
+      const toUserFullURL =
+        toUser.profilePhotoPath.length > 0
+          ? `${this.config.get('BE_URL')}${toUser.profilePhotoPath}`
+          : '';
+
+      return {
+        ...newChat,
+        fromUser: {
+          ...fromUser,
+          fullName: fromUser.fullName || '',
+          profilePhotoPath: fromUserFullURL,
+        },
+        toUser: {
+          ...toUser,
+          fullName: toUser.fullName || '',
+          profilePhotoPath: toUserFullURL,
+        },
+        roomId: this.getRoomId(fromUser.id, toUser.id),
+      };
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);
@@ -267,6 +353,8 @@ export class ChatService implements IChatService {
     //   cursor: cursor ? { id: cursor } : undefined,
     //   take: limit + 1,
     // });
+
+    const bucketURL = this.config.get('BE_URL');
 
     try {
       const inboxes = await this.prisma.$queryRaw<

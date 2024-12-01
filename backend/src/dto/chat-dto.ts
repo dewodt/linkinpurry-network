@@ -172,7 +172,7 @@ export interface IGetChatHistoryResponseBodyDto
  */
 // Request
 export const joinChatRoomsRequestDataDto = z.object({
-  userIds: z
+  user_ids: z
     .array(z.string({ message: 'must be an array of strings (bigint)' }))
     .refine((val) => val.length > 0 && val.every((v) => Utils.parseBigIntId(v).isValid), {
       message: 'must be an array of strings (bigint)',
@@ -187,7 +187,7 @@ export interface IJoinChatRoomsRequestDataDto extends z.infer<typeof joinChatRoo
  */
 // Request
 export const getStatusRequestDataDto = z.object({
-  userId: z
+  user_id: z
     .string({ message: 'must be a string (bigint)' })
     .refine((v) => Utils.parseBigIntId(v).isValid, {
       message: 'must be a string (bigint)',
@@ -211,7 +211,7 @@ export interface IGetStatusResponseDataDto extends z.infer<typeof getStatusRespo
  */
 // Request
 export const sendMessageRequestDataDto = z.object({
-  toUserId: z
+  to_user_id: z
     .string({ message: 'must be a string (bigint)' })
     .refine((v) => Utils.parseBigIntId(v).isValid, {
       message: 'must be a string (bigint)',
@@ -224,17 +224,22 @@ export interface ISendMessageRequestDataDto extends z.infer<typeof sendMessageRe
 
 // Response
 export const sendMessageResponseDataDto = z.object({
-  fromUserId: z.string({ message: 'must be a string (bigint)' }),
+  other_user_id: z.string({ message: 'must be a string (bigint)' }),
+  other_user_username: z.string({ message: 'must be a string' }),
+  other_user_full_name: z.string({ message: 'must be a string' }),
+  other_user_profile_photo_path: z.string({ message: 'must be a string' }),
   message: z.string({ message: 'must be a string' }),
   timestamp: z.string({ message: 'must be a string (ISO string)' }),
 });
+
+export interface ISendMessageResponseDataDto extends z.infer<typeof sendMessageResponseDataDto> {}
 
 /**
  * Send typing request data
  */
 // Request
 export const sendTypingRequestDataDto = z.object({
-  toUserId: z
+  to_user_id: z
     .string({ message: 'must be a string (bigint)' })
     .refine((val) => Utils.parseBigIntId(val), { message: 'must be a string (bigint)' })
     .transform((val) => BigInt(val)),
@@ -244,7 +249,7 @@ export interface ISendTypingRequestDataDto extends z.infer<typeof sendTypingRequ
 
 // Response
 export const sendTypingResponseDataDto = z.object({
-  fromUserId: z.string({ message: 'must be a string (bigint)' }),
+  from_user_id: z.string({ message: 'must be a string (bigint)' }),
 });
 
 export interface ISendTypingResponseDataDto extends z.infer<typeof sendTypingResponseDataDto> {}
@@ -254,7 +259,7 @@ export interface ISendTypingResponseDataDto extends z.infer<typeof sendTypingRes
  */
 // Request
 export const sendStopTypingRequestDataDto = z.object({
-  toUserId: z
+  to_user_id: z
     .string({ message: 'must be a string (bigint)' })
     .refine((val) => Utils.parseBigIntId(val), { message: 'must be a string (bigint)' })
     .transform((val) => BigInt(val)),
@@ -265,7 +270,7 @@ export interface ISendStopTypingRequestDataDto
 
 // Response
 export const sendStopTypingResponseDataDto = z.object({
-  fromUserId: z.string({ message: 'must be a string (bigint)' }),
+  from_user_id: z.string({ message: 'must be a string (bigint)' }),
 });
 
 export interface ISendStopTypingResponseDataDto
