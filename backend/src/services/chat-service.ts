@@ -8,6 +8,16 @@ import { Database } from '@/infrastructures/database/database';
 import type { IService } from './service';
 
 export interface IChatService extends IService {
+  saveMessage(
+    currentUserId: bigint,
+    otherUserId: bigint,
+    message: string
+  ): Promise<Prisma.ChatGetPayload<{}>>;
+
+  canUserAccessChat(currentUserId: bigint, otherUserId: bigint): Promise<boolean>;
+
+  canUserAccessChats(currentUserId: bigint, otherUserIds: bigint[]): Promise<boolean>;
+
   getChatInbox(
     currentUserId: bigint,
     search: string | undefined,
@@ -63,6 +73,138 @@ export class ChatService implements IChatService {
   }
 
   /**
+   * Save new message
+   */
+  async saveMessage(currentUserId: bigint, otherUserId: bigint, message: string) {
+    // Try to message themselves
+    if (currentUserId === otherUserId)
+      throw ExceptionFactory.badRequest('You cannot send message to yourself');
+
+    // Check if user is connected to other user
+    let isConnected = false;
+
+    try {
+      const connection = await this.prisma.connection.findFirst({
+        where: {
+          OR: [
+            { fromId: currentUserId, toId: otherUserId },
+            { fromId: otherUserId, toId: currentUserId },
+          ],
+        },
+        select: { fromId: true, toId: true },
+      });
+
+      if (connection) isConnected = true;
+    } catch (error) {
+      // Internal server error
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to check connection existence');
+    }
+
+    if (!isConnected)
+      throw ExceptionFactory.badRequest(
+        'You are not connected to other user or other user does not exist'
+      );
+
+    // Save message
+    try {
+      const newChat = await this.prisma.chat.create({
+        data: {
+          fromId: currentUserId,
+          toId: otherUserId,
+          message,
+        },
+      });
+
+      return newChat;
+    } catch (error) {
+      // Internal server error
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to save message');
+    }
+  }
+
+  /**
+   *  Check if the user is trying to get chat history of themselves
+   *
+   * @param currentUserId
+   * @param otherUserId
+   * @returns boolean
+   * @throws CustomException
+   */
+  async canUserAccessChat(currentUserId: bigint, otherUserId: bigint) {
+    // Check if the user is trying to get chat history of themselves
+    if (currentUserId === otherUserId)
+      throw ExceptionFactory.badRequest('You cannot get chat history of yourself');
+
+    // Check if connected to other user
+    let isConnected = false;
+
+    try {
+      const connection = await this.prisma.connection.findFirst({
+        where: {
+          OR: [
+            { fromId: currentUserId, toId: otherUserId },
+            { fromId: otherUserId, toId: currentUserId },
+          ],
+        },
+        select: { fromId: true, toId: true },
+      });
+
+      if (connection) isConnected = true;
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to check connection existence');
+    }
+
+    if (!isConnected)
+      throw ExceptionFactory.badRequest(
+        'You are not connected to other user or other user does not exist'
+      );
+
+    return true;
+  }
+
+  /**
+   * Validate if user can chat to an array of users
+   * @param currentUserId
+   * @param otherUserIds
+   * @returns boolean
+   * @throws CustomException
+   */
+  async canUserAccessChats(currentUserId: bigint, otherUserIds: bigint[]) {
+    // Check if all connections exists
+    let isAllConnectionsExist = false;
+
+    try {
+      const connections = await this.prisma.connection.findMany({
+        where: {
+          OR: otherUserIds.map((otherUserId) => ({
+            fromId: currentUserId, // use currentUserId as pointer
+            toId: otherUserId,
+          })),
+        },
+        select: { fromId: true, toId: true },
+      });
+
+      if (connections.length === otherUserIds.length) isAllConnectionsExist = true;
+    } catch (error) {
+      // Internal server error
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to check connection existence');
+    }
+
+    if (!isAllConnectionsExist)
+      throw ExceptionFactory.badRequest('You are not connected to all other users');
+
+    return true;
+  }
+
+  /**
    * Get chat inboxes
    * gets the list of current user chat inbox: chat of connected users that have atleast one message
    * Uses cursor based pagination. Cursor is based on id of the latest message of each chat (note that higher id means higher timestamp)
@@ -79,6 +221,7 @@ export class ChatService implements IChatService {
     cursor: bigint | undefined,
     limit: number
   ) {
+    // dont think its feasible to use prisma here
     // await this.prisma.chat.findMany({
     //   where: {
     //     OR: [{ fromId: currentUserId }, { toId: currentUserId }],
@@ -195,28 +338,32 @@ export class ChatService implements IChatService {
     if (currentUserId === otherUserId)
       throw ExceptionFactory.badRequest('You cannot get chat history of yourself');
 
-    // Check if other user exists or no
-    let isOtherUserExist = false;
+    // Check if connected to other user
+    let isConnected = false;
 
     try {
-      const otherUser = await this.prisma.user.findUnique({
+      const connection = await this.prisma.connection.findFirst({
         where: {
-          id: otherUserId,
+          OR: [
+            { fromId: currentUserId, toId: otherUserId },
+            { fromId: otherUserId, toId: currentUserId },
+          ],
         },
-        select: {
-          id: true,
-        },
+        select: { fromId: true, toId: true },
       });
 
-      if (otherUser) isOtherUserExist = true;
+      if (connection) isConnected = true;
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);
 
-      throw ExceptionFactory.internalServerError('Failed to check other user existence');
+      throw ExceptionFactory.internalServerError('Failed to check connection existence');
     }
 
-    if (!isOtherUserExist) throw ExceptionFactory.notFound('Other user not found');
+    if (!isConnected)
+      throw ExceptionFactory.badRequest(
+        'You are not connected to other user or other user does not exist'
+      );
 
     try {
       const history = await this.prisma.chat.findMany({

@@ -2,11 +2,7 @@ import { type OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { inject, injectable } from 'inversify';
 
 import type { IGlobalContext } from '@/core/app';
-import {
-  InternalServerErrorException,
-  NotFoundException,
-  UnauthorizedException,
-} from '@/core/exception';
+import { BadRequestException, InternalServerErrorException } from '@/core/exception';
 import {
   type IGetChatHistoryResponseBodyDto,
   type IGetChatInboxResponseBodyDto,
@@ -67,6 +63,7 @@ export class ChatRoute implements IRoute {
           'Get chat inbox successful',
           getChatInboxResponseBodyDto
         ),
+        400: OpenApiResponseFactory.jsonBadRequest('cursor must be type of string (bigint)'),
         401: OpenApiResponseFactory.jsonUnauthorized('Unauthorized'),
         500: OpenApiResponseFactory.jsonInternalServerError(
           'Unexpected error occurred while getting chat inbox'
@@ -120,8 +117,7 @@ export class ChatRoute implements IRoute {
         return c.json(responseDto, 200);
       } catch (e) {
         // Internal server error
-        if (e instanceof UnauthorizedException) return c.json(e.toResponseDto(), 401);
-        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+        if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
         // Unexpected error
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
@@ -150,9 +146,10 @@ export class ChatRoute implements IRoute {
           'Get chat history successful',
           getChatHistoryResponseBodyDto
         ),
-        400: OpenApiResponseFactory.jsonBadRequest('Trying to get chat history of yourself'),
+        400: OpenApiResponseFactory.jsonBadRequest(
+          'Invalid cursor type (bigint in string) | Trying to get chat history of yourself | you are not connected to other user'
+        ),
         401: OpenApiResponseFactory.jsonUnauthorized('Unauthorized'),
-        404: OpenApiResponseFactory.jsonNotFound('Other user not found'),
         500: OpenApiResponseFactory.jsonInternalServerError(
           'Unexpected error occurred while getting chat history'
         ),
@@ -208,8 +205,7 @@ export class ChatRoute implements IRoute {
         return c.json(responseDto, 200);
       } catch (e) {
         // Handle service exception
-        if (e instanceof UnauthorizedException) return c.json(e.toResponseDto(), 401);
-        else if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
+        if (e instanceof BadRequestException) return c.json(e.toResponseDto(), 400);
         else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
         // Other errors
