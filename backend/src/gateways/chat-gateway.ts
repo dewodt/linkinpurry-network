@@ -1,11 +1,14 @@
 import { inject, injectable } from 'inversify';
 
+import { BadRequestException } from '@/core/exception';
 import { logger } from '@/core/logger';
 import type { TSocket, TSocketServer } from '@/core/websocket';
+import { type IJoinChatRoomsRequestDataDto, joinChatRoomsRequestDataDto } from '@/dto/chat-dto';
 import { ResponseDtoFactory } from '@/dto/common';
 import { ChatService } from '@/services/chat-service';
+import { Utils } from '@/utils/utils';
 
-import type { IWebSocketGateway } from './gateway';
+import type { IWebSocketGateway, SocketCallbackFunction, SocketListenerFunction } from './gateway';
 
 @injectable()
 export class ChatGateway implements IWebSocketGateway {
@@ -33,7 +36,7 @@ export class ChatGateway implements IWebSocketGateway {
 
     // Register other events
     socket.on('disconnect', () => this.handleDisconnect(socket, io));
-    socket.on('joinChatRooms', () => this.handleJoinChatRooms(socket, io));
+    socket.on('joinChatRooms', this.handleJoinChatRooms(socket, io));
     socket.on('getStatus', () => this.handleGetStatus(socket, io));
     socket.on('sendMessage', () => this.handleSendMessage(socket, io));
     socket.on('sendTyping', () => this.handleSendTyping(socket, io));
@@ -47,30 +50,41 @@ export class ChatGateway implements IWebSocketGateway {
    * @param io
    */
   private async handleDisconnect(socket: TSocket, io: TSocketServer) {
-    const currentUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
+    try {
+      const currentUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
 
-    // Update socket id from userid - sockets mapping
-    const userSockets = this.userSocketsMap.get(currentUserId);
-    if (userSockets) {
-      userSockets.delete(socket.id);
-      if (userSockets.size === 0) {
-        // empty
-        this.userSocketsMap.delete(currentUserId);
+      // Update socket id from userid - sockets mapping
+      const userSockets = this.userSocketsMap.get(currentUserId);
+      if (userSockets) {
+        userSockets.delete(socket.id);
+        if (userSockets.size === 0) {
+          // empty
+          this.userSocketsMap.delete(currentUserId);
+        }
       }
+
+      // Notify offline to other users
+      const onlineUserIds = Array.from(new Set(this.userSocketsMap.keys()));
+      const currentUserOnlineRooms = await this.chatService.getCurrentUserOnlineRoomIds(
+        currentUserId,
+        onlineUserIds
+      );
+
+      const response = ResponseDtoFactory.createSuccessDataResponseDto('User is now offline', {
+        userId: currentUserId.toString(),
+      });
+
+      socket.to(currentUserOnlineRooms).emit('userOffline', response);
+
+      logger.info(`Chat disconnected | ID:${socket.id} | FROM: ${socket.handshake.address}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        socket.emit('error', error.message);
+        return;
+      }
+
+      socket.emit('error', 'Unknown error');
     }
-
-    // Notify offline to other users
-    const onlineUserIds = Array.from(new Set(this.userSocketsMap.keys()));
-    const currentUserOnlineRooms = await this.chatService.getCurrentUserOnlineRoomIds(
-      currentUserId,
-      onlineUserIds
-    );
-    const response = ResponseDtoFactory.createSuccessDataResponseDto('User is now offline', {
-      userId: currentUserId.toString(),
-    });
-    socket.to(currentUserOnlineRooms).emit('userOffline', response);
-
-    logger.info(`Chat disconnected | ID:${socket.id} | FROM: ${socket.handshake.address}`);
   }
 
   /**
@@ -80,26 +94,37 @@ export class ChatGateway implements IWebSocketGateway {
    * @param io
    */
   private async notifyOnline(socket: TSocket, io: TSocketServer) {
-    // Add socket id to userid - sockets mapping
-    const currentUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
-    const userSockets = this.userSocketsMap.get(currentUserId);
-    if (userSockets) {
-      userSockets.add(socket.id);
-    } else {
-      this.userSocketsMap.set(currentUserId, new Set([socket.id]));
+    try {
+      // Add socket id to userid - sockets mapping
+      const currentUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
+      const userSockets = this.userSocketsMap.get(currentUserId);
+      if (userSockets) {
+        userSockets.add(socket.id);
+      } else {
+        this.userSocketsMap.set(currentUserId, new Set([socket.id]));
+      }
+
+      // Notify online users
+      const onlineUserIds = Array.from(new Set(this.userSocketsMap.keys()));
+
+      const currentUserOnlineRooms = await this.chatService.getCurrentUserOnlineRoomIds(
+        currentUserId,
+        onlineUserIds
+      );
+
+      const response = ResponseDtoFactory.createSuccessDataResponseDto('User is now online', {
+        user_id: currentUserId.toString(),
+      });
+
+      socket.to(currentUserOnlineRooms).emit('userOnline', response);
+    } catch (error) {
+      if (error instanceof Error) {
+        socket.emit('error', error.message);
+        return;
+      }
+
+      socket.emit('error', 'Unknown error');
     }
-
-    // Notify online users
-    const onlineUserIds = Array.from(new Set(this.userSocketsMap.keys()));
-
-    const currentUserOnlineRooms = await this.chatService.getCurrentUserOnlineRoomIds(
-      currentUserId,
-      onlineUserIds
-    );
-    const response = ResponseDtoFactory.createSuccessDataResponseDto('User is now online', {
-      user_id: currentUserId.toString(),
-    });
-    socket.to(currentUserOnlineRooms).emit('userOnline', response);
   }
 
   /**
@@ -108,7 +133,40 @@ export class ChatGateway implements IWebSocketGateway {
    * @param socket
    * @param io
    */
-  private async handleJoinChatRooms(socket: TSocket, io: TSocketServer) {}
+  private handleJoinChatRooms(socket: TSocket, io: TSocketServer): SocketListenerFunction {
+    return async (data: unknown, callback: SocketCallbackFunction) => {
+      // Validate data
+      const joinChatRoomsRequestData = await joinChatRoomsRequestDataDto.safeParseAsync(data);
+      if (!joinChatRoomsRequestData.success) {
+        const responseDto = ResponseDtoFactory.createErrorResponseDto(
+          Utils.getErrorMessagesFromZodParseResult(joinChatRoomsRequestData.error),
+          Utils.getErrorFieldsFromZodParseResult(joinChatRoomsRequestData.error)
+        );
+        callback(responseDto);
+        return;
+      }
+
+      try {
+        // Join chat rooms
+        const currentUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
+        const targetUserIds = joinChatRoomsRequestData.data.userIds;
+
+        const roomIds = await this.chatService.joinChatRooms(currentUserId, targetUserIds);
+        socket.join(roomIds);
+
+        callback(ResponseDtoFactory.createSuccessResponseDto('Joined chat rooms'));
+      } catch (error) {
+        if (error instanceof Error) {
+          const responseDto = ResponseDtoFactory.createErrorResponseDto(error.message);
+          callback(responseDto);
+          return;
+        }
+
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Unknown error');
+        callback(responseDto);
+      }
+    };
+  }
 
   private async handleGetStatus(socket: TSocket, io: TSocketServer) {}
 

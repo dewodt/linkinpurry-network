@@ -7,7 +7,6 @@ import { ChatGateway } from '@/gateways/chat-gateway';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 
 import { Config } from './config';
-import { logger } from './logger';
 
 export interface SocketData {
   user?: JWTPayload;
@@ -55,9 +54,9 @@ export class WebSocketServer {
     // Initialize chat namespace
     this.chatNamespace = this.io.of('/chat');
     this.chatNamespace.use(this.authMiddleware.authorizeSocket({ isPublic: false }));
-    this.chatNamespace.on('connection', (socket: TSocket) =>
-      this.chatGateway.handleConnection(socket, this.io!)
-    );
+    this.chatNamespace.on('connection', (socket: TSocket) => {
+      this.chatGateway.handleConnection(socket, this.io!);
+    });
 
     // Add more if needed
   }

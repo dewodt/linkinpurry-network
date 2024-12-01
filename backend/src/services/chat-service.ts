@@ -16,7 +16,7 @@ export interface IChatService extends IService {
 
   canUserAccessChat(currentUserId: bigint, otherUserId: bigint): Promise<boolean>;
 
-  canUserAccessChats(currentUserId: bigint, otherUserIds: bigint[]): Promise<boolean>;
+  joinChatRooms(currentUserId: bigint, otherUserIds: bigint[]): Promise<string[]>;
 
   getChatInbox(
     currentUserId: bigint,
@@ -138,18 +138,24 @@ export class ChatService implements IChatService {
    * @returns
    */
   async getCurrentUserOnlineRoomIds(currentUserId: bigint, onlineUserIds: bigint[]) {
-    // Get connecttions that intersect with otherUserIds
-    const connections = await this.prisma.connection.findMany({
-      where: {
-        OR: onlineUserIds.map((onlineUserId) => ({
-          fromId: currentUserId,
-          toId: onlineUserId,
-        })),
-      },
-      select: { fromId: true, toId: true },
-    });
+    try {
+      // Get connecttions that intersect with otherUserIds
+      const connections = await this.prisma.connection.findMany({
+        where: {
+          OR: onlineUserIds.map((onlineUserId) => ({
+            fromId: currentUserId,
+            toId: onlineUserId,
+          })),
+        },
+        select: { fromId: true, toId: true },
+      });
 
-    return connections.map((connection) => this.getRoomId(connection.fromId, connection.toId));
+      return connections.map((connection) => this.getRoomId(connection.fromId, connection.toId));
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to fetch chat inbox');
+    }
   }
 
   /**
@@ -196,12 +202,14 @@ export class ChatService implements IChatService {
 
   /**
    * Validate if user can chat to an array of users
+   * Returns the room ids if the user can chat to all users
+   *
    * @param currentUserId
    * @param otherUserIds
-   * @returns boolean
+   * @returns string
    * @throws CustomException
    */
-  async canUserAccessChats(currentUserId: bigint, otherUserIds: bigint[]) {
+  async joinChatRooms(currentUserId: bigint, otherUserIds: bigint[]) {
     // Check if all connections exists
     let isAllConnectionsExist = false;
 
@@ -227,7 +235,7 @@ export class ChatService implements IChatService {
     if (!isAllConnectionsExist)
       throw ExceptionFactory.badRequest('You are not connected to all other users');
 
-    return true;
+    return otherUserIds.map((otherUserId) => this.getRoomId(currentUserId, otherUserId));
   }
 
   /**

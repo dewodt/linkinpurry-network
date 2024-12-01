@@ -1,63 +1,13 @@
 import { z } from '@hono/zod-openapi';
 
+import { UserStatus } from '@/utils/enum';
 import { Utils } from '@/utils/utils';
 
-// /**
-//  * Cursor schema for chat (uses timestamp + id for the cursor)
-//  */
-// export const ChatCursorSchema = z.object({
-//   id: z
-//     .string({ message: 'ID must be in string format' })
-//     .refine(
-//       (v) => {
-//         // Validate bigint
-//         const { isValid } = Utils.parseBigIntId(v);
-//         return isValid;
-//       },
-//       { message: 'userId must be type of big int and greater than 0' }
-//     )
-//     .transform((val) => BigInt(val)), // Convert string to BigInt
-//   timestamp: z
-//     .string({ message: 'timestamp must be in string format' })
-//     .refine(
-//       (v) => {
-//         // Validate date
-//         const date = new Date(v);
-//         return !isNaN(date.getTime());
-//       },
-//       { message: 'timestamp must be in ISO string format' }
-//     )
-//     .transform((val) => new Date(val)), // Convert ISO string to Date
-// });
-
-// export interface IChatCursor extends z.infer<typeof ChatCursorSchema> {}
-
-// /**
-//  * Base64 cursor schema for chat
-//  */
-// const base64ChatCursorSchema = z
-//   .string({ message: 'Cursor must be a base64 string' })
-//   .refine(
-//     (str) => {
-//       try {
-//         // Check if it's valid base64
-//         return Buffer.from(str, 'base64').toString('base64') === str;
-//       } catch {
-//         return false;
-//       }
-//     },
-//     { message: 'Invalid base64 string' }
-//   )
-//   .transform((base64Str) => {
-//     try {
-//       // Decode and parse the JSON
-//       const decoded = JSON.parse(Buffer.from(base64Str, 'base64').toString());
-//       // Validate against cursor schema
-//       return ChatCursorSchema.parse(decoded);
-//     } catch {
-//       throw new Error('Invalid cursor format');
-//     }
-//   });
+/**
+ *
+ * REST API
+ *
+ */
 
 /**
  * Get Chat Inbox
@@ -210,3 +160,113 @@ export const getChatHistoryResponseBodyDto = z.array(
 
 export interface IGetChatHistoryResponseBodyDto
   extends z.infer<typeof getChatHistoryResponseBodyDto> {}
+
+/**
+ *
+ * WEBSOCKET
+ *
+ */
+
+/**
+ * Join chat rooms requestdto
+ */
+// Request
+export const joinChatRoomsRequestDataDto = z.object({
+  userIds: z
+    .array(z.string({ message: 'must be an array of strings (bigint)' }))
+    .refine((val) => val.length > 0 && val.every((v) => Utils.parseBigIntId(v).isValid), {
+      message: 'must be an array of strings (bigint)',
+    })
+    .transform((val) => val.map((v) => BigInt(v))),
+});
+
+export interface IJoinChatRoomsRequestDataDto extends z.infer<typeof joinChatRoomsRequestDataDto> {}
+
+/**
+ * Get status request dto
+ */
+// Request
+export const getStatusRequestDataDto = z.object({
+  userId: z
+    .string({ message: 'must be a string (bigint)' })
+    .refine((v) => Utils.parseBigIntId(v).isValid, {
+      message: 'must be a string (bigint)',
+    })
+    .transform((v) => BigInt(v)),
+});
+
+export interface IGetStatusRequestDataDto extends z.infer<typeof getStatusRequestDataDto> {}
+
+// Response
+export const getStatusResponseDataDto = z.object({
+  status: z.enum([UserStatus.ONLINE, UserStatus.OFFLINE], {
+    message: 'must be a valid user status',
+  }),
+});
+
+export interface IGetStatusResponseDataDto extends z.infer<typeof getStatusResponseDataDto> {}
+
+/**
+ * Send message request dto
+ */
+// Request
+export const sendMessageRequestDataDto = z.object({
+  toUserId: z
+    .string({ message: 'must be a string (bigint)' })
+    .refine((v) => Utils.parseBigIntId(v).isValid, {
+      message: 'must be a string (bigint)',
+    })
+    .transform((v) => BigInt(v)),
+  message: z.string({ message: 'must be a string' }),
+});
+
+export interface ISendMessageRequestDataDto extends z.infer<typeof sendMessageRequestDataDto> {}
+
+// Response
+export const sendMessageResponseDataDto = z.object({
+  fromUserId: z.string({ message: 'must be a string (bigint)' }),
+  message: z.string({ message: 'must be a string' }),
+  timestamp: z.string({ message: 'must be a string (ISO string)' }),
+});
+
+/**
+ * Send typing request data
+ */
+// Request
+export const sendTypingRequestDataDto = z.object({
+  toUserId: z
+    .string({ message: 'must be a string (bigint)' })
+    .refine((val) => Utils.parseBigIntId(val), { message: 'must be a string (bigint)' })
+    .transform((val) => BigInt(val)),
+});
+
+export interface ISendTypingRequestDataDto extends z.infer<typeof sendTypingRequestDataDto> {}
+
+// Response
+export const sendTypingResponseDataDto = z.object({
+  fromUserId: z.string({ message: 'must be a string (bigint)' }),
+});
+
+export interface ISendTypingResponseDataDto extends z.infer<typeof sendTypingResponseDataDto> {}
+
+/**
+ * Send stop typing request data
+ */
+// Request
+export const sendStopTypingRequestDataDto = z.object({
+  toUserId: z
+    .string({ message: 'must be a string (bigint)' })
+    .refine((val) => Utils.parseBigIntId(val), { message: 'must be a string (bigint)' })
+    .transform((val) => BigInt(val)),
+});
+
+export interface ISendStopTypingRequestDataDto
+  extends z.infer<typeof sendStopTypingRequestDataDto> {}
+
+// Response
+export const sendStopTypingResponseDataDto = z.object({
+  fromUserId: z.string({ message: 'must be a string (bigint)' }),
+});
+
+export interface ISendStopTypingResponseDataDto
+  extends z.infer<typeof sendStopTypingResponseDataDto> {}
