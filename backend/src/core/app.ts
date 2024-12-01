@@ -154,9 +154,11 @@ export class App {
       fetch: this.app.fetch,
       port,
     });
+    logger.info(`Server started on port ${port}`);
 
-    // Initialize socket.io server
+    // Start websocket server
     this.webSocketServer.initialize(httpServer);
+    logger.info('WebSocket server started');
   }
 
   /**
@@ -167,5 +169,6 @@ export class App {
     await this.database.disconnect();
 
     // Add more if needed
+    this.webSocketServer.getIO().close();
   }
 }

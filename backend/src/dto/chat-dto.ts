@@ -134,7 +134,7 @@ export interface IGetChatInboxResponseBodyDto extends z.infer<typeof getChatInbo
 // Request params
 export const getChatHistoryRequestParamsDto = z.object({
   otherUserId: z
-    .string({ message: 'withUserId must be type of string' })
+    .string({ message: 'otherUserId must be type of string' })
     .refine(
       (v) => {
         // Validate bigint
@@ -148,7 +148,7 @@ export const getChatHistoryRequestParamsDto = z.object({
     .openapi({
       type: 'bigint',
       param: {
-        name: 'withUserId',
+        name: 'otherUserId',
         in: 'path',
         required: true,
         description: 'User ID to get the profile',

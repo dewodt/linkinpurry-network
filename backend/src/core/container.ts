@@ -1,5 +1,6 @@
 import { Container, ContainerModule } from 'inversify';
 
+import { ChatGateway } from '@/gateways/chat-gateway';
 import { Database } from '@/infrastructures/database/database';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { AuthRoute } from '@/routes/auth-route';
@@ -59,6 +60,7 @@ export class DependencyContainer {
     this.chatModule = new ContainerModule((bind) => {
       bind(ChatService.Key).to(ChatService).inSingletonScope();
       bind(ChatRoute.Key).to(ChatRoute).inSingletonScope();
+      bind(ChatGateway.Key).to(ChatGateway).inSingletonScope();
     });
 
     // Load modules
