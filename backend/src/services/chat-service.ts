@@ -152,7 +152,7 @@ export class ChatService implements IChatService {
           JOIN matching_messages_inbox mm ON mm.other_user_id = cuc.other_user_id
           JOIN users u ON u.id = mm.other_user_id
         WHERE
-          ${cursor ? Prisma.sql`mm.id < ${cursor}` : Prisma.sql`TRUE`}
+          ${cursor ? Prisma.sql`mm.id <= ${cursor}` : Prisma.sql`TRUE`}
         ORDER BY mm.id DESC
         LIMIT ${limit} + 1
       `;
