@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 import React from 'react';
 
-import { LinkedInFindUserIcon, LinkedInHomeIcon, LinkedInLogo, LinkedInNetworkIcon } from '@/components/icons/linkedin-icons';
+import { LinkedInFindUserIcon, LinkedInHomeIcon, LinkedInLogo, LinkedInMessagingIcon, LinkedInNetworkIcon } from '@/components/icons/linkedin-icons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -93,7 +93,7 @@ export const Navbar = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-12 md:flex">
-          <ul className="flex items-center gap-9">
+          <ul className="mdLg flex items-center gap-9 md:gap-3">
             {/* Authorized */}
             {session && (
               <>
@@ -104,8 +104,14 @@ export const Navbar = () => {
                 </li>
 
                 <li>
-                  <NavLink href="/my-networks" icon={LinkedInNetworkIcon}>
+                  <NavLink href="/my-network/grow" icon={LinkedInNetworkIcon}>
                     My Networks
+                  </NavLink>
+                </li>
+
+                <li>
+                  <NavLink href="/messaging" icon={LinkedInMessagingIcon}>
+                    Messaging
                   </NavLink>
                 </li>
               </>
@@ -169,6 +175,12 @@ export const Navbar = () => {
                         My Network
                       </NavLink>
                     </li>
+
+                    <li>
+                      <NavLink href="/messaging" icon={LinkedInMessagingIcon}>
+                        Messaging
+                      </NavLink>
+                    </li>
                   </>
                 )}
 
@@ -213,13 +225,19 @@ const NavLink = ({
     <Link
       to={href}
       className={cn(
-        'flex flex-row items-center gap-2.5 text-base font-medium tracking-wide text-muted-foreground transition-colors hover:text-primary md:flex-col md:gap-[1px] md:text-xs',
-        isActive && 'font-semibold text-primary',
+        'group relative flex flex-row items-center gap-2.5 text-base font-medium tracking-wide text-muted-foreground transition-colors hover:text-foreground md:flex-col md:gap-[1px] md:px-2 md:text-xs',
+        isActive && 'text-foreground',
         className,
       )}
     >
       <Icon className="size-6" />
       <span>{children}</span>
+      <span
+        className={cn(
+          'absolute left-0 hidden h-0.5 w-full bg-foreground opacity-0 md:-bottom-3 md:inline md:transition-opacity',
+          isActive && 'opacity-100',
+        )}
+      />
     </Link>
   );
 };
@@ -281,7 +299,7 @@ function UserDropdown({ session }: { session: Session }) {
     <DropdownMenu open={open} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger className="flex flex-col items-center gap-[1px] focus:outline-none">
         <Avatar className="size-8 md:size-6">
-          <AvatarImage src={session.avatarUrl} alt="Profile picture" />
+          <AvatarImage src={session.profilePhoto} alt="Profile picture" />
           <AvatarFallback>
             <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
           </AvatarFallback>
@@ -297,7 +315,7 @@ function UserDropdown({ session }: { session: Session }) {
         <DropdownMenuGroup>
           <div className="flex items-center gap-3 p-3">
             <Avatar className="size-14">
-              <AvatarImage src={session.avatarUrl} alt="Profile picture" />
+              <AvatarImage src={session.profilePhoto} alt="Profile picture" />
               <AvatarFallback>
                 <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
               </AvatarFallback>
@@ -309,7 +327,7 @@ function UserDropdown({ session }: { session: Session }) {
             </div>
           </div>
 
-          <Link to={`/users/${session.userId}`}>
+          <Link to="/users/$userId" params={{ userId: session.userId }}>
             <div className="mt-1 flex w-full px-3.5">
               <Button variant="secondary" size={'sm'} className="flex-auto">
                 View Profile

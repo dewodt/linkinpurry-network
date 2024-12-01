@@ -32,7 +32,7 @@ export const sessionResponseBodyDto = z.object({
     description: 'User full name',
     example: 'Dewantoro Triatmojo',
   }),
-  avatarUrl: z.string().openapi({
+  profilePhoto: z.string().openapi({
     description: 'Profile photo path',
     example: 'https://example.com/photo.jpg',
   }),

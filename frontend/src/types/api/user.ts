@@ -1,3 +1,5 @@
+import { ConnectionStatus } from '@/lib/enum';
+
 import { AxiosErrorResponse, SuccessResponse } from './common';
 
 /**
@@ -14,7 +16,7 @@ export interface GetProfileResponseBody {
   name: string;
   profile_photo: string;
   connection_count: number;
-  is_connected: boolean;
+  connection_status: ConnectionStatus;
   work_history: string | null;
   skills: string | null;
   relevant_posts?: {

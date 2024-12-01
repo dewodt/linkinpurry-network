@@ -4,16 +4,18 @@ import { createFileRoute } from '@tanstack/react-router';
 import * as React from 'react';
 
 import { RegisterForm } from '@/components/auth/register-form';
+import { HelmetTemplate } from '@/components/shared/helmet';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { AuthGuardLayout } from '@/layouts/auth-guard-layout';
 
-export const Route = createFileRoute('/auth/register')({
+export const Route = createFileRoute('/_auth/auth/register/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
   return (
-    <AuthGuardLayout level="unauthenticated-only">
+    <>
+      <HelmetTemplate title="Register | LinkinPurry" />
+
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto items-center justify-center bg-muted p-6 py-12 sm:p-12 lg:p-24">
         <Card className="w-full max-w-sm shadow-md">
           {/* Title */}
@@ -27,6 +29,6 @@ function RouteComponent() {
           </CardContent>
         </Card>
       </main>
-    </AuthGuardLayout>
+    </>
   );
 }

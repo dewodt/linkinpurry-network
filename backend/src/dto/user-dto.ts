@@ -1,6 +1,8 @@
 import { z } from '@hono/zod-openapi';
 
 import { AVATAR_MAX_SIZE } from '@/utils/constants';
+import { ConnectionStatus } from '@/utils/enum';
+import { Utils } from '@/utils/utils';
 
 /**
  * R
@@ -33,8 +35,14 @@ export const userIdRequestParamsDto = z.object({
   // cannot use coerce + bigint in zod + openapi, must manually transform + refine
   userId: z
     .string({ message: 'userId must be type of string' })
+    .refine(
+      (v) => {
+        const { result, isValid } = Utils.parseBigIntId(v);
+        return isValid && result > 0;
+      },
+      { message: 'userId must be type of big int and greater than 0' }
+    )
     .transform((v) => BigInt(v))
-    .refine((v) => !Number.isNaN(v) && v > 0, { message: 'userId must be type of big int' })
     // @ts-ignore
     .openapi({
       type: 'bigint',
@@ -43,7 +51,7 @@ export const userIdRequestParamsDto = z.object({
         in: 'path',
         required: true,
         description: 'User ID to get the profile',
-        example: 7,
+        example: '7',
       },
     }),
 });
@@ -73,31 +81,22 @@ export const getProfileResponseBodyDto = z.object({
     .string()
     .nullable() // no work history (null)
     .openapi({
-      description: 'Work history of the user (in rich text)',
-      example: `
-      <ul>
-        <li>Frontend Developer at Company A</li>
-        <li>Backend Developer at Company B</li>
-      </ul>
-    `,
+      description: 'Work history of the user',
+      example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
     }),
   skills: z
     .string()
     .nullable() // no skills (null)
     .openapi({
-      description: 'Skills of the user (rich text)',
-      example: `
-          <ul>
-            <li>JavaScript</li>
-            <li>TypeScript</li>
-            <li>Node.js</li>
-          </ul>      
-        `,
+      description: 'Skills of the user',
+      example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
     }),
-  is_connected: z.boolean().openapi({
-    description: 'Whether the current user is connected to the user',
-    example: true,
-  }),
+  connection_status: z
+    .enum([ConnectionStatus.ACCEPTED, ConnectionStatus.PENDING, ConnectionStatus.NONE])
+    .openapi({
+      description: 'Status of the connection',
+      example: ConnectionStatus.ACCEPTED,
+    }),
 
   // level 2
   relevant_posts: z
@@ -171,33 +170,14 @@ export const updateProfileRequestBodyDto = z.object({
       description: 'Profile photo of the user',
       example: new File([], 'my-pict.jpg', { type: 'image/jpeg' }),
     }),
-  work_history: z
-    .string({ message: 'Work history must be a string' })
-    .trim()
-    .optional()
-    .openapi({
-      description: 'Work history of the user (in rich text)',
-      example: `
-        <ul>
-          <li>Frontend Developer at Company A</li>
-          <li>Backend Developer at Company B</li>
-        </ul>
-      `,
-    }),
-  skills: z
-    .string({ message: 'Skills must be a string' })
-    .trim()
-    .optional()
-    .openapi({
-      description: 'Skills of the user (rich text)',
-      example: `
-        <ul>
-          <li>JavaScript</li>
-          <li>TypeScript</li>
-          <li>Node.js</li>
-        </ul>      
-      `,
-    }),
+  work_history: z.string({ message: 'Work history must be a string' }).trim().optional().openapi({
+    description: 'Work history of the user',
+    example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
+  }),
+  skills: z.string({ message: 'Skills must be a string' }).trim().optional().openapi({
+    description: 'Skills of the user',
+    example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
+  }),
 });
 
 export interface IUpdateProfileRequestBodyDto extends z.infer<typeof updateProfileRequestBodyDto> {}
@@ -222,25 +202,14 @@ export const updateProfileResponseBodyDto = z.object({
     .nullable() // no work history (null)
     .openapi({
       description: 'Work history of the user (in rich text)',
-      example: `
-      <ul>
-        <li>Frontend Developer at Company A</li>
-        <li>Backend Developer at Company B</li>
-      </ul>
-    `,
+      example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
     }),
   skills: z
     .string()
     .nullable() // no skills (null)
     .openapi({
-      description: 'Skills of the user (rich text)',
-      example: `
-        <ul>
-          <li>JavaScript</li>
-          <li>TypeScript</li>
-          <li>Node.js</li>
-        </ul>      
-      `,
+      description: 'Skills of the user',
+      example: 'Ex-Software Engineer @ Google, AWS, Microsoft',
     }),
 });
 
