@@ -5,9 +5,11 @@ import type { TSocket, TSocketServer } from '@/core/websocket';
 import {
   type IGetStatusResponseDataDto,
   type ISendMessageResponseDataDto,
+  type ISendTypingResponseDataDto,
   getStatusRequestDataDto,
   joinChatRoomsRequestDataDto,
   sendMessageRequestDataDto,
+  sendTypingRequestDataDto,
 } from '@/dto/chat-dto';
 import { ResponseDtoFactory } from '@/dto/common';
 import { ChatService } from '@/services/chat-service';
@@ -47,7 +49,7 @@ export class ChatGateway implements IWebSocketGateway {
     socket.on('joinChatRooms', this.handleJoinChatRooms(socket, io));
     socket.on('getStatus', this.handleGetStatus(socket, io));
     socket.on('sendMessage', this.handleSendMessage(socket, io));
-    // socket.on('sendTyping', this.handleSendTyping(socket, io));
+    socket.on('sendTyping', this.handleSendTyping(socket, io));
     // socket.on('stopTyping', this.handleStopTyping(socket, io));
   }
 
@@ -283,7 +285,55 @@ export class ChatGateway implements IWebSocketGateway {
     };
   }
 
-  private handleSendTyping(socket: TSocket, io: TSocketServer) {}
+  private handleSendTyping(socket: TSocket, io: TSocketServer): SocketListenerFunction {
+    return async (data: unknown, callback: SocketCallbackFunction) => {
+      // Validate data
+      const sendTypingRequestData = await sendTypingRequestDataDto.safeParseAsync(data);
+      if (!sendTypingRequestData.success) {
+        const { message, errorFields } = Utils.parseZodErrorResult(sendTypingRequestData.error);
+        const responseDto = ResponseDtoFactory.createErrorResponseDto(message, errorFields);
+        callback(responseDto);
+        return;
+      }
 
-  private handleStopTyping(socket: TSocket, io: TSocketServer) {}
+      try {
+        // Send typing
+        const fromUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
+        const toUserId = sendTypingRequestData.data.to_user_id;
+
+        const roomId = await this.chatService.getChatRoom(fromUserId, toUserId);
+
+        // To other user
+        const otherUserResponseData: ISendTypingResponseDataDto = {
+          from_user_id: fromUserId.toString(),
+        };
+        const otherUserResponseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          'Other user is typing',
+          otherUserResponseData
+        );
+        socket.to(roomId).emit('typing', otherUserResponseDto);
+
+        // To sender
+        const fromUserResponseDto = ResponseDtoFactory.createSuccessResponseDto(
+          'Typing successfully sent'
+        );
+        callback(fromUserResponseDto);
+      } catch (error) {
+        if (error instanceof Error) {
+          const responseDto = ResponseDtoFactory.createErrorResponseDto(error.message);
+          callback(responseDto);
+          return;
+        }
+
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Unknown error');
+        callback(responseDto);
+      }
+    };
+  }
+
+  private handleStopTyping(socket: TSocket, io: TSocketServer): SocketListenerFunction {
+    return async (data: unknown, callback: SocketCallbackFunction) => {
+      // Validate data
+    };
+  }
 }
