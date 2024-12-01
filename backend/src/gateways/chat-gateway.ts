@@ -9,6 +9,7 @@ import {
   getStatusRequestDataDto,
   joinChatRoomsRequestDataDto,
   sendMessageRequestDataDto,
+  sendStopTypingRequestDataDto,
   sendTypingRequestDataDto,
 } from '@/dto/chat-dto';
 import { ResponseDtoFactory } from '@/dto/common';
@@ -50,7 +51,7 @@ export class ChatGateway implements IWebSocketGateway {
     socket.on('getStatus', this.handleGetStatus(socket, io));
     socket.on('sendMessage', this.handleSendMessage(socket, io));
     socket.on('sendTyping', this.handleSendTyping(socket, io));
-    // socket.on('stopTyping', this.handleStopTyping(socket, io));
+    socket.on('stopTyping', this.handleStopTyping(socket, io));
   }
 
   /**
@@ -334,6 +335,46 @@ export class ChatGateway implements IWebSocketGateway {
   private handleStopTyping(socket: TSocket, io: TSocketServer): SocketListenerFunction {
     return async (data: unknown, callback: SocketCallbackFunction) => {
       // Validate data
+      const sendStopTypingRequestData = await sendStopTypingRequestDataDto.safeParseAsync(data);
+      if (!sendStopTypingRequestData.success) {
+        const { message, errorFields } = Utils.parseZodErrorResult(sendStopTypingRequestData.error);
+        const responseDto = ResponseDtoFactory.createErrorResponseDto(message, errorFields);
+        callback(responseDto);
+        return;
+      }
+
+      try {
+        // Send stop typing
+        const fromUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
+        const toUserId = sendStopTypingRequestData.data.to_user_id;
+
+        const roomId = await this.chatService.getChatRoom(fromUserId, toUserId);
+
+        // To other user
+        const otherUserResponseData: ISendTypingResponseDataDto = {
+          from_user_id: fromUserId.toString(),
+        };
+        const otherUserResponseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          'Other user stopped typing',
+          otherUserResponseData
+        );
+        socket.to(roomId).emit('stopTyping', otherUserResponseDto);
+
+        // To sender
+        const fromUserResponseDto = ResponseDtoFactory.createSuccessResponseDto(
+          'Stop typing successfully sent'
+        );
+        callback(fromUserResponseDto);
+      } catch (error) {
+        if (error instanceof Error) {
+          const responseDto = ResponseDtoFactory.createErrorResponseDto(error.message);
+          callback(responseDto);
+          return;
+        }
+
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Unknown error');
+        callback(responseDto);
+      }
     };
   }
 }
