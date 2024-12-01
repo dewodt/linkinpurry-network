@@ -48,8 +48,7 @@ export class App {
     this.app = new OpenAPIHono<IGlobalContext>({
       defaultHook: (result, c) => {
         if (!result.success) {
-          const errorFields = Utils.getErrorFieldsFromZodParseResult(result.error);
-          const message = Utils.getErrorMessagesFromZodParseResult(result.error);
+          const { message, errorFields } = Utils.parseZodErrorResult(result.error);
           const responseDto = ResponseDtoFactory.createErrorResponseDto(message, errorFields);
           return c.json(responseDto, 400);
         }

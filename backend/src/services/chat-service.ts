@@ -14,9 +14,9 @@ export interface IChatService extends IService {
     message: string
   ): Promise<Prisma.ChatGetPayload<{}>>;
 
-  canUserAccessChat(currentUserId: bigint, otherUserId: bigint): Promise<boolean>;
+  getChatRoom(currentUserId: bigint, otherUserId: bigint): Promise<string>;
 
-  joinChatRooms(currentUserId: bigint, otherUserIds: bigint[]): Promise<string[]>;
+  getChatRooms(currentUserId: bigint, otherUserIds: bigint[]): Promise<string[]>;
 
   getChatInbox(
     currentUserId: bigint,
@@ -166,10 +166,10 @@ export class ChatService implements IChatService {
    * @returns boolean
    * @throws CustomException
    */
-  async canUserAccessChat(currentUserId: bigint, otherUserId: bigint) {
+  async getChatRoom(currentUserId: bigint, otherUserId: bigint) {
     // Check if the user is trying to get chat history of themselves
     if (currentUserId === otherUserId)
-      throw ExceptionFactory.badRequest('You cannot get chat history of yourself');
+      throw ExceptionFactory.badRequest('There is no chat room with yourself');
 
     // Check if connected to other user
     let isConnected = false;
@@ -197,7 +197,7 @@ export class ChatService implements IChatService {
         'You are not connected to other user or other user does not exist'
       );
 
-    return true;
+    return this.getRoomId(currentUserId, otherUserId);
   }
 
   /**
@@ -209,7 +209,7 @@ export class ChatService implements IChatService {
    * @returns string
    * @throws CustomException
    */
-  async joinChatRooms(currentUserId: bigint, otherUserIds: bigint[]) {
+  async getChatRooms(currentUserId: bigint, otherUserIds: bigint[]) {
     // Check if all connections exists
     let isAllConnectionsExist = false;
 
