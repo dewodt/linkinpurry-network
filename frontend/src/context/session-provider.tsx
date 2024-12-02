@@ -1,6 +1,6 @@
 import { UseQueryResult, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import React, { useContext } from 'react';
+import React, { useCallback, useContext } from 'react';
 
 import { socket } from '@/lib/socket-io';
 import { getSession } from '@/services/auth';
@@ -12,7 +12,7 @@ import { SessionErrorResponse, SessionSuccessResponse } from '@/types/api/auth';
 
 interface SessionContextValue {
   sessionQuery: UseQueryResult<SessionSuccessResponse, SessionErrorResponse>;
-  deleteSession: () => Promise<void>;
+  deleteSession: () => void;
   updateSession: ({ name, profilePhoto }: { name: string; profilePhoto: string }) => void;
 }
 
@@ -28,34 +28,49 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const queryClient = useQueryClient();
 
-  const deleteSession = async () => {
-    await queryClient.resetQueries({
-      queryKey: ['session'],
+  const deleteSession = useCallback(() => {
+    // Clear query cache
+    queryClient.clear();
+    queryClient.removeQueries({
+      predicate: () => true,
     });
-  };
 
-  const updateSession = ({ name, profilePhoto }: { name: string; profilePhoto: string }) => {
-    queryClient.setQueryData<SessionSuccessResponse>(['session'], (prevData) => {
-      if (!prevData) return prevData;
+    // Disconnect from socket
+    socket.disconnect();
 
-      return {
-        ...prevData,
-        data: {
-          ...prevData.data,
-          name,
-          profilePhoto,
-        },
-      };
-    });
-  };
+    // Navigate to login page
+    window.location.href = '/auth/login';
+  }, [queryClient]);
 
-  // Everytime session query succeeded, connect to socket
+  const updateSession = useCallback(
+    ({ name, profilePhoto }: { name: string; profilePhoto: string }) => {
+      queryClient.setQueryData<SessionSuccessResponse>(['session'], (prevData) => {
+        if (!prevData) return prevData;
+
+        return {
+          ...prevData,
+          data: {
+            ...prevData.data,
+            name,
+            profilePhoto,
+          },
+        };
+      });
+    },
+    [queryClient],
+  );
+
   React.useEffect(() => {
     if (sessionQuery.isSuccess) {
-      // connect to socket
+      // Everytime session query succeeded, connect to socket
       socket.connect();
+    } else if (sessionQuery.isError) {
+      // If session data exists but query failed (expired), delete session
+      if (sessionQuery.error?.response?.status === 401 && sessionQuery.data?.data) {
+        deleteSession();
+      }
     }
-  }, [sessionQuery.isSuccess]);
+  }, [sessionQuery.isSuccess, sessionQuery.data, sessionQuery.isError, sessionQuery.error, deleteSession]);
 
   return <SessionContext.Provider value={{ sessionQuery, deleteSession, updateSession }}>{children}</SessionContext.Provider>;
 }
@@ -69,8 +84,16 @@ export function useSession() {
 
   const { sessionQuery, updateSession, deleteSession } = context;
 
+  const sessionData = React.useMemo(() => {
+    if (sessionQuery.isSuccess) {
+      return sessionQuery.data.data;
+    }
+
+    return undefined;
+  }, [sessionQuery.isSuccess, sessionQuery.data]);
+
   return {
-    session: sessionQuery.data?.data,
+    session: sessionData,
     isSuccessSession: sessionQuery.isSuccess,
     isLoadingSession: sessionQuery.isLoading,
     isPendingSession: sessionQuery.isPending,

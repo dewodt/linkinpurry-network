@@ -75,7 +75,6 @@ export class ChatGateway implements IWebSocketGateway {
     socket.join(chatRooms);
 
     // if want to notify online, can do it here
-    
 
     // Events
     socket.on('disconnect', () => this.handleDisconnect(socket, nsp, io));

@@ -248,7 +248,6 @@ function UserDropdown({ session }: { session: Session }) {
 
   // Hooks
   const router = useRouter();
-  const navigate = useNavigate();
   const { deleteSession } = useSession();
   const { setTheme, theme } = useTheme();
 
@@ -261,13 +260,12 @@ function UserDropdown({ session }: { session: Session }) {
       toast.dismiss();
       toast.error(error.response?.statusText || 'Error', { description: error.response?.data.message || 'An error occurred' });
     },
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       toast.dismiss();
       toast.success('Success', { description: data.message });
 
       // delete session
-      await deleteSession();
-      await navigate({ to: '/auth/login' });
+      deleteSession();
     },
   });
 
