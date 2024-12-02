@@ -26,8 +26,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { HelmetTemplate } from "@/components/shared/helmet";
+import { Textarea } from "@/components/ui/textarea"
 
 // Mock data with enhanced user information
 const mockPosts = [
@@ -78,6 +80,8 @@ function RouteComponent() {
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc")
   const [postToDelete, setPostToDelete] = React.useState<number | null>(null)
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
+  const [newPostContent, setNewPostContent] = React.useState("")
   
   // Handle sorting of posts based on creation date
   const handleSort = (order: "asc" | "desc") => {
@@ -97,8 +101,8 @@ function RouteComponent() {
   });
 
   // Handle deletion of a post
+  // TODO: Implement API call to delete post
   const handleDelete = () => {
-    // TODO: Implement API call to delete post
     if (postToDelete !== null) {
       setPosts(posts.filter((post) => post.id !== postToDelete))
       setPostToDelete(null)
@@ -106,15 +110,39 @@ function RouteComponent() {
     setIsDialogOpen(false)
   }
 
+  // Handle creation of a new post
+  // TODO: Implement API call to create post
+  const handleCreatePost = () => {
+    if (newPostContent.trim()) {
+      const newPost = {
+        id: posts.length + 1,
+        content: newPostContent,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: 1,
+        user: {
+          username: "johndoe",
+          full_name: "John Doe",
+          profile_photo_path: "/placeholder.svg"
+        }
+      }
+      setPosts([newPost, ...posts])
+      setNewPostContent("")
+      setIsCreateDialogOpen(false)
+    }
+  }
+
   const formatDate = (date: string) => {
     const now = new Date()
     const postDate = new Date(date)
     const diffInHours = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60 * 60))
     
-    // Display date in relative format (e.g., "Just now", "2h", "3d")
-    // Under 1 hour case
+    // Display date in relative format (e.g., "Just now", "4m", "2h", "3d")
+    // Under 1 hour case (display in minutes)
     if (diffInHours < 1) {
-      return "Just now"
+      const diffInMinutes = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60))
+      // Display "Just now" if less than 1 minute
+      return diffInMinutes < 1 ? "Just now" : `${diffInMinutes}m`
     } 
     // 1 hour to 24 hours case (display in hour)
     else if (diffInHours < 24) {
@@ -152,10 +180,50 @@ function RouteComponent() {
                 <SelectItem value="asc">Oldest First</SelectItem>
               </SelectContent>
             </Select>
-            {/* TODO: Set Up Create Post Button that Linked to create page */}
-            <Button>
-              <PlusIcon className="mr-2 h-4 w-4" /> Create Post
-            </Button>
+
+            {/* Create Post Dialog (Pop Up) */}
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusIcon className="mr-2 h-4 w-4" /> Create Post
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[525px]">
+                <DialogHeader className="flex flex-row items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src="/placeholder.svg" alt="John Doe" />
+                      <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                    <DialogTitle className="text-xl">John Doe</DialogTitle>
+                  </div>
+                  {/* <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => setIsCreateDialogOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button> */}
+                </DialogHeader>
+                <div className="mt-4">
+                  <Textarea
+                    placeholder="What do you want to talk about?"
+                    className="min-h-[150px] resize-none border-none text-lg focus-visible:ring-0"
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                  />
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    onClick={handleCreatePost}
+                    disabled={!newPostContent.trim()}
+                  >
+                    Post
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
