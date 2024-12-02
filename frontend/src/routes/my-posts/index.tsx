@@ -79,7 +79,7 @@ function RouteComponent() {
   const [posts, setPosts] = React.useState(mockPosts)
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc")
   const [postToDelete, setPostToDelete] = React.useState<number | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
   const [newPostContent, setNewPostContent] = React.useState("")
   
@@ -107,7 +107,7 @@ function RouteComponent() {
       setPosts(posts.filter((post) => post.id !== postToDelete))
       setPostToDelete(null)
     }
-    setIsDialogOpen(false)
+    setIsDeleteDialogOpen(false)
   }
 
   // Handle creation of a new post
@@ -258,7 +258,7 @@ function RouteComponent() {
                       <Pencil className="mr-2 h-4 w-4" /> Edit
                     </DropdownMenuItem>
                     {/* Set up delete button to display pop up confirmation */}
-                    <DropdownMenuItem onClick={() => { setPostToDelete(post.id); setIsDialogOpen(true); }}>
+                    <DropdownMenuItem onClick={() => { setPostToDelete(post.id); setIsDeleteDialogOpen(true); }}>
                       <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -274,7 +274,7 @@ function RouteComponent() {
       </div>
 
       {/* Delete Confirmation Dialog (Pop Up) */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
@@ -283,7 +283,7 @@ function RouteComponent() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
