@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Prisma, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { subHours } from 'date-fns';
+import { addHours, subHours } from 'date-fns';
 import { injectable } from 'inversify';
 
 import { logger } from '@/core/logger';
@@ -227,7 +227,7 @@ export class Database {
       logger.info('Creating chats...');
       let processedConnections = 0;
 
-      const baseDate = new Date(); // now
+      const baseDate = subHours(new Date(), connectionSet.size);
 
       for (const connectionKey of connectionSet) {
         const chatBatch: Prisma.ChatCreateManyInput[] = [];
@@ -238,7 +238,7 @@ export class Database {
           const isFromFirst = Math.random() > 0.5;
 
           // minus days using date-fns
-          const newDate = subHours(baseDate, processedConnections);
+          const newDate = addHours(baseDate, processedConnections);
 
           chatBatch.push({
             fromId: isFromFirst ? fromId : toId,
