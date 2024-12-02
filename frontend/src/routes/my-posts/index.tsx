@@ -31,6 +31,7 @@ import {
 import { HelmetTemplate } from "@/components/shared/helmet";
 import { Textarea } from "@/components/ui/textarea"
 
+// TODO: Match the Post type with the actual data from the backend
 // Define the Post type
 type Post = {
   id: number;
@@ -45,44 +46,45 @@ type Post = {
   };
 };
 
+// TODO: Replace mock data with actual data from the backend
 // Mock data with enhanced user information
 const mockPosts: Post[] = [
-  // {
-  //   id: 1,
-  //   content: "Just completed another milestone in our project! Looking forward to sharing more updates with the team. The progress we've made is truly remarkable and I'm excited about the next phase.",
-  //   created_at: "2023-06-01T10:00:00Z",
-  //   updated_at: "2024-06-01T10:00:00Z",
-  //   user_id: 1,
-  //   user: {
-  //     username: "johndoe",
-  //     full_name: "John Doe",
-  //     profile_photo_path: "/placeholder.svg"
-  //   }
-  // },
-  // {
-  //   id: 2,
-  //   content: "Reflecting on our recent achievements and the challenges we've overcome. It's amazing to see how far we've come as a team. Every obstacle has been a learning opportunity.",
-  //   created_at: "2023-06-02T14:30:00Z",
-  //   updated_at: "2023-06-02T15:00:00Z",
-  //   user_id: 1,
-  //   user: {
-  //     username: "johndoe",
-  //     full_name: "John Doe",
-  //     profile_photo_path: "/placeholder.svg"
-  //   }
-  // },
-  // {
-  //   id: 3,
-  //   content: "Innovation never stops! Excited to share some insights from our latest development sprint. The new features we're working on will revolutionize how we approach our daily tasks.",
-  //   created_at: "2023-06-03T09:15:00Z",
-  //   updated_at: "2023-06-03T09:15:00Z",
-  //   user_id: 1,
-  //   user: {
-  //     username: "johndoe",
-  //     full_name: "John Doe",
-  //     profile_photo_path: "/placeholder.svg"
-  //   }
-  // },
+  {
+    id: 1,
+    content: "Just completed another milestone in our project! Looking forward to sharing more updates with the team. The progress we've made is truly remarkable and I'm excited about the next phase.",
+    created_at: "2023-06-01T10:00:00Z",
+    updated_at: "2024-06-01T10:00:00Z",
+    user_id: 1,
+    user: {
+      username: "johndoe",
+      full_name: "John Doe",
+      profile_photo_path: "/placeholder.svg"
+    }
+  },
+  {
+    id: 2,
+    content: "Reflecting on our recent achievements and the challenges we've overcome. It's amazing to see how far we've come as a team. Every obstacle has been a learning opportunity.",
+    created_at: "2023-06-02T14:30:00Z",
+    updated_at: "2023-06-02T15:00:00Z",
+    user_id: 1,
+    user: {
+      username: "johndoe",
+      full_name: "John Doe",
+      profile_photo_path: "/placeholder.svg"
+    }
+  },
+  {
+    id: 3,
+    content: "Innovation never stops! Excited to share some insights from our latest development sprint. The new features we're working on will revolutionize how we approach our daily tasks.",
+    created_at: "2023-06-03T09:15:00Z",
+    updated_at: "2023-06-03T09:15:00Z",
+    user_id: 1,
+    user: {
+      username: "johndoe",
+      full_name: "John Doe",
+      profile_photo_path: "/placeholder.svg"
+    }
+  },
 ]
 
 export const Route = createFileRoute("/my-posts/")({
@@ -217,7 +219,7 @@ function RouteComponent() {
       {/* Main Content */}
       <div className="w-full max-w-2xl min-h-[calc(100vh-4rem)] mx-auto space-y-12 py-12 sm:p-12">
         {/* Header */}
-        <div className="flex items-center justify-between p-4">
+        <div className="flex flex-col items-start justify-between p-4 gap-4">
           <h1 className="text-2xl font-bold">My Posts</h1>
           <div className="flex gap-4">
             <Select
@@ -277,46 +279,55 @@ function RouteComponent() {
 
         {/* List of Posts */}
         <div className="space-y-4">
-          {posts.map((post) => (
-            <Card key={post.id} className="p-4">
-              <div className="flex justify-between items-start">
-                <div className="flex gap-3">
-                  <Avatar className="h-12 w-12">
-                    {/* TODO: Get user's profile picture from backend */}
-                    <AvatarImage src={post.user.profile_photo_path} alt={post.user.full_name} />
-                    <AvatarFallback>{post.user.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h2 className="font-semibold">{post.user.full_name}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(post.created_at)} {post.created_at !== post.updated_at && "• Edited"}
-                    </p>
+          {/* TODO: Change the variable posts.length to match in backend */}
+          {posts.length === 0 ? (
+            // Handle empty posts case
+            <div className="text-center text-muted-foreground">
+              <p className="text-lg font-medium">You have no posts yet</p>
+            </div>
+          ) : (
+            // Render posts
+            posts.map((post) => (
+              <Card key={post.id} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex gap-3">
+                    <Avatar className="h-12 w-12">
+                      {/* TODO: Get user's profile picture from backend */}
+                      <AvatarImage src={post.user.profile_photo_path} alt={post.user.full_name} />
+                      <AvatarFallback>{post.user.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h2 className="font-semibold">{post.user.full_name}</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(post.created_at)} {post.created_at !== post.updated_at && "• Edited"}
+                      </p>
+                    </div>
                   </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {/* TODO: Set Up Edit Button that Linked to edit page */}
+                      <DropdownMenuItem onClick={() => handleOpenEditDialog(post.id, post.content)}>
+                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setPostToDelete(post.id); setIsDeleteDialogOpen(true); }}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {/* TODO: Set Up Edit Button that Linked to edit page */}
-                    <DropdownMenuItem onClick={() => handleOpenEditDialog(post.id, post.content)}>
-                      <Pencil className="mr-2 h-4 w-4" /> Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setPostToDelete(post.id); setIsDeleteDialogOpen(true); }}>
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <div className="mt-4">
-                {/* TODO: Make displayed content to handle enters  */}
-                {/* TODO: Get post content from backend */}
-                <p className="text-sm">{post.content}</p>
-              </div>
-            </Card>
-          ))}
+                <div className="mt-4">
+                  {/* TODO: Make displayed content to handle enters  */}
+                  {/* TODO: Get post content from backend */}
+                  <p className="text-sm">{post.content}</p>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </div>
 
