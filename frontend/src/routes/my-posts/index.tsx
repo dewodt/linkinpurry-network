@@ -31,44 +31,58 @@ import {
 import { HelmetTemplate } from "@/components/shared/helmet";
 import { Textarea } from "@/components/ui/textarea"
 
+// Define the Post type
+type Post = {
+  id: number;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  user_id: number;
+  user: {
+    username: string;
+    full_name: string;
+    profile_photo_path: string;
+  };
+};
+
 // Mock data with enhanced user information
-const mockPosts = [
-  {
-    id: 1,
-    content: "Just completed another milestone in our project! Looking forward to sharing more updates with the team. The progress we've made is truly remarkable and I'm excited about the next phase.",
-    created_at: "2023-06-01T10:00:00Z",
-    updated_at: "2024-06-01T10:00:00Z",
-    user_id: 1,
-    user: {
-      username: "johndoe",
-      full_name: "John Doe",
-      profile_photo_path: "/placeholder.svg"
-    }
-  },
-  {
-    id: 2,
-    content: "Reflecting on our recent achievements and the challenges we've overcome. It's amazing to see how far we've come as a team. Every obstacle has been a learning opportunity.",
-    created_at: "2023-06-02T14:30:00Z",
-    updated_at: "2023-06-02T15:00:00Z",
-    user_id: 1,
-    user: {
-      username: "johndoe",
-      full_name: "John Doe",
-      profile_photo_path: "/placeholder.svg"
-    }
-  },
-  {
-    id: 3,
-    content: "Innovation never stops! Excited to share some insights from our latest development sprint. The new features we're working on will revolutionize how we approach our daily tasks.",
-    created_at: "2023-06-03T09:15:00Z",
-    updated_at: "2023-06-03T09:15:00Z",
-    user_id: 1,
-    user: {
-      username: "johndoe",
-      full_name: "John Doe",
-      profile_photo_path: "/placeholder.svg"
-    }
-  },
+const mockPosts: Post[] = [
+  // {
+  //   id: 1,
+  //   content: "Just completed another milestone in our project! Looking forward to sharing more updates with the team. The progress we've made is truly remarkable and I'm excited about the next phase.",
+  //   created_at: "2023-06-01T10:00:00Z",
+  //   updated_at: "2024-06-01T10:00:00Z",
+  //   user_id: 1,
+  //   user: {
+  //     username: "johndoe",
+  //     full_name: "John Doe",
+  //     profile_photo_path: "/placeholder.svg"
+  //   }
+  // },
+  // {
+  //   id: 2,
+  //   content: "Reflecting on our recent achievements and the challenges we've overcome. It's amazing to see how far we've come as a team. Every obstacle has been a learning opportunity.",
+  //   created_at: "2023-06-02T14:30:00Z",
+  //   updated_at: "2023-06-02T15:00:00Z",
+  //   user_id: 1,
+  //   user: {
+  //     username: "johndoe",
+  //     full_name: "John Doe",
+  //     profile_photo_path: "/placeholder.svg"
+  //   }
+  // },
+  // {
+  //   id: 3,
+  //   content: "Innovation never stops! Excited to share some insights from our latest development sprint. The new features we're working on will revolutionize how we approach our daily tasks.",
+  //   created_at: "2023-06-03T09:15:00Z",
+  //   updated_at: "2023-06-03T09:15:00Z",
+  //   user_id: 1,
+  //   user: {
+  //     username: "johndoe",
+  //     full_name: "John Doe",
+  //     profile_photo_path: "/placeholder.svg"
+  //   }
+  // },
 ]
 
 export const Route = createFileRoute("/my-posts/")({
@@ -80,8 +94,10 @@ function RouteComponent() {
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc")
   const [postToDelete, setPostToDelete] = React.useState<number | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false)
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
-  const [newPostContent, setNewPostContent] = React.useState("")
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false) // Dialog for creating/editing posts pop up
+  const [dialogMode, setDialogMode] = React.useState<"create" | "edit">("create");
+  const [editingPostId, setEditingPostId] = React.useState<number | null>(null);
+  const [dialogContent, setDialogContent] = React.useState("")
   
   // Handle sorting of posts based on creation date
   const handleSort = (order: "asc" | "desc") => {
@@ -112,25 +128,61 @@ function RouteComponent() {
 
   // Handle creation of a new post
   // TODO: Implement API call to create post
-  const handleCreatePost = () => {
-    if (newPostContent.trim()) {
+  // const handleCreatePost = () => {
+  //   if (dialogContent.trim()) {
+  //     const newPost = {
+  //       id: posts.length + 1,
+  //       content: dialogContent,
+  //       created_at: new Date().toISOString(),
+  //       updated_at: new Date().toISOString(),
+  //       user_id: 1,
+  //       user: {
+  //         username: "johndoe",
+  //         full_name: "John Doe",
+  //         profile_photo_path: "/placeholder.svg"
+  //       }
+  //     }
+  //     setPosts([newPost, ...posts])
+  //     setDialogContent("")
+  //     setIsDialogOpen(false)
+  //   }
+  // }
+
+  const handleSavePost = () => {
+    if (dialogMode === "create") {
       const newPost = {
         id: posts.length + 1,
-        content: newPostContent,
+        content: dialogContent,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: 1,
         user: {
           username: "johndoe",
           full_name: "John Doe",
-          profile_photo_path: "/placeholder.svg"
-        }
-      }
-      setPosts([newPost, ...posts])
-      setNewPostContent("")
-      setIsCreateDialogOpen(false)
+          profile_photo_path: "/placeholder.svg",
+        },
+      };
+      setPosts([newPost, ...posts]);
+    } else if (dialogMode === "edit" && editingPostId !== null) {
+      setPosts(
+        posts.map((post) =>
+          post.id === editingPostId
+            ? { ...post, content: dialogContent, updated_at: new Date().toISOString() }
+            : post
+        )
+      );
     }
-  }
+    setDialogContent("");
+    setEditingPostId(null);
+    setIsDialogOpen(false);
+  };
+
+  const handleOpenEditDialog = (postId: number, content: string) => {
+    setDialogMode("edit");
+    setEditingPostId(postId);
+    setDialogContent(content);
+    setIsDialogOpen(true);
+  };
 
   const formatDate = (date: string) => {
     const now = new Date()
@@ -182,39 +234,43 @@ function RouteComponent() {
             </Select>
 
             {/* Create Post Dialog (Pop Up) */}
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={() => { setDialogMode("create"); setDialogContent("");}}>
                   <PlusIcon className="mr-2 h-4 w-4" /> Create Post
                 </Button>
               </DialogTrigger>
-                <DialogContent className="sm:max-w-[700px] sm:min-h-[400px]">
-                <DialogHeader className="flex flex-row items-center justify-between">
+              <DialogContent className="sm:max-w-[700px] sm:min-h-[400px]">
+                <DialogHeader className="flex flex-col items-start justify-between gap-4">
+                  <DialogTitle className="text-xl">
+                    {dialogMode === "create" ? "Create Post" : "Edit Post"}
+                  </DialogTitle>
                   <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src="/placeholder.svg" alt="John Doe" />
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
-                  <DialogTitle className="text-xl">John Doe</DialogTitle>
+                    {/* TODO: Get profile picture and full name from backend */}
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src="/placeholder.svg" alt="John Doe" />
+                      <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                    <DialogTitle className="text-xl">John Doe</DialogTitle>
                   </div>
                 </DialogHeader>
                 <div className="mt-4">
                   <Textarea
-                  placeholder="What do you want to talk about?"
-                  className="min-h-[250px] resize-none border-none text-lg focus-visible:ring-0"
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
+                    placeholder="What do you want to talk about?"
+                    className="min-h-[250px] resize-none border-none text-lg focus-visible:ring-0"
+                    value={dialogContent}
+                    onChange={(e) => setDialogContent(e.target.value)}
                   />
                 </div>
                 <div className="mt-4 flex justify-end">
                   <Button
-                  onClick={handleCreatePost}
-                  disabled={!newPostContent.trim()}
+                    onClick={handleSavePost}
+                    disabled={!dialogContent.trim()}
                   >
-                  Post
+                    {dialogMode === "create" ? "Post" : "Save"}
                   </Button>
                 </div>
-                </DialogContent>
+              </DialogContent>
             </Dialog>
           </div>
         </div>
@@ -245,10 +301,9 @@ function RouteComponent() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {/* TODO: Set Up Edit Button that Linked to edit page */}
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleOpenEditDialog(post.id, post.content)}>
                       <Pencil className="mr-2 h-4 w-4" /> Edit
                     </DropdownMenuItem>
-                    {/* Set up delete button to display pop up confirmation */}
                     <DropdownMenuItem onClick={() => { setPostToDelete(post.id); setIsDeleteDialogOpen(true); }}>
                       <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </DropdownMenuItem>
