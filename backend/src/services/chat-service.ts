@@ -32,12 +32,11 @@ export interface IChatService extends IService {
       fullName: string;
       profilePhotoPath: string;
     };
-    roomId: string;
   }>; // TODO: fill this im lazy
 
-  getChatRoom(currentUserId: bigint, otherUserId: bigint): Promise<string>;
+  canUserChat(currentUserId: bigint, otherUserId: bigint): Promise<boolean>;
 
-  getChatRooms(currentUserId: bigint, otherUserIds: bigint[]): Promise<string[]>;
+  canUserChatMany(currentUserId: bigint, otherUserIds: bigint[]): Promise<boolean>;
 
   getChatInbox(
     currentUserId: bigint,
@@ -91,11 +90,6 @@ export class ChatService implements IChatService {
 
   constructor(@inject(Database.Key) private readonly database: Database) {
     this.prisma = this.database.getPrisma();
-  }
-
-  getRoomId(user1: bigint, user2: bigint) {
-    const roomId = [user1, user2].sort().join('-');
-    return roomId;
   }
 
   /**
@@ -192,7 +186,6 @@ export class ChatService implements IChatService {
           ...toUser,
           fullName: toUser.fullName || '',
         },
-        roomId: this.getRoomId(fromUser.id, toUser.id),
       };
     } catch (error) {
       // Internal server error
@@ -208,7 +201,7 @@ export class ChatService implements IChatService {
    * @param onlineUserIds
    * @returns
    */
-  async getCurrentUserOnlineRoomIds(currentUserId: bigint, onlineUserIds: bigint[]) {
+  async getConnectedOnlineUsers(currentUserId: bigint, onlineUserIds: bigint[]) {
     try {
       // Get connecttions that intersect with otherUserIds
       const connections = await this.prisma.connection.findMany({
@@ -221,7 +214,12 @@ export class ChatService implements IChatService {
         select: { fromId: true, toId: true },
       });
 
-      return connections.map((connection) => this.getRoomId(connection.fromId, connection.toId));
+      // NOTE: Not to confuse connection from/to vs user from/to. This is user from/to/
+      const onlineOtherUserIds = connections.map((connection) =>
+        connection.fromId === currentUserId ? connection.toId : connection.fromId
+      );
+
+      return onlineOtherUserIds;
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
 
@@ -230,14 +228,14 @@ export class ChatService implements IChatService {
   }
 
   /**
-   *  Check if the user is trying to get chat history of themselves
+   *  Check if user can chat with other user
    *
    * @param currentUserId
    * @param otherUserId
-   * @returns boolean
+   * @returns bool
    * @throws CustomException
    */
-  async getChatRoom(currentUserId: bigint, otherUserId: bigint) {
+  async canUserChat(currentUserId: bigint, otherUserId: bigint) {
     // Check if the user is trying to get chat history of themselves
     if (currentUserId === otherUserId)
       throw ExceptionFactory.badRequest('There is no chat room with yourself');
@@ -268,19 +266,18 @@ export class ChatService implements IChatService {
         'You are not connected to other user or other user does not exist'
       );
 
-    return this.getRoomId(currentUserId, otherUserId);
+    return true;
   }
 
   /**
    * Validate if user can chat to an array of users
-   * Returns the room ids if the user can chat to all users
    *
    * @param currentUserId
    * @param otherUserIds
-   * @returns string
+   * @returns boolean
    * @throws CustomException
    */
-  async getChatRooms(currentUserId: bigint, otherUserIds: bigint[]) {
+  async canUserChatMany(currentUserId: bigint, otherUserIds: bigint[]) {
     // Check if all connections exists
     let isAllConnectionsExist = false;
 
@@ -306,7 +303,7 @@ export class ChatService implements IChatService {
     if (!isAllConnectionsExist)
       throw ExceptionFactory.badRequest('You are not connected to all other users');
 
-    return otherUserIds.map((otherUserId) => this.getRoomId(currentUserId, otherUserId));
+    return true;
   }
 
   /**

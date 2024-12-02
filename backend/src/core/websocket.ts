@@ -55,7 +55,7 @@ export class WebSocketServer {
     this.chatNamespace = this.io.of('/chat');
     this.chatNamespace.use(this.authMiddleware.authorizeSocket({ isPublic: false }));
     this.chatNamespace.on('connection', (socket: TSocket) => {
-      this.chatGateway.handleConnection(socket, this.io!);
+      this.chatGateway.handleConnection(socket, this.chatNamespace!, this.io!);
     });
 
     // Add more if needed
