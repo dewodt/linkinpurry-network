@@ -188,41 +188,33 @@ function RouteComponent() {
                   <PlusIcon className="mr-2 h-4 w-4" /> Create Post
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[525px]">
+                <DialogContent className="sm:max-w-[700px] sm:min-h-[400px]">
                 <DialogHeader className="flex flex-row items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src="/placeholder.svg" alt="John Doe" />
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
-                    <DialogTitle className="text-xl">John Doe</DialogTitle>
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src="/placeholder.svg" alt="John Doe" />
+                    <AvatarFallback>JD</AvatarFallback>
+                  </Avatar>
+                  <DialogTitle className="text-xl">John Doe</DialogTitle>
                   </div>
-                  {/* <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full"
-                    onClick={() => setIsCreateDialogOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button> */}
                 </DialogHeader>
                 <div className="mt-4">
                   <Textarea
-                    placeholder="What do you want to talk about?"
-                    className="min-h-[150px] resize-none border-none text-lg focus-visible:ring-0"
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
+                  placeholder="What do you want to talk about?"
+                  className="min-h-[250px] resize-none border-none text-lg focus-visible:ring-0"
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
                   />
                 </div>
                 <div className="mt-4 flex justify-end">
                   <Button
-                    onClick={handleCreatePost}
-                    disabled={!newPostContent.trim()}
+                  onClick={handleCreatePost}
+                  disabled={!newPostContent.trim()}
                   >
-                    Post
+                  Post
                   </Button>
                 </div>
-              </DialogContent>
+                </DialogContent>
             </Dialog>
           </div>
         </div>
