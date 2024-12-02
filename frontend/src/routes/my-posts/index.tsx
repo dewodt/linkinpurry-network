@@ -96,10 +96,10 @@ function RouteComponent() {
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc")
   const [postToDelete, setPostToDelete] = React.useState<number | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false)
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false) // Dialog for creating/editing posts pop up
-  const [dialogMode, setDialogMode] = React.useState<"create" | "edit">("create");
+  const [isCreateOrEditDialogOpen, setIsCreateOrEditDialogOpen] = React.useState(false) // Dialog for creating/editing posts pop up
+  const [dialogCreateOrEditMode, setCreateOrEditDialogMode] = React.useState<"create" | "edit">("create");
   const [editingPostId, setEditingPostId] = React.useState<number | null>(null);
-  const [dialogContent, setDialogContent] = React.useState("")
+  const [dialogPostContent, setDialogPostContent] = React.useState("")
   
   // Handle sorting of posts based on creation date
   const handleSort = (order: "asc" | "desc") => {
@@ -151,10 +151,10 @@ function RouteComponent() {
   // }
 
   const handleSavePost = () => {
-    if (dialogMode === "create") {
+    if (dialogCreateOrEditMode === "create") {
       const newPost = {
         id: posts.length + 1,
-        content: dialogContent,
+        content: dialogPostContent,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: 1,
@@ -165,25 +165,25 @@ function RouteComponent() {
         },
       };
       setPosts([newPost, ...posts]);
-    } else if (dialogMode === "edit" && editingPostId !== null) {
+    } else if (dialogCreateOrEditMode === "edit" && editingPostId !== null) {
       setPosts(
         posts.map((post) =>
           post.id === editingPostId
-            ? { ...post, content: dialogContent, updated_at: new Date().toISOString() }
+            ? { ...post, content: dialogPostContent, updated_at: new Date().toISOString() }
             : post
         )
       );
     }
-    setDialogContent("");
+    setDialogPostContent("");
     setEditingPostId(null);
-    setIsDialogOpen(false);
+    setIsCreateOrEditDialogOpen(false);
   };
 
   const handleOpenEditDialog = (postId: number, content: string) => {
-    setDialogMode("edit");
+    setCreateOrEditDialogMode("edit");
     setEditingPostId(postId);
-    setDialogContent(content);
-    setIsDialogOpen(true);
+    setDialogPostContent(content);
+    setIsCreateOrEditDialogOpen(true);
   };
 
   const formatDate = (date: string) => {
@@ -236,16 +236,16 @@ function RouteComponent() {
             </Select>
 
             {/* Create Post Dialog (Pop Up) */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isCreateOrEditDialogOpen} onOpenChange={setIsCreateOrEditDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => { setDialogMode("create"); setDialogContent("");}}>
+                <Button onClick={() => { setCreateOrEditDialogMode("create"); setDialogPostContent("");}}>
                   <PlusIcon className="mr-2 h-4 w-4" /> Create Post
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[700px] sm:min-h-[400px]">
                 <DialogHeader className="flex flex-col items-start justify-between gap-4">
                   <DialogTitle className="text-xl">
-                    {dialogMode === "create" ? "Create Post" : "Edit Post"}
+                    {dialogCreateOrEditMode === "create" ? "Create Post" : "Edit Post"}
                   </DialogTitle>
                   <div className="flex items-center gap-3">
                     {/* TODO: Get profile picture and full name from backend */}
@@ -260,16 +260,16 @@ function RouteComponent() {
                   <Textarea
                     placeholder="What do you want to talk about?"
                     className="min-h-[250px] resize-none border-none text-lg focus-visible:ring-0"
-                    value={dialogContent}
-                    onChange={(e) => setDialogContent(e.target.value)}
+                    value={dialogPostContent}
+                    onChange={(e) => setDialogPostContent(e.target.value)}
                   />
                 </div>
                 <div className="mt-4 flex justify-end">
                   <Button
                     onClick={handleSavePost}
-                    disabled={!dialogContent.trim()}
+                    disabled={!dialogPostContent.trim()}
                   >
-                    {dialogMode === "create" ? "Post" : "Save"}
+                    {dialogCreateOrEditMode === "create" ? "Post" : "Save"}
                   </Button>
                 </div>
               </DialogContent>
