@@ -297,6 +297,7 @@ function RouteComponent() {
                       <AvatarFallback>{post.user.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div>
+                      {/* TODO: Get user's full name from backend */}
                       <h2 className="font-semibold">{post.user.full_name}</h2>
                       <p className="text-sm text-muted-foreground">
                         {formatDate(post.created_at)} {post.created_at !== post.updated_at && "• Edited"}
