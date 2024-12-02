@@ -1,4 +1,4 @@
-import { InfiniteData, QueryKey, useInfiniteQuery } from '@tanstack/react-query';
+import { InfiniteData, QueryKey, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ChevronLeft } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
@@ -7,9 +7,10 @@ import React from 'react';
 
 import { useChat } from '@/context/chat-provider';
 import { useSession } from '@/context/session-provider';
+import { UserStatus } from '@/lib/enum';
 import { getRelativeTime } from '@/lib/utils';
-import { getChatHistory } from '@/services/chat';
-import { GetChatHistoryErrorResponse, GetChatHistorySuccessResponse } from '@/types/api/chat';
+import { getChatHistory, getStatus } from '@/services/chat';
+import { GetChatHistoryErrorResponse, GetChatHistorySuccessResponse, GetStatusErrorResponse, GetStatusSuccessResponse } from '@/types/api/chat';
 
 import { AvatarUser } from '../shared/avatar-user';
 import { ErrorFill } from '../shared/error-fill';
@@ -29,6 +30,14 @@ export function ChatContent() {
   const { ref: chatSentinelRef, inView: chatSentinelInView } = useInView({
     root: chatRootRef.current,
     threshold: 0,
+  });
+
+  // Initial user data status (online/offline)
+  const { data: userStatus, isSuccess: isSuccessUserStatus } = useQuery<GetStatusSuccessResponse, GetStatusErrorResponse>({
+    queryKey: ['user', selectedOtherUserId],
+    queryFn: async () => getStatus({ user_id: selectedOtherUserId!.otherUserId }),
+    enabled: !!selectedOtherUserId,
+    retry: 1,
   });
 
   // Chat detail query
@@ -95,7 +104,7 @@ export function ChatContent() {
   return (
     <>
       {/* Header */}
-      <div className="flex flex-row gap-3 border-b bg-background py-2.5 pl-2 pr-4">
+      <div className="flex flex-row items-center gap-3 border-b bg-background py-2.5 pl-2 pr-4">
         <Button variant="ghost" size="icon-sm" className="rounded-full" onClick={closeChat}>
           <ChevronLeft />
         </Button>
@@ -106,7 +115,9 @@ export function ChatContent() {
             <h1 className="text-sm font-bold text-foreground">{selectedOtherUserId.name}</h1>
 
             {/* Status */}
-            <p className="text-xs font-medium text-muted-foreground">Online</p>
+            {isSuccessUserStatus && userStatus.data.status === UserStatus.ONLINE && (
+              <p className="text-xs font-medium text-muted-foreground">Online</p>
+            )}
           </div>
         </Link>
       </div>
