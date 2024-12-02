@@ -257,6 +257,7 @@ function RouteComponent() {
                 </DropdownMenu>
               </div>
               <div className="mt-4">
+                {/* TODO: Make displayed content to handle enters  */}
                 {/* TODO: Get post content from backend */}
                 <p className="text-sm">{post.content}</p>
               </div>
