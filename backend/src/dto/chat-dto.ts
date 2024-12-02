@@ -228,6 +228,8 @@ export const sendMessageResponseDataDto = z.object({
   other_user_username: z.string({ message: 'must be a string' }),
   other_user_full_name: z.string({ message: 'must be a string' }),
   other_user_profile_photo_path: z.string({ message: 'must be a string' }),
+  from_user_id: z.string({ message: 'must be a string (bigint)' }),
+  message_id: z.string({ message: 'must be a string' }),
   message: z.string({ message: 'must be a string' }),
   timestamp: z.string({ message: 'must be a string (ISO string)' }),
 });

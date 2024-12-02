@@ -17,11 +17,12 @@ import { ErrorFill } from '../shared/error-fill';
 import { LoadingFill } from '../shared/loading-fill';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
+import { SendMessageForm } from './send-message-form';
 
 export function ChatContent() {
   // hooks
   const { session } = useSession();
-  const { selectedOtherUserId, closeChat } = useChat();
+  const { selectedOtherUser, closeChat } = useChat();
 
   // Intersection observer hook
   const chatContainerRef = React.useRef<HTMLOListElement>(null);
@@ -34,9 +35,9 @@ export function ChatContent() {
 
   // Initial user data status (online/offline)
   const { data: userStatus, isSuccess: isSuccessUserStatus } = useQuery<GetStatusSuccessResponse, GetStatusErrorResponse>({
-    queryKey: ['user', selectedOtherUserId],
-    queryFn: async () => getStatus({ user_id: selectedOtherUserId!.otherUserId }),
-    enabled: !!selectedOtherUserId,
+    queryKey: ['user', selectedOtherUser?.otherUserId, 'status'],
+    queryFn: async () => getStatus({ user_id: selectedOtherUser!.otherUserId }),
+    enabled: !!selectedOtherUser,
     retry: 1,
   });
 
@@ -60,8 +61,8 @@ export function ChatContent() {
     QueryKey,
     string | undefined
   >({
-    queryKey: ['chats', selectedOtherUserId, session?.userId, limit],
-    enabled: !!selectedOtherUserId,
+    queryKey: ['chats', selectedOtherUser?.otherUserId, 'content'],
+    enabled: !!selectedOtherUser,
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -69,7 +70,7 @@ export function ChatContent() {
     initialPageParam: undefined,
     queryFn: async ({ pageParam }) =>
       getChatHistory(
-        { otherUserId: selectedOtherUserId!.otherUserId },
+        { otherUserId: selectedOtherUser!.otherUserId },
         {
           cursor: pageParam,
           limit,
@@ -78,28 +79,36 @@ export function ChatContent() {
     getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
   });
 
-  const flattenChats = React.useMemo(() => chatData?.pages.flatMap((page) => page.data) ?? [], [chatData]);
+  const flattenChats = React.useMemo(() => (chatData ? chatData.pages.flatMap((page) => page.data).reverse() : []), [chatData]);
 
-  // Fetch more when scroll to top
+  const scrollToBottomInstant = React.useCallback(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'instant', block: 'end' });
+  }, [chatEndRef]);
+
+  const scrollToBottomSmooth = React.useCallback(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [chatEndRef]);
+
   React.useEffect(() => {
+    // Fetch more when scroll to top
     if (chatSentinelInView && hasNextPageChat && !isFetchingNextPageChat) {
       fetchNextPageChat();
 
       // scroll to bottom
-      chatEndRef.current!.scrollIntoView({ behavior: 'instant', block: 'end' });
+      scrollToBottomInstant();
     }
-  }, [hasNextPageChat, isFetchingNextPageChat, chatSentinelInView, fetchNextPageChat]);
+  }, [hasNextPageChat, isFetchingNextPageChat, chatSentinelInView, fetchNextPageChat, scrollToBottomInstant]);
 
   // When change chat, scroll to bottom aswell
   React.useEffect(() => {
-    if (selectedOtherUserId && selectedOtherUserId.otherUserId && isSuccessChat) {
+    if (selectedOtherUser && selectedOtherUser.otherUserId && isSuccessChat) {
       // scroll to bottom
-      chatEndRef.current!.scrollIntoView({ behavior: 'instant', block: 'end' });
+      scrollToBottomInstant();
     }
-  }, [selectedOtherUserId, isSuccessChat]);
+  }, [selectedOtherUser, isSuccessChat, scrollToBottomInstant]);
 
-  // ensure selectedOtherUserId is not null
-  if (!selectedOtherUserId) return null;
+  // ensure selectedOtherUser is not null
+  if (!selectedOtherUser) return null;
 
   return (
     <>
@@ -109,10 +118,10 @@ export function ChatContent() {
           <ChevronLeft />
         </Button>
 
-        <Link to="/users/$userId" params={{ userId: selectedOtherUserId.otherUserId }}>
+        <Link to="/users/$userId" params={{ userId: selectedOtherUser.otherUserId }}>
           <div className="w-full space-y-0.5">
             {/* name */}
-            <h1 className="text-sm font-bold text-foreground">{selectedOtherUserId.name}</h1>
+            <h1 className="text-sm font-bold text-foreground">{selectedOtherUser.name}</h1>
 
             {/* Status */}
             {isSuccessUserStatus && userStatus.data.status === UserStatus.ONLINE && (
@@ -140,11 +149,11 @@ export function ChatContent() {
       {isSuccessChat && (
         <>
           {flattenChats.length === 0 ? (
-            <div className="flex w-full items-center justify-center sm:max-w-[312px] sm:border-r">
+            <div className="flex flex-auto items-center justify-center">
               <p className="text-base text-muted-foreground">Send a message to start chatting</p>
             </div>
           ) : (
-            <ScrollArea className="flex" ref={chatRootRef} key={selectedOtherUserId.otherUserId}>
+            <ScrollArea className="flex flex-auto" ref={chatRootRef} key={selectedOtherUser.otherUserId}>
               <ol className="flex flex-col py-2" ref={chatContainerRef}>
                 {/* Sentinel top */}
                 <li ref={chatSentinelRef} className="flex items-center justify-center">
@@ -152,11 +161,11 @@ export function ChatContent() {
                 </li>
 
                 {flattenChats.map((message) => (
-                  <li className="flex flex-row items-start gap-3 bg-background p-4">
+                  <li className="flex flex-row items-start gap-3 bg-background p-4" key={message.chat_id}>
                     {/* Avatar */}
                     <AvatarUser
-                      src={message.from_user_id == session?.userId ? session.profilePhoto : selectedOtherUserId.profileProfilePhoto}
-                      alt={`${message.from_user_id == session?.userId ? session.name : selectedOtherUserId.name}'s profile picture`}
+                      src={message.from_user_id == session?.userId ? session.profilePhoto : selectedOtherUser.profileProfilePhoto}
+                      alt={`${message.from_user_id == session?.userId ? session.name : selectedOtherUser.name}'s profile picture`}
                       classNameAvatar="size-10"
                     />
 
@@ -165,7 +174,7 @@ export function ChatContent() {
                       <div className="flex flex-row items-center gap-2">
                         {/* Name */}
                         <p className="text-sm font-bold text-foreground">
-                          {message.from_user_id == session?.userId ? session.name : selectedOtherUserId.name}
+                          {message.from_user_id == session?.userId ? session.name : selectedOtherUser.name}
                         </p>
 
                         <p className="text-xs font-medium text-muted-foreground">{getRelativeTime(new Date(message.timestamp))}</p>
@@ -184,6 +193,9 @@ export function ChatContent() {
           )}
         </>
       )}
+
+      {/* Send message form*/}
+      <SendMessageForm scrollToBottomSmooth={scrollToBottomSmooth} />
     </>
   );
 }

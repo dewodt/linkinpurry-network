@@ -128,7 +128,7 @@ function HomeComponent() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p>"{testimonial.content}"</p>
+                    <p>&quot;{testimonial.content}&quot;</p>
                   </CardContent>
                 </Card>
               ))}

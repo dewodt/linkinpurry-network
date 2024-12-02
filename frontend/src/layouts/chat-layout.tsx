@@ -34,7 +34,7 @@ export function ChatLayout({ children }: ChatLayoutProps) {
 
   // Common hooks
   const { session } = useSession();
-  const { selectedOtherUserId, setOtherUserId } = useChat();
+  const { selectedOtherUser, setOtherUser } = useChat();
   const isMinimumSmViewport = useMediaQuery('(min-width: 640px');
 
   // Intersection observer hook
@@ -63,7 +63,7 @@ export function ChatLayout({ children }: ChatLayoutProps) {
     QueryKey,
     string | undefined
   >({
-    queryKey: ['chats', 'inbox', debouncedSearchMessage, limit],
+    queryKey: ['chats', 'inbox', debouncedSearchMessage],
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -139,7 +139,7 @@ export function ChatLayout({ children }: ChatLayoutProps) {
 
           <div className="flex h-[576px] flex-row sm:h-[768px]">
             {/* Inbox */}
-            {(isMinimumSmViewport || (!isMinimumSmViewport && !selectedOtherUserId)) && (
+            {(isMinimumSmViewport || (!isMinimumSmViewport && !selectedOtherUser)) && (
               <div className="flex w-full sm:max-w-[312px] sm:border-r">
                 {/* Pending */}
                 {isPendingInbox && <LoadingFill />}
@@ -164,11 +164,14 @@ export function ChatLayout({ children }: ChatLayoutProps) {
                     <ScrollArea ref={inboxRootRef}>
                       <ol className="flex flex-col">
                         {flattenInbox.map((inbox) => (
-                          <li className="flex h-24 items-center border-b border-border bg-background px-3.5 transition-colors hover:bg-muted">
+                          <li
+                            key={inbox.latest_message_id}
+                            className="flex h-24 items-center border-b border-border bg-background px-3.5 transition-colors hover:bg-muted"
+                          >
                             <button
                               className="flex flex-auto flex-row items-start gap-3"
                               onClick={() =>
-                                setOtherUserId({
+                                setOtherUser({
                                   name: inbox.other_user_full_name,
                                   otherUserId: inbox.other_user_id,
                                   profileProfilePhoto: inbox.other_user_profile_photo_path,
@@ -207,7 +210,7 @@ export function ChatLayout({ children }: ChatLayoutProps) {
             )}
 
             {/* Chat view */}
-            {selectedOtherUserId && <div className="flex flex-auto flex-col">{children}</div>}
+            {selectedOtherUser && <div className="flex flex-auto flex-col">{children}</div>}
           </div>
         </section>
       </main>

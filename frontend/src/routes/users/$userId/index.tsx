@@ -37,7 +37,7 @@ function RouteComponent() {
     isError: isErrorProfile,
     refetch,
   } = useQuery<GetProfileSuccessResponse, GetProfileErrorResponse>({
-    queryKey: ['users', userId],
+    queryKey: ['users', userId, 'profile'],
     queryFn: () => getProfile({ userId }),
   });
 

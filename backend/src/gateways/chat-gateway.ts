@@ -237,7 +237,7 @@ export class ChatGateway implements IWebSocketGateway {
         const fromUserId = socket.data.user?.userId as bigint; // assured by authorizeSocket middleware
         const toUserId = sendMessageRequestData.data.to_user_id;
 
-        const { message, timestamp, fromUser, toUser, roomId } = await this.chatService.sendMessage(
+        const { newChat, fromUser, toUser, roomId } = await this.chatService.sendMessage(
           fromUserId,
           toUserId,
           sendMessageRequestData.data.message
@@ -249,14 +249,16 @@ export class ChatGateway implements IWebSocketGateway {
           other_user_username: fromUser.username,
           other_user_full_name: fromUser.fullName,
           other_user_profile_photo_path: fromUser.profilePhotoPath,
-          message,
-          timestamp: timestamp.toISOString(),
+          from_user_id: newChat.fromId.toString(),
+          message_id: newChat.id.toString(),
+          message: newChat.message,
+          timestamp: newChat.timestamp.toISOString(),
         };
-        const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+        const toUserResponseDto = ResponseDtoFactory.createSuccessDataResponseDto(
           'Send message successful',
           toUserResponseData
         );
-        socket.to(roomId).emit('newMessage', responseDto);
+        socket.to(roomId).emit('newMessage', toUserResponseDto);
 
         // To sender
         const fromUserResponseData: ISendMessageResponseDataDto = {
@@ -264,8 +266,10 @@ export class ChatGateway implements IWebSocketGateway {
           other_user_username: toUser.username,
           other_user_full_name: toUser.fullName,
           other_user_profile_photo_path: toUser.profilePhotoPath,
-          message,
-          timestamp: timestamp.toISOString(),
+          from_user_id: newChat.fromId.toString(),
+          message_id: newChat.id.toString(),
+          message: newChat.message,
+          timestamp: newChat.timestamp.toISOString(),
         };
         const fromUserResponseDto = ResponseDtoFactory.createSuccessDataResponseDto(
           'Send message successful',

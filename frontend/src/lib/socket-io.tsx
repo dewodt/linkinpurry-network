@@ -1,5 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
 
+import { updateSendMessageQueryDataInbox, updateSendMessageQueryDataMessage } from '@/services/chat';
+import { SendMessageResponseData, SendMessageSuccessResponse } from '@/types/api/chat';
 import type { ErrorResponse, SuccessResponse } from '@/types/api/common';
 
 import { Config } from './config';
@@ -36,4 +39,20 @@ export function emitWithAck<T extends SuccessResponse<any>>(eventName: string, d
 
 export function listenEvent<T>(eventName: string, callback: (data: T) => void) {
   socket.on(eventName, callback);
+}
+
+export function removeEventListener(eventName: string) {
+  socket.off(eventName);
+}
+
+export function SocketIOLayout({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
+
+  listenEvent<SendMessageSuccessResponse>('newMessage', (resp) => {
+    updateSendMessageQueryDataInbox(queryClient, resp.data);
+
+    updateSendMessageQueryDataMessage(queryClient, resp.data);
+  });
+
+  return <>{children}</>;
 }

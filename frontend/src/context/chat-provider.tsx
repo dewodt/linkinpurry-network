@@ -10,8 +10,8 @@ interface SelectedChat {
 }
 
 interface ChatContextType {
-  selectedOtherUserId: SelectedChat | null;
-  setOtherUserId: (chat: SelectedChat) => void;
+  selectedOtherUser: SelectedChat | null;
+  setOtherUser: (chat: SelectedChat) => void;
   closeChat: () => void;
 }
 
@@ -23,19 +23,19 @@ interface ChatProviderProps {
 const ChatContext = React.createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: ChatProviderProps) {
-  const [selectedOtherUserId, setSelectedOtherUserId] = React.useState<SelectedChat | null>(null);
+  const [selectedOtherUser, setSelectedOtherUser] = React.useState<SelectedChat | null>(null);
 
-  const setOtherUserId = (chat: SelectedChat) => {
-    setSelectedOtherUserId(chat);
+  const setOtherUser = (chat: SelectedChat) => {
+    setSelectedOtherUser(chat);
   };
 
   const closeChat = () => {
-    setSelectedOtherUserId(null);
+    setSelectedOtherUser(null);
   };
 
   const value = {
-    selectedOtherUserId,
-    setOtherUserId,
+    selectedOtherUser,
+    setOtherUser,
     closeChat,
   };
 

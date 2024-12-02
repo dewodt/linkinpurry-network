@@ -1,4 +1,7 @@
+import { z } from 'zod';
+
 import { UserStatus } from '@/lib/enum';
+import { sendMessageRequestData } from '@/lib/schemas/chat';
 
 import { AxiosErrorResponse, SuccessCursorPaginationResponse, SuccessResponse } from './common';
 
@@ -93,16 +96,15 @@ export type GetStatusErrorResponse = AxiosErrorResponse;
 /**
  * Send message
  */
-export interface SendMessageRequestData {
-  to_user_id: string;
-  message: string;
-}
+export type SendMessageRequestData = z.infer<typeof sendMessageRequestData>;
 
 export interface SendMessageResponseData {
   other_user_id: string;
   other_user_username: string;
   other_user_full_name: string;
   other_user_profile_photo_path: string;
+  from_user_id: string;
+  message_id: string;
   message: string;
   timestamp: string;
 }

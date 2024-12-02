@@ -12,6 +12,7 @@ import { ThemeProvider } from '@/context/theme-provider';
 import RootLayout from '@/layouts/root-layout';
 import { Config } from '@/lib/config';
 import { queryClient } from '@/lib/query';
+import { SocketIOLayout } from '@/lib/socket-io';
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -25,11 +26,13 @@ function RootComponent() {
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <SessionProvider>
-            <ThemeProvider defaultTheme="light" storageKey="linkinpurry-theme">
-              <RootLayout>
-                <Outlet />
-              </RootLayout>
-            </ThemeProvider>
+            <SocketIOLayout>
+              <ThemeProvider defaultTheme="light" storageKey="linkinpurry-theme">
+                <RootLayout>
+                  <Outlet />
+                </RootLayout>
+              </ThemeProvider>
+            </SocketIOLayout>
           </SessionProvider>
         </QueryClientProvider>
       </HelmetProvider>

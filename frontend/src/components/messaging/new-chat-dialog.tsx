@@ -42,7 +42,7 @@ const NewChatDialog = ({ children }: NewChatDialogProps) => {
   React.useEffect(() => {
     if (!isOpen) {
       setSearch('');
-      queryClient.removeQueries({ queryKey: ['users', session?.userId, 'connections', debouncedSearch] });
+      queryClient.removeQueries({ queryKey: ['users', session?.userId, 'connections'] });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, queryClient]);
@@ -94,7 +94,7 @@ interface UserListProps {
 export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
   // hooks
   const { session } = useSession();
-  const { setOtherUserId } = useChat();
+  const { setOtherUser } = useChat();
 
   // Intersection observer
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -112,7 +112,7 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
     QueryKey,
     number
   >({
-    queryKey: ['users', session?.userId, 'connections', debouncedSearch, limit],
+    queryKey: ['users', session?.userId, 'connections', debouncedSearch],
     enabled: !!debouncedSearch,
     retry: 1,
     refetchOnWindowFocus: false,
@@ -143,7 +143,7 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
     },
     onSuccess: (_, variables) => {
       setIsOpen(false);
-      setOtherUserId({
+      setOtherUser({
         otherUserId: variables.user_id,
         profileProfilePhoto: variables.profile_photo,
         username: variables.username,

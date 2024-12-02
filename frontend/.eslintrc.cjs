@@ -7,6 +7,8 @@ module.exports = {
     'plugin:@typescript-eslint/recommended-requiring-type-checking', // Added for strict TypeScript checks
     'plugin:react-hooks/recommended',
     'plugin:@tanstack/eslint-plugin-query/recommended', // Added for React Query best practices
+    // 'plugin:react/recommended',
+    'plugin:react/jsx-runtime',
   ],
   ignorePatterns: ['dist', '.eslintrc.cjs', 'vite.config.ts', 'postcss.config.js', 'tailwind.config.js', 'node_modules', 'coverage'],
   parser: '@typescript-eslint/parser',
@@ -19,11 +21,13 @@ module.exports = {
       jsx: true,
     },
   },
-  plugins: [
-    'react-refresh',
-    '@typescript-eslint',
-    '@tanstack/query', // Added for React Query
-  ],
+  plugins: ['react-refresh', '@typescript-eslint', '@tanstack/query', 'react'],
+  settings: {
+    // Add this section
+    react: {
+      version: 'detect',
+    },
+  },
   rules: {
     // React Refresh
     'react-refresh/only-export-components': [
@@ -32,6 +36,17 @@ module.exports = {
         allowConstantExport: true,
       },
     ],
+
+    'react/jsx-key': [
+      'warn',
+      {
+        checkFragmentShorthand: true,
+        checkKeyMustBeforeSpread: true,
+        warnOnDuplicates: true,
+      },
+    ],
+    'react/jsx-uses-react': 'off', // off because we're using the new JSX transform
+    'react/react-in-jsx-scope': 'off', // off because we're using the new JSX transform
 
     // disable if something is weird lol
 
@@ -57,7 +72,7 @@ module.exports = {
     // '@typescript-eslint/no-non-null-assertion': 'warn',
 
     // React Query
-    '@tanstack/query/exhaustive-deps': 'error',
+    '@tanstack/query/exhaustive-deps': 'off',
     '@tanstack/query/stable-query-client': 'error',
 
     // General

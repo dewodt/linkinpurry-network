@@ -12,28 +12,28 @@ export interface IChatService extends IService {
     currentUserId: bigint,
     otherUserId: bigint,
     message: string
-  ): Promise<
-    Prisma.ChatGetPayload<{
-      include: {
-        fromUser: {
-          select: {
-            id: true;
-            username: true;
-            fullName: true;
-            profilePhotoPath: true;
-          };
-        };
-        toUser: {
-          select: {
-            id: true;
-            username: true;
-            fullName: true;
-            profilePhotoPath: true;
-          };
-        };
-      };
-    }>
-  >;
+  ): Promise<{
+    newChat: {
+      id: bigint;
+      message: string;
+      timestamp: Date;
+      fromId: bigint;
+      toId: bigint;
+    };
+    fromUser: {
+      id: bigint;
+      username: string;
+      fullName: string;
+      profilePhotoPath: string;
+    };
+    toUser: {
+      id: bigint;
+      username: string;
+      fullName: string;
+      profilePhotoPath: string;
+    };
+    roomId: string;
+  }>; // TODO: fill this im lazy
 
   getChatRoom(currentUserId: bigint, otherUserId: bigint): Promise<string>;
 
@@ -177,12 +177,13 @@ export class ChatService implements IChatService {
         },
       });
 
-      // current user must be fromUser
-      const fromUser = connection.fromUser;
-      const toUser = connection.toUser;
+      // NOTE: NOT TO CONFUSE CONNECTION FROM/TO VS MESSAGE FROM/TO. THIS IS MESSAGE FROM/TO/
+      const fromUser =
+        connection.fromId === currentUserId ? connection.fromUser : connection.toUser;
+      const toUser = connection.fromId === otherUserId ? connection.fromUser : connection.toUser;
 
       return {
-        ...newChat,
+        newChat,
         fromUser: {
           ...fromUser,
           fullName: fromUser.fullName || '',

@@ -53,11 +53,7 @@ const RegisterForm = () => {
     resolver: zodResolver(registerRequestBody),
   });
 
-  const {
-    control,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = form;
+  const { control, handleSubmit } = form;
 
   return (
     <div className="flex flex-col gap-5">
@@ -66,7 +62,7 @@ const RegisterForm = () => {
           {/* Username */}
           <FormField
             control={control}
-            disabled={isSubmitting}
+            disabled={mutation.isPending}
             name="username"
             render={({ field }) => (
               <FormItem>
@@ -82,7 +78,7 @@ const RegisterForm = () => {
           {/* Email */}
           <FormField
             control={control}
-            disabled={isSubmitting}
+            disabled={mutation.isPending}
             name="email"
             render={({ field }) => (
               <FormItem>
@@ -98,7 +94,7 @@ const RegisterForm = () => {
           {/* Name */}
           <FormField
             control={control}
-            disabled={isSubmitting}
+            disabled={mutation.isPending}
             name="name"
             render={({ field }) => (
               <FormItem>
@@ -114,7 +110,7 @@ const RegisterForm = () => {
           {/* Password */}
           <FormField
             control={control}
-            disabled={isSubmitting}
+            disabled={mutation.isPending}
             name="password"
             render={({ field }) => (
               <FormItem>
@@ -128,8 +124,8 @@ const RegisterForm = () => {
           />
 
           {/* Submit Button */}
-          <Button variant="default" className="mt-1 w-full" type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button variant="default" className="mt-1 w-full" type="submit" disabled={mutation.isPending}>
+            {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Register
           </Button>
         </form>

@@ -11,11 +11,7 @@ export const Route = createFileRoute('/_messaging/messaging/')({
 function RouteComponent() {
   return (
     <ChatLayout>
-      {/* Chat Content */}
       <ChatContent />
-
-      {/* Send message form */}
-      <SendMessageForm />
     </ChatLayout>
   );
 }
