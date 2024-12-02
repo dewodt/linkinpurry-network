@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChat } from '@/context/chat-provider';
-import { useSession } from '@/context/session-provider';
 import { useMediaQuery } from '@/hooks/use-mediaquery';
 import { getRelativeTime } from '@/lib/utils';
 import { getChatInbox } from '@/services/chat';
@@ -33,9 +32,8 @@ export function ChatLayout({ children }: ChatLayoutProps) {
   const [debouncedSearchMessage] = useDebounce(searchMessage, 500);
 
   // Common hooks
-  const { session } = useSession();
   const { selectedOtherUserId, setOtherUserId } = useChat();
-  const isSmallViewport = useMediaQuery('(min-width: 640px');
+  const isMinimumSmViewport = useMediaQuery('(min-width: 640px');
 
   // Intersection observer hook
   const inboxRootRef = React.useRef<HTMLDivElement>(null);
@@ -131,63 +129,65 @@ export function ChatLayout({ children }: ChatLayoutProps) {
 
           <div className="flex h-[576px] flex-row sm:h-[768px]">
             {/* Inbox */}
-            <div className="flex w-full sm:max-w-[312px] sm:border-r">
-              {/* Pending */}
-              {isPendingInbox && <LoadingFill />}
+            {(isMinimumSmViewport || (!isMinimumSmViewport && !selectedOtherUserId)) && (
+              <div className="flex w-full sm:max-w-[312px] sm:border-r">
+                {/* Pending */}
+                {isPendingInbox && <LoadingFill />}
 
-              {/* Error */}
-              {isErrorInbox && (
-                <ErrorFill
-                  statusCode={errorInbox?.response?.status}
-                  statusText={errorInbox.response?.statusText}
-                  message={errorInbox?.response?.data.message}
-                  refetch={refetchInbox}
-                />
-              )}
+                {/* Error */}
+                {isErrorInbox && (
+                  <ErrorFill
+                    statusCode={errorInbox?.response?.status}
+                    statusText={errorInbox.response?.statusText}
+                    message={errorInbox?.response?.data.message}
+                    refetch={refetchInbox}
+                  />
+                )}
 
-              {/* Success */}
-              {isSuccessInbox &&
-                (flattenInbox.length === 0 ? (
-                  <div className="flex items-center justify-center">
-                    <p className="text-base text-muted-foreground">Inbox Empty</p>
-                  </div>
-                ) : (
-                  <ScrollArea ref={inboxRootRef}>
-                    <ol className="flex flex-col">
-                      {flattenInbox.map((inbox) => (
-                        <li className="flex h-24 items-center border-b border-border bg-background px-3.5 transition-colors hover:bg-muted">
-                          <button className="flex flex-auto flex-row items-start gap-3" onClick={() => setOtherUserId(inbox.other_user_id)}>
-                            {/* Avatar */}
-                            <AvatarUser
-                              src={inbox.other_user_profile_photo_path}
-                              alt={`${inbox.other_user_username}'s profile picture`}
-                              classNameAvatar="size-12 self-center"
-                            />
+                {/* Success */}
+                {isSuccessInbox &&
+                  (flattenInbox.length === 0 ? (
+                    <div className="flex items-center justify-center">
+                      <p className="text-base text-muted-foreground">Inbox Empty</p>
+                    </div>
+                  ) : (
+                    <ScrollArea ref={inboxRootRef}>
+                      <ol className="flex flex-col">
+                        {flattenInbox.map((inbox) => (
+                          <li className="flex h-24 items-center border-b border-border bg-background px-3.5 transition-colors hover:bg-muted">
+                            <button className="flex flex-auto flex-row items-start gap-3" onClick={() => setOtherUserId(inbox)}>
+                              {/* Avatar */}
+                              <AvatarUser
+                                src={inbox.other_user_profile_photo_path}
+                                alt={`${inbox.other_user_username}'s profile picture`}
+                                classNameAvatar="size-12 self-center"
+                              />
 
-                            {/* Name & message preview */}
-                            <div className="flex flex-auto flex-col text-left">
-                              <div className="flex flex-auto flex-row items-center justify-between gap-1">
-                                <h2 className="line-clamp-1 text-lg font-semibold text-foreground">{inbox.other_user_full_name}</h2>
+                              {/* Name & message preview */}
+                              <div className="flex flex-auto flex-col text-left">
+                                <div className="flex flex-auto flex-row items-center justify-between gap-1">
+                                  <h2 className="line-clamp-1 text-lg font-semibold text-foreground">{inbox.other_user_full_name}</h2>
 
-                                {/* Time preview */}
-                                <p className="text-xs font-medium">{getRelativeTime(new Date(inbox.latest_message_timestamp))}</p>
+                                  {/* Time preview */}
+                                  <p className="text-xs font-medium">{getRelativeTime(new Date(inbox.latest_message_timestamp))}</p>
+                                </div>
+                                <p className="line-clamp-2 text-sm text-muted-foreground">{inbox.latest_message}</p>
                               </div>
-                              <p className="line-clamp-2 text-sm text-muted-foreground">{inbox.latest_message}</p>
-                            </div>
-                          </button>
-                        </li>
-                      ))}
+                            </button>
+                          </li>
+                        ))}
 
-                      <li ref={inboxSentinelRef} className="flex items-center justify-center">
-                        {isFetchingNextPageInbox && <LoadingFill className="border-t py-5" />}
-                      </li>
-                    </ol>
-                  </ScrollArea>
-                ))}
-            </div>
+                        <li ref={inboxSentinelRef} className="flex items-center justify-center">
+                          {isFetchingNextPageInbox && <LoadingFill className="border-t py-5" />}
+                        </li>
+                      </ol>
+                    </ScrollArea>
+                  ))}
+              </div>
+            )}
 
             {/* Chat view */}
-            <div className="flex flex-auto">{children}</div>
+            {selectedOtherUserId && <div className="flex flex-auto flex-col">{children}</div>}
           </div>
         </section>
       </main>

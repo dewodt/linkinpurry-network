@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { ChatContent } from '@/components/messaging/chat-content';
+import { SendMessageForm } from '@/components/messaging/send-message-form';
 import { ChatLayout } from '@/layouts/chat-layout';
 
 export const Route = createFileRoute('/_messaging/messaging/')({
@@ -9,12 +11,11 @@ export const Route = createFileRoute('/_messaging/messaging/')({
 function RouteComponent() {
   return (
     <ChatLayout>
-      <></>
-      {/* Chat header */}
-
       {/* Chat Content */}
+      <ChatContent />
 
       {/* Send message form */}
+      <SendMessageForm />
     </ChatLayout>
   );
 }

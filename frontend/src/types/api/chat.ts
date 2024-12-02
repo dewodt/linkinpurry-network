@@ -40,7 +40,7 @@ export interface GetChatHistoryRequestParams {
 
 export interface GetChatHistoryRequestQuery {
   cursor: string | undefined;
-  limit: string | undefined;
+  limit: number | undefined;
 }
 
 export interface GetChatHistoryResponseBody {
