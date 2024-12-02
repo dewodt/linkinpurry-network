@@ -233,8 +233,7 @@ function RouteComponent() {
                   <div>
                     <h2 className="font-semibold">{post.user.full_name}</h2>
                     <p className="text-sm text-muted-foreground">
-                      {/* TODO: display "Edited" only if created_at !== updated_at */}
-                      {formatDate(post.created_at)} • Edited
+                      {formatDate(post.created_at)} {post.created_at !== post.updated_at && "• Edited"}
                     </p>
                   </div>
                 </div>
