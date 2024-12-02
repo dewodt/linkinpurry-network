@@ -43,7 +43,9 @@ const LogInForm = () => {
     onSuccess: async (data) => {
       toast.dismiss();
       toast.success('Success', { description: data.message });
+
       await navigate({ to: '/' }); // TODO: change to /feed
+
       await refetchSession();
     },
   });

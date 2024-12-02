@@ -8,3 +8,8 @@ export enum ConnectionRequestDecision {
   ACCEPT = 'ACCEPT',
   DECLINE = 'DECLINE',
 }
+
+export enum UserStatus {
+  ONLINE = 'ONLINE',
+  OFFLINE = 'OFFLINE',
+}

@@ -10,12 +10,12 @@ import { AvatarUser } from '@/components/shared/avatar-user';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useChat } from '@/context/chat-provider';
 import { useSession } from '@/context/session-provider';
-// import { joinChatRoomsService, newChatService } from '@/lib/services/chats';
-// import { findUserService } from '@/lib/services/users/find-user';
 import { cn } from '@/lib/utils';
+import { joinChatRooms } from '@/services/chat';
 import { getConnectionLists } from '@/services/connection';
-import type { GetConnectionsErrorResponse, GetConnectionsSuccessResponse } from '@/types/api/connection';
+import type { GetConnectionsErrorResponse, GetConnectionsResponseBody, GetConnectionsSuccessResponse } from '@/types/api/connection';
 
 import { ErrorFill } from '../shared/error-fill';
 import { LoadingFill } from '../shared/loading-fill';
@@ -80,7 +80,7 @@ const NewChatDialog = ({ children }: NewChatDialogProps) => {
           </search>
         </DialogHeader>
 
-        <UserList debouncedSearch={debouncedSearch} isOpen={isOpen} setIsOpen={setIsOpen} />
+        <UserList debouncedSearch={debouncedSearch} setIsOpen={setIsOpen} />
       </DialogContent>
     </Dialog>
   );
@@ -88,13 +88,13 @@ const NewChatDialog = ({ children }: NewChatDialogProps) => {
 
 interface UserListProps {
   debouncedSearch: string;
-  isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export const UserList = ({ debouncedSearch, isOpen, setIsOpen }: UserListProps) => {
+export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
   // hooks
   const { session } = useSession();
+  const { setOtherUserId } = useChat();
 
   // Intersection observer
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -137,24 +137,23 @@ export const UserList = ({ debouncedSearch, isOpen, setIsOpen }: UserListProps) 
     }
   }, [inView, isFetchingNextPage, hasNextPage, fetchNextPage]);
 
-  // const { mutate, isPending: isMutating } = useMutation({
-  //   mutationFn: async (userId: string) => {
-  //     // const response = await newChatService(userId);
-  //     // await joinChatRoomsService({ chatIds: [response.data.chatId] });
-  //     // return response;
-  //   },
-  //   onMutate: () => {
-  //     toast.loading('Please wait while we create a new chat.');
-  //   },
-  //   onSuccess: (response) => {
-  //     toast.success(response.message);
-  //     // Handle opening chat (implement your chat opening logic here)
-  //     setIsOpen(false);
-  //   },
-  //   onError: (error) => {
-  //     toast.error(error.message);
-  //   },
-  // });
+  const { mutate, isPending: isMutating } = useMutation({
+    mutationFn: async (user: GetConnectionsResponseBody) => {
+      return await joinChatRooms({ user_ids: [user.user_id] });
+    },
+    onSuccess: (_, variables) => {
+      setIsOpen(false);
+      setOtherUserId({
+        otherUserId: variables.user_id,
+        profileProfilePhoto: variables.profile_photo,
+        username: variables.username,
+        name: variables.name,
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   if (!debouncedSearch) {
     return (
@@ -181,8 +180,8 @@ export const UserList = ({ debouncedSearch, isOpen, setIsOpen }: UserListProps) 
                 'flex flex-auto flex-row items-center gap-3 px-5 py-3 transition-all hover:bg-muted lg:px-5',
                 index === allUsers.length - 1 ? 'border-none' : 'border-b',
               )}
-              // onClick={() => mutate(user.id)}
-              // disabled={isMutating}
+              onClick={() => mutate(user)}
+              disabled={isMutating}
             >
               <AvatarUser classNameAvatar="size-12" src={user.profile_photo} alt={`${user.username}'s profile picture`} />
               <div className="space-y-1">

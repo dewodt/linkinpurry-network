@@ -2,6 +2,7 @@ import { UseQueryResult, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import React, { useContext } from 'react';
 
+import { socket } from '@/lib/socket-io';
 import { getSession } from '@/services/auth';
 import { SessionErrorResponse, SessionSuccessResponse } from '@/types/api/auth';
 
@@ -47,6 +48,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       };
     });
   };
+
+  // Everytime session query succeeded, connect to socket
+  React.useEffect(() => {
+    if (sessionQuery.isSuccess) {
+      // connect to socket
+      socket.connect();
+    }
+  }, [sessionQuery.isSuccess]);
 
   return <SessionContext.Provider value={{ sessionQuery, deleteSession, updateSession }}>{children}</SessionContext.Provider>;
 }

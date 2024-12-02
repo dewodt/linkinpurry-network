@@ -14,9 +14,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChat } from '@/context/chat-provider';
+import { useSession } from '@/context/session-provider';
 import { useMediaQuery } from '@/hooks/use-mediaquery';
 import { getRelativeTime } from '@/lib/utils';
-import { getChatInbox } from '@/services/chat';
+import { getChatInbox, joinChatRooms } from '@/services/chat';
 import { GetChatInboxErrorResponse, GetChatInboxSuccessResponse } from '@/types/api/chat';
 
 interface ChatLayoutProps {
@@ -32,6 +33,7 @@ export function ChatLayout({ children }: ChatLayoutProps) {
   const [debouncedSearchMessage] = useDebounce(searchMessage, 500);
 
   // Common hooks
+  const { session } = useSession();
   const { selectedOtherUserId, setOtherUserId } = useChat();
   const isMinimumSmViewport = useMediaQuery('(min-width: 640px');
 
@@ -67,12 +69,20 @@ export function ChatLayout({ children }: ChatLayoutProps) {
     refetchOnMount: false,
     refetchInterval: 0,
     initialPageParam: undefined,
-    queryFn: async ({ pageParam }) =>
-      getChatInbox({
+    queryFn: async ({ pageParam }) => {
+      // Get data
+      const response = await getChatInbox({
         search: debouncedSearchMessage,
         cursor: pageParam,
         limit,
-      }),
+      });
+
+      // join chat rooms
+      const otherUserIds = response.data.map((inbox) => inbox.other_user_id);
+      await joinChatRooms({ user_ids: otherUserIds });
+
+      return response;
+    },
     getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
   });
 
@@ -155,7 +165,17 @@ export function ChatLayout({ children }: ChatLayoutProps) {
                       <ol className="flex flex-col">
                         {flattenInbox.map((inbox) => (
                           <li className="flex h-24 items-center border-b border-border bg-background px-3.5 transition-colors hover:bg-muted">
-                            <button className="flex flex-auto flex-row items-start gap-3" onClick={() => setOtherUserId(inbox)}>
+                            <button
+                              className="flex flex-auto flex-row items-start gap-3"
+                              onClick={() =>
+                                setOtherUserId({
+                                  name: inbox.other_user_full_name,
+                                  otherUserId: inbox.other_user_id,
+                                  profileProfilePhoto: inbox.other_user_profile_photo_path,
+                                  username: inbox.other_user_username,
+                                })
+                              }
+                            >
                               {/* Avatar */}
                               <AvatarUser
                                 src={inbox.other_user_profile_photo_path}
