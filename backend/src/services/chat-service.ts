@@ -193,7 +193,7 @@ export class ChatService implements IChatService {
       .sendNotificationToUser(otherUserId, {
         title: `New message from ${fromUser.username} | LinkinPurry`,
         message: newChat.message,
-        url: `${this.config.get('FE_URL')}/messaging?from=${fromUser.id}`,
+        url: `${this.config.get('FE_URL')}/messaging?withUserId="${fromUser.id}"`, // tbh idk why need " " lol TODO: Check this out
       })
       .catch((error) => {
         if (error instanceof Error) logger.error(error.message);

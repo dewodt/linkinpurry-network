@@ -4,6 +4,7 @@ import { UserStatus } from '@/lib/enum';
 import { sendMessageRequestData } from '@/lib/schemas/chat';
 
 import { AxiosErrorResponse, SuccessCursorPaginationResponse, SuccessResponse } from './common';
+import { GetProfileResponseBody } from './user';
 
 /**
  *
@@ -35,6 +36,18 @@ export interface GetChatInboxResponseBody {
 export type GetChatInboxSuccessResponse = SuccessCursorPaginationResponse<GetChatInboxResponseBody>;
 
 export type GetChatInboxErrorResponse = AxiosErrorResponse;
+
+/**
+ * Get other user profile
+ */
+export interface GetOtherUserProfileRequestParams {
+  otherUserId: string;
+}
+
+export type GetOtherUserProfile = Omit<
+  GetProfileResponseBody,
+  'work_history' | 'relevant_posts' | 'skills' | 'connection_status' | 'connection_count'
+>;
 
 /**
  * Get chat history

@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearch } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import React from 'react';
 
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { useChat } from '@/context/chat-provider';
 import { sendMessageRequestData } from '@/lib/schemas/chat';
 import { sendMessage, updateSendMessageQueryDataInbox, updateSendMessageQueryDataMessage } from '@/services/chat';
 import { SendMessageErrorResponse, SendMessageRequestData, SendMessageSuccessResponse } from '@/types/api/chat';
@@ -20,13 +20,13 @@ interface SendMessageFormProps {
 
 export function SendMessageForm({ scrollToBottomSmooth }: SendMessageFormProps) {
   // hooks
-  const { selectedOtherUser } = useChat();
+  const searchParams = useSearch({ from: '/messaging/' });
   const queryClient = useQueryClient();
 
   const form = useForm<SendMessageRequestData>({
     resolver: zodResolver(sendMessageRequestData),
     defaultValues: {
-      to_user_id: selectedOtherUser!.otherUserId,
+      to_user_id: searchParams.withUserId,
       message: '',
     },
   });
@@ -42,7 +42,7 @@ export function SendMessageForm({ scrollToBottomSmooth }: SendMessageFormProps) 
     onSuccess: async (response) => {
       // Reset form
       form.reset({
-        to_user_id: selectedOtherUser!.otherUserId,
+        to_user_id: searchParams.withUserId,
         message: '',
       });
 
@@ -61,9 +61,9 @@ export function SendMessageForm({ scrollToBottomSmooth }: SendMessageFormProps) 
   // Everytime chat changes
   React.useEffect(() => {
     // Reset form
-    if (selectedOtherUser) {
+    if (searchParams.withUserId) {
       form.reset({
-        to_user_id: selectedOtherUser.otherUserId,
+        to_user_id: searchParams.withUserId,
         message: '',
       });
     } else {
@@ -77,7 +77,7 @@ export function SendMessageForm({ scrollToBottomSmooth }: SendMessageFormProps) 
       form.setFocus('message');
     }, 25);
     return () => clearTimeout(timeoutId);
-  }, [selectedOtherUser, form]);
+  }, [searchParams.withUserId, form]);
 
   // handlers
   const handleEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

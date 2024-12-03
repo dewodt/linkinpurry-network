@@ -9,19 +9,13 @@ import { Route as rootRoute } from './routes/__root';
 import { Route as AuthImport } from './routes/_auth';
 import { Route as AuthAuthLoginIndexImport } from './routes/_auth/auth/login/index';
 import { Route as AuthAuthRegisterIndexImport } from './routes/_auth/auth/register/index';
-import { Route as MessagingImport } from './routes/_messaging';
-import { Route as MessagingMessagingIndexImport } from './routes/_messaging/messaging/index';
 import { Route as IndexImport } from './routes/index';
+import { Route as MessagingIndexImport } from './routes/messaging/index';
 import { Route as MyNetworkGrowIndexImport } from './routes/my-network/grow/index';
 import { Route as UsersUserIdConnectionsIndexImport } from './routes/users/$userId/connections/index';
 import { Route as UsersUserIdIndexImport } from './routes/users/$userId/index';
 
 // Create/Update Routes
-
-const MessagingRoute = MessagingImport.update({
-  id: '/_messaging',
-  getParentRoute: () => rootRoute,
-} as any);
 
 const AuthRoute = AuthImport.update({
   id: '/_auth',
@@ -31,6 +25,12 @@ const AuthRoute = AuthImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any);
+
+const MessagingIndexRoute = MessagingIndexImport.update({
+  id: '/messaging/',
+  path: '/messaging/',
   getParentRoute: () => rootRoute,
 } as any);
 
@@ -44,12 +44,6 @@ const MyNetworkGrowIndexRoute = MyNetworkGrowIndexImport.update({
   id: '/my-network/grow/',
   path: '/my-network/grow/',
   getParentRoute: () => rootRoute,
-} as any);
-
-const MessagingMessagingIndexRoute = MessagingMessagingIndexImport.update({
-  id: '/messaging/',
-  path: '/messaging/',
-  getParentRoute: () => MessagingRoute,
 } as any);
 
 const UsersUserIdConnectionsIndexRoute = UsersUserIdConnectionsIndexImport.update({
@@ -88,19 +82,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthImport;
       parentRoute: typeof rootRoute;
     };
-    '/_messaging': {
-      id: '/_messaging';
-      path: '';
-      fullPath: '';
-      preLoaderRoute: typeof MessagingImport;
-      parentRoute: typeof rootRoute;
-    };
-    '/_messaging/messaging/': {
-      id: '/_messaging/messaging/';
+    '/messaging/': {
+      id: '/messaging/';
       path: '/messaging';
       fullPath: '/messaging';
-      preLoaderRoute: typeof MessagingMessagingIndexImport;
-      parentRoute: typeof MessagingImport;
+      preLoaderRoute: typeof MessagingIndexImport;
+      parentRoute: typeof rootRoute;
     };
     '/my-network/grow/': {
       id: '/my-network/grow/';
@@ -154,20 +141,10 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren);
 
-interface MessagingRouteChildren {
-  MessagingMessagingIndexRoute: typeof MessagingMessagingIndexRoute;
-}
-
-const MessagingRouteChildren: MessagingRouteChildren = {
-  MessagingMessagingIndexRoute: MessagingMessagingIndexRoute,
-};
-
-const MessagingRouteWithChildren = MessagingRoute._addFileChildren(MessagingRouteChildren);
-
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
-  '': typeof MessagingRouteWithChildren;
-  '/messaging': typeof MessagingMessagingIndexRoute;
+  '': typeof AuthRouteWithChildren;
+  '/messaging': typeof MessagingIndexRoute;
   '/my-network/grow': typeof MyNetworkGrowIndexRoute;
   '/users/$userId': typeof UsersUserIdIndexRoute;
   '/auth/login': typeof AuthAuthLoginIndexRoute;
@@ -177,8 +154,8 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
-  '': typeof MessagingRouteWithChildren;
-  '/messaging': typeof MessagingMessagingIndexRoute;
+  '': typeof AuthRouteWithChildren;
+  '/messaging': typeof MessagingIndexRoute;
   '/my-network/grow': typeof MyNetworkGrowIndexRoute;
   '/users/$userId': typeof UsersUserIdIndexRoute;
   '/auth/login': typeof AuthAuthLoginIndexRoute;
@@ -190,8 +167,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute;
   '/': typeof IndexRoute;
   '/_auth': typeof AuthRouteWithChildren;
-  '/_messaging': typeof MessagingRouteWithChildren;
-  '/_messaging/messaging/': typeof MessagingMessagingIndexRoute;
+  '/messaging/': typeof MessagingIndexRoute;
   '/my-network/grow/': typeof MyNetworkGrowIndexRoute;
   '/users/$userId/': typeof UsersUserIdIndexRoute;
   '/_auth/auth/login/': typeof AuthAuthLoginIndexRoute;
@@ -208,8 +184,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_auth'
-    | '/_messaging'
-    | '/_messaging/messaging/'
+    | '/messaging/'
     | '/my-network/grow/'
     | '/users/$userId/'
     | '/_auth/auth/login/'
@@ -221,7 +196,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AuthRoute: typeof AuthRouteWithChildren;
-  MessagingRoute: typeof MessagingRouteWithChildren;
+  MessagingIndexRoute: typeof MessagingIndexRoute;
   MyNetworkGrowIndexRoute: typeof MyNetworkGrowIndexRoute;
   UsersUserIdIndexRoute: typeof UsersUserIdIndexRoute;
   UsersUserIdConnectionsIndexRoute: typeof UsersUserIdConnectionsIndexRoute;
@@ -230,7 +205,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
-  MessagingRoute: MessagingRouteWithChildren,
+  MessagingIndexRoute: MessagingIndexRoute,
   MyNetworkGrowIndexRoute: MyNetworkGrowIndexRoute,
   UsersUserIdIndexRoute: UsersUserIdIndexRoute,
   UsersUserIdConnectionsIndexRoute: UsersUserIdConnectionsIndexRoute,
@@ -246,7 +221,7 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
       "children": [
         "/",
         "/_auth",
-        "/_messaging",
+        "/messaging/",
         "/my-network/grow/",
         "/users/$userId/",
         "/users/$userId/connections/"
@@ -262,15 +237,8 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
         "/_auth/auth/register/"
       ]
     },
-    "/_messaging": {
-      "filePath": "_messaging.tsx",
-      "children": [
-        "/_messaging/messaging/"
-      ]
-    },
-    "/_messaging/messaging/": {
-      "filePath": "_messaging/messaging/index.tsx",
-      "parent": "/_messaging"
+    "/messaging/": {
+      "filePath": "messaging/index.tsx"
     },
     "/my-network/grow/": {
       "filePath": "my-network/grow/index.tsx"

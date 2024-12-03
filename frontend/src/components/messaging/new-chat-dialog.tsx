@@ -1,4 +1,5 @@
 import { InfiniteData, QueryKey, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Search, SearchIcon } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { toast } from 'sonner';
@@ -10,7 +11,6 @@ import { AvatarUser } from '@/components/shared/avatar-user';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useChat } from '@/context/chat-provider';
 import { useSession } from '@/context/session-provider';
 import { cn } from '@/lib/utils';
 import { joinChatRooms } from '@/services/chat';
@@ -93,8 +93,9 @@ interface UserListProps {
 
 export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
   // hooks
+  const searchParams = useSearch({ from: '/messaging/' });
+  const navigate = useNavigate();
   const { session } = useSession();
-  const { setOtherUser } = useChat();
 
   // Intersection observer
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -143,12 +144,8 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
     },
     onSuccess: (_, variables) => {
       setIsOpen(false);
-      setOtherUser({
-        otherUserId: variables.user_id,
-        profileProfilePhoto: variables.profile_photo,
-        username: variables.username,
-        name: variables.name,
-      });
+
+      navigate({ to: '/messaging', search: { ...searchParams, withUserId: variables.user_id } });
     },
     onError: (error) => {
       toast.error(error.message);

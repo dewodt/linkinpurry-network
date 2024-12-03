@@ -1,4 +1,4 @@
-import { InfiniteData, QueryClient } from '@tanstack/react-query';
+import { InfiniteData, QueryClient, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@/lib/api';
 import { emitWithAck } from '@/lib/socket-io';
@@ -8,6 +8,8 @@ import {
   GetChatHistorySuccessResponse,
   GetChatInboxRequestQuery,
   GetChatInboxSuccessResponse,
+  GetOtherUserProfile,
+  GetOtherUserProfileRequestParams,
   GetStatusRequestData,
   GetStatusSuccessResponse,
   JoinChatRoomsRequestData,
@@ -20,6 +22,9 @@ import {
   SendTypingRequestData,
   SendTypingSuccessResponse,
 } from '@/types/api/chat';
+import { GetProfileSuccessResponse } from '@/types/api/user';
+
+import { getProfile } from './user';
 
 /**
  *
@@ -37,6 +42,27 @@ export async function getChatInbox(query: GetChatInboxRequestQuery): Promise<Get
   // throw new Error('Not implemented');
   const axiosResponse = await api.get<GetChatInboxSuccessResponse>('/api/chat/inbox', { params: query });
   return axiosResponse.data;
+}
+
+/**
+ * Get profile of other chat user
+ * TODO: optimizaton to use cache first
+ * 1st attempt: find in user lists cache
+ * 2nd attempt: find in chat inbox cache
+ * 3rd attempt: find from user profile cache
+ * last attempt: fetch from /api/users/$userId
+ */
+export async function getOtherUserProfile({ otherUserId }: GetOtherUserProfileRequestParams): Promise<GetOtherUserProfile> {
+  // Get from user lists cache
+  // ...
+
+  // Last attemp
+  const axiosResponse = await getProfile({ userId: otherUserId });
+  return {
+    name: axiosResponse.data.name,
+    profile_photo: axiosResponse.data.profile_photo,
+    username: axiosResponse.data.username,
+  };
 }
 
 /**
