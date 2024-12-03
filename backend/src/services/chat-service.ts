@@ -191,9 +191,9 @@ export class ChatService implements IChatService {
     // Send notification to user without awaiting
     this.notificationService
       .sendNotificationToUser(otherUserId, {
-        title: `New message from ${fromUser.username}`,
+        title: `New message from ${fromUser.username} | LinkinPurry`,
         message: newChat.message,
-        url: `${this.config.get('FE_URL')}/messaging?from=${fromUser.username}`,
+        url: `${this.config.get('FE_URL')}/messaging?from=${fromUser.id}`,
       })
       .catch((error) => {
         if (error instanceof Error) logger.error(error.message);
