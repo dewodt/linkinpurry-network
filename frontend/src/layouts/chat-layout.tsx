@@ -79,7 +79,9 @@ export function ChatLayout({ children }: ChatLayoutProps) {
 
       // join chat rooms
       const otherUserIds = response.data.map((inbox) => inbox.other_user_id);
-      await joinChatRooms({ user_ids: otherUserIds });
+      if (otherUserIds.length > 0) {
+        await joinChatRooms({ user_ids: otherUserIds });
+      }
 
       return response;
     },
@@ -100,6 +102,8 @@ export function ChatLayout({ children }: ChatLayoutProps) {
     // prevent blink
     e.preventDefault();
   };
+
+  console.log(errorInbox);
 
   return (
     <>
@@ -157,7 +161,7 @@ export function ChatLayout({ children }: ChatLayoutProps) {
                 {/* Success */}
                 {isSuccessInbox &&
                   (flattenInbox.length === 0 ? (
-                    <div className="flex items-center justify-center">
+                    <div className="flex flex-auto items-center justify-center">
                       <p className="text-base text-muted-foreground">Inbox Empty</p>
                     </div>
                   ) : (
