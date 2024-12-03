@@ -47,6 +47,8 @@ services:
       dockerfile: ./backend/Dockerfile.run
     env_file:
       - ./backend/.env.docker
+    volumes:
+      - upload-data:/app/public # Upload data
     ports:
       - "3000:3000"
     depends_on:
@@ -54,7 +56,7 @@ services:
     networks:
       - linkinpurry-network
 
-  # BE development (with hot reload)
+  # FE development (with hot reload)
   linkinpurry-fe-dev:
     container_name: linkinpurry-fe-dev
     build:
@@ -66,13 +68,12 @@ services:
     volumes:
       - ./frontend:/app # Mount the frontend folder to the container
       - /app/node_modules # Prevent the node_modules folder from being mounted
-      - upload-data:/app/public # Upload data
     ports:
       - "5173:5173"
     networks:
       - linkinpurry-network
 
-  # BE production (no hot reload)
+  # FE production (no hot reload)
   linkinpurry-fe-prod:
     container_name: linkinpurry-fe-prod
     build:

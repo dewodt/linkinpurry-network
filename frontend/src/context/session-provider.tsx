@@ -2,6 +2,7 @@ import { UseQueryResult, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import React, { useCallback, useContext } from 'react';
 
+import { useNotification } from '@/hooks/use-notification';
 import { socket } from '@/lib/socket-io';
 import { getSession } from '@/services/auth';
 import { SessionErrorResponse, SessionSuccessResponse } from '@/types/api/auth';
@@ -25,6 +26,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     staleTime: 15 * 60 * 1000, // 15 minutes
     retry: 1,
   });
+
+  const { requestPermission } = useNotification();
 
   const queryClient = useQueryClient();
 
@@ -64,12 +67,17 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     if (sessionQuery.isSuccess) {
       // Everytime session query succeeded, connect to socket
       socket.connect();
+
+      requestPermission();
+      // Prompt notification request
     } else if (sessionQuery.isError) {
       // If session data exists but query failed (expired), delete session
       if (sessionQuery.error?.response?.status === 401 && sessionQuery.data?.data) {
         deleteSession();
       }
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionQuery.isSuccess, sessionQuery.data, sessionQuery.isError, sessionQuery.error, deleteSession]);
 
   return <SessionContext.Provider value={{ sessionQuery, deleteSession, updateSession }}>{children}</SessionContext.Provider>;

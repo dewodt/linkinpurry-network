@@ -32,11 +32,17 @@ export class NotificationService {
    */
   async saveSubscription(currentUserId: bigint, subscription: webpush.PushSubscription) {
     try {
-      const newSubscription = await this.prisma.pushSubscription.create({
-        data: {
+      const newSubscription = await this.prisma.pushSubscription.upsert({
+        where: { endpoint: subscription.endpoint },
+        create: {
           endpoint: subscription.endpoint,
           userId: currentUserId,
           keys: subscription.keys,
+        },
+        update: {
+          // Update keys if they changed
+          keys: subscription.keys,
+          userId: currentUserId,
         },
       });
 
@@ -69,7 +75,7 @@ export class NotificationService {
             JSON.stringify(payload)
           )
           .catch((err) => {
-            if (err instanceof WebPushError && err.statusCode === 410) {
+            if (err instanceof WebPushError && (err.statusCode === 410 || err.statusCode === 404)) {
               // Subscription has expired or is no longer valid
               return this.prisma.pushSubscription.delete({
                 where: { endpoint: sub.endpoint },

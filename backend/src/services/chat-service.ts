@@ -188,19 +188,16 @@ export class ChatService implements IChatService {
     const fromUser = connection.fromId === currentUserId ? connection.fromUser : connection.toUser;
     const toUser = connection.fromId === otherUserId ? connection.fromUser : connection.toUser;
 
-    // Send notification to user
-    try {
-      await this.notificationService.sendNotificationToUser(otherUserId, {
+    // Send notification to user without awaiting
+    this.notificationService
+      .sendNotificationToUser(otherUserId, {
         title: `New message from ${fromUser.username}`,
         message: newChat.message,
-        link: `${this.config.get('FE_URL')}/messaging?from=${fromUser.username}`,
+        url: `${this.config.get('FE_URL')}/messaging?from=${fromUser.username}`,
+      })
+      .catch((error) => {
+        if (error instanceof Error) logger.error(error.message);
       });
-    } catch (error) {
-      if (error instanceof Error) logger.error(error.message);
-
-      // no need to throw error if notification fails, just log it
-      // throw ExceptionFactory.internalServerError('Failed to send notification to user');
-    }
 
     return {
       newChat,

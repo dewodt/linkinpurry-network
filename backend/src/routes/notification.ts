@@ -34,7 +34,7 @@ export class NotificationRoute implements IRoute {
     const subscribeNotificationRoute = createRoute({
       tags: ['notification'],
       method: 'post',
-      path: '/api/notifications/subscribe',
+      path: '/api/notifications/subscription',
       summary: 'Subscribe to notification',
       description: 'API endpoint for subscribing to notification',
       request: {
