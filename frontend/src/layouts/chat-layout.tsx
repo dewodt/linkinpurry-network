@@ -103,8 +103,6 @@ export function ChatLayout({ children }: ChatLayoutProps) {
     e.preventDefault();
   };
 
-  console.log(errorInbox);
-
   return (
     <>
       <HelmetTemplate title="Messaging | LinkinPurry" />

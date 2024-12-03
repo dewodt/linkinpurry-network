@@ -1,10 +1,12 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
 
+import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import { Database } from '@/infrastructures/database/database';
 
+import { NotificationService } from './notification';
 import type { IService } from './service';
 
 export interface IChatService extends IService {
@@ -88,7 +90,11 @@ export class ChatService implements IChatService {
 
   private prisma: PrismaClient;
 
-  constructor(@inject(Database.Key) private readonly database: Database) {
+  constructor(
+    @inject(Config.Key) private readonly config: Config,
+    @inject(Database.Key) private readonly database: Database,
+    @inject(NotificationService.Key) private readonly notificationService: NotificationService
+  ) {
     this.prisma = this.database.getPrisma();
   }
 
@@ -162,37 +168,51 @@ export class ChatService implements IChatService {
       );
 
     // Save message
+    let newChat: Prisma.ChatGetPayload<{}>;
     try {
-      const newChat = await this.prisma.chat.create({
+      newChat = await this.prisma.chat.create({
         data: {
           fromId: currentUserId,
           toId: otherUserId,
           message,
         },
       });
-
-      // NOTE: NOT TO CONFUSE CONNECTION FROM/TO VS MESSAGE FROM/TO. THIS IS MESSAGE FROM/TO/
-      const fromUser =
-        connection.fromId === currentUserId ? connection.fromUser : connection.toUser;
-      const toUser = connection.fromId === otherUserId ? connection.fromUser : connection.toUser;
-
-      return {
-        newChat,
-        fromUser: {
-          ...fromUser,
-          fullName: fromUser.fullName || '',
-        },
-        toUser: {
-          ...toUser,
-          fullName: toUser.fullName || '',
-        },
-      };
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);
 
       throw ExceptionFactory.internalServerError('Failed to save message');
     }
+
+    // NOTE: NOT TO CONFUSE CONNECTION FROM/TO VS MESSAGE FROM/TO. THIS IS MESSAGE FROM/TO/
+    const fromUser = connection.fromId === currentUserId ? connection.fromUser : connection.toUser;
+    const toUser = connection.fromId === otherUserId ? connection.fromUser : connection.toUser;
+
+    // Send notification to user
+    try {
+      await this.notificationService.sendNotificationToUser(otherUserId, {
+        title: `New message from ${fromUser.username}`,
+        message: newChat.message,
+        link: `${this.config.get('FE_URL')}/messaging?from=${fromUser.username}`,
+      });
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      // no need to throw error if notification fails, just log it
+      // throw ExceptionFactory.internalServerError('Failed to send notification to user');
+    }
+
+    return {
+      newChat,
+      fromUser: {
+        ...fromUser,
+        fullName: fromUser.fullName || '',
+      },
+      toUser: {
+        ...toUser,
+        fullName: toUser.fullName || '',
+      },
+    };
   }
 
   /**

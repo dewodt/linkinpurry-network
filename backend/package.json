@@ -23,6 +23,7 @@
     "inversify": "^6.1.4",
     "reflect-metadata": "^0.2.2",
     "socket.io": "^4.8.1",
+    "web-push": "^3.6.7",
     "winston": "^3.17.0",
     "zod": "^3.23.8"
   },
@@ -42,6 +43,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.17.6",
+    "@types/web-push": "^3.6.4",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "dotenv-cli": "^7.4.4",

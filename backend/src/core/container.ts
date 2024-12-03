@@ -6,10 +6,12 @@ import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { AuthRoute } from '@/routes/auth-route';
 import { ChatRoute } from '@/routes/chat-route';
 import { ConnectionRoute } from '@/routes/connection-route';
+import { NotificationRoute } from '@/routes/notification';
 import { UserRoute } from '@/routes/user-route';
 import { AuthService } from '@/services/auth-service';
 import { ChatService } from '@/services/chat-service';
 import { ConnectionService } from '@/services/connection-service';
+import { NotificationService } from '@/services/notification';
 import { UserService } from '@/services/user-service';
 
 import { Bucket } from './bucket';
@@ -24,6 +26,7 @@ export class DependencyContainer {
   private userModule: ContainerModule;
   private connectionModule: ContainerModule;
   private chatModule: ContainerModule;
+  private notificationModule: ContainerModule;
 
   constructor() {
     // Initialize container
@@ -63,12 +66,19 @@ export class DependencyContainer {
       bind(ChatGateway.Key).to(ChatGateway).inSingletonScope();
     });
 
+    // Notification module
+    this.notificationModule = new ContainerModule((bind) => {
+      bind(NotificationService.Key).to(NotificationService).inSingletonScope();
+      bind(NotificationRoute.Key).to(NotificationRoute).inSingletonScope();
+    });
+
     // Load modules
     this.container.load(this.coreModule);
     this.container.load(this.authModule);
     this.container.load(this.userModule);
     this.container.load(this.connectionModule);
     this.container.load(this.chatModule);
+    this.container.load(this.notificationModule);
   }
 
   /**

@@ -28,6 +28,15 @@ export const ConfigSchema = z.object({
   JWT_SECRET: z
     .string({ message: 'JWT_SECRET must be a string' })
     .min(1, { message: 'JWT_SECRET must not be empty' }),
+  VAPID_PUBLIC_KEY: z
+    .string({ message: 'VAPID_PUBLIC_KEY must be a string' })
+    .min(1, { message: 'VAPID_PUBLIC_KEY must not be empty' }),
+  VAPID_PRIVATE_KEY: z
+    .string({ message: 'VAPID_PRIVATE_KEY must be a string' })
+    .min(1, { message: 'VAPID_PRIVATE_KEY must not be empty' }),
+  PUSH_NOTIFICATION_SUBJECT: z
+    .string({ message: 'PUSH_NOTIFICATION_SUBJECT must be a string' })
+    .min(1, { message: 'PUSH_NOTIFICATION_SUBJECT must not be empty' }),
 
   // Database
   POSTGRES_USER: z
