@@ -1,14 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, createFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
-import { UserCircle2 } from 'lucide-react';
+import { Link, createFileRoute, useSearch } from '@tanstack/react-router';
 
 import * as React from 'react';
 
 import { DecideDialog } from '@/components/connections/decide-dialog';
+import { AvatarUser } from '@/components/shared/avatar-user';
 import { ErrorFill } from '@/components/shared/error-fill';
 import { HelmetTemplate } from '@/components/shared/helmet';
 import { LoadingFill } from '@/components/shared/loading-fill';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Pagination,
@@ -101,12 +100,7 @@ function RouteComponent() {
                       <li className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5">
                         <Link to="/users/$userId" params={{ userId: con.user_id }} className="flex flex-auto flex-row items-center gap-3.5">
                           {/* Avatar */}
-                          <Avatar className="size-14">
-                            <AvatarImage src={con.profile_photo} alt={`${con.name}'s profile picture`} />
-                            <AvatarFallback>
-                              <UserCircle2 className="size-full stroke-gray-500 stroke-[1.25px]" />
-                            </AvatarFallback>
-                          </Avatar>
+                          <AvatarUser src={con.profile_photo} alt={`${con.name}'s profile picture`} classNameAvatar="size-14" />
 
                           <div className="flex-auto">
                             <h2 className="text-xl font-bold text-foreground decoration-2 underline-offset-2 hover:underline">{con.name}</h2>

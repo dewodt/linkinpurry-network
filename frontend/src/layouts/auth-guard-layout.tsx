@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { ErrorPage } from '@/components/shared/error-page';
 import { LoadingPage } from '@/components/shared/loading-page';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/context/session-provider';
 
 interface AuthGuardLayoutProps {
   level: 'unauthenticated-only' | 'authenticated-only';

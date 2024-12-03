@@ -6,17 +6,21 @@ import type { ErrorFieldDto } from '@/dto/common';
  * Utils class
  */
 export class Utils {
-  static getErrorFieldsFromZodParseResult = (zodParseResult: ZodError<any>): ErrorFieldDto[] => {
-    return zodParseResult.errors.map((err) => {
+  static parseZodErrorResult = (
+    zodParseResult: ZodError<any>
+  ): { message: string; errorFields: ErrorFieldDto[] } => {
+    const message = zodParseResult.errors.map((err) => err.message).join(', ');
+    const errorFields = zodParseResult.errors.map((err) => {
       return {
-        field: err.path[0].toString(), // only get the first path
         message: err.message,
+        field: err.path.length > 0 ? err.path[0].toString() : 'N/A', // only get the first path
       };
     });
-  };
 
-  static getErrorMessagesFromZodParseResult = (zodParseResult: ZodError<any>): string => {
-    return zodParseResult.errors.map((err) => err.message).join(', ');
+    return {
+      message,
+      errorFields,
+    };
   };
 
   static parseBigIntId = (
@@ -70,5 +74,20 @@ export class Utils {
       page: pageResult,
       limit: limitResult,
     };
+  };
+
+  static parseLimitPagination = ({
+    limit,
+    defaultLimit = 15,
+  }: {
+    limit: string | undefined;
+    defaultLimit?: number;
+  }) => {
+    const limitResult =
+      isNaN(Number(limit)) || Number(limit) <= 0 || Number(limit) > 50 // upperboundary for limit
+        ? defaultLimit
+        : Number(limit);
+
+    return limitResult;
   };
 }

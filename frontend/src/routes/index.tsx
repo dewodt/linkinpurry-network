@@ -1,11 +1,11 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { MessageCircle, Search, UserCircle2, Users } from 'lucide-react';
+import { MessageCircle, Search, Users } from 'lucide-react';
 
 // @ts-expect-error - babel resolver
 import * as React from 'react';
 
+import { AvatarUser } from '@/components/shared/avatar-user';
 import { HelmetTemplate } from '@/components/shared/helmet';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -120,19 +120,15 @@ function HomeComponent() {
               {reviews.map((testimonial, index) => (
                 <Card key={index} className="w-full max-w-[420px]">
                   <CardHeader className="flex flex-row items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={testimonial.avatar} />
-                      <AvatarFallback>
-                        <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
-                      </AvatarFallback>
-                    </Avatar>
+                    <AvatarUser src={testimonial.avatar} alt={`${testimonial.name}'s profile picture`} classNameAvatar="size-12" />
+
                     <div className="space-y-0.5">
                       <CardTitle className="text-xl/none">{testimonial.name}</CardTitle>
                       <CardDescription className="text-base">{testimonial.role}</CardDescription>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p>"{testimonial.content}"</p>
+                    <p>&quot;{testimonial.content}&quot;</p>
                   </CardContent>
                 </Card>
               ))}

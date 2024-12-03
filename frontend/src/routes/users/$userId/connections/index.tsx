@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, createFileRoute, useNavigate, useParams, useSearch } from '@tanstack/react-router';
-import { Clock4, Ellipsis, SearchIcon, UserCircle2 } from 'lucide-react';
+import { Clock4, Ellipsis, SearchIcon } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
 
 import * as React from 'react';
 
 import { ConnectDialog } from '@/components/connections/connect-dialog';
 import { UnConnectDropdown } from '@/components/connections/unconnect-dropdown';
+import { AvatarUser } from '@/components/shared/avatar-user';
 import { ErrorFill } from '@/components/shared/error-fill';
 import { HelmetTemplate } from '@/components/shared/helmet';
 import { LoadingFill } from '@/components/shared/loading-fill';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,7 +22,7 @@ import {
   PaginationNumber,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/context/session-provider';
 import { ConnectionStatus } from '@/lib/enum';
 import { getConnectionsRequestQuery } from '@/lib/schemas/connection';
 import { getConnectionLists } from '@/services/connection';
@@ -103,7 +103,7 @@ function RouteComponent() {
                     type="search"
                     id="search-connection"
                     placeholder="Search connection"
-                    className="h-8 bg-muted pl-9 text-xs"
+                    className="h-9 bg-muted pl-9 text-sm"
                     value={searchInput}
                     onChange={(e) => {
                       setSearchInput(e.target.value);
@@ -143,12 +143,7 @@ function RouteComponent() {
                       <li className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5">
                         <Link to="/users/$userId" params={{ userId: con.user_id }} className="flex flex-auto flex-row items-center gap-3.5">
                           {/* Avatar */}
-                          <Avatar className="size-14">
-                            <AvatarImage src={con.profile_photo} alt={`${con.name}'s profile picture`} />
-                            <AvatarFallback>
-                              <UserCircle2 className="size-full stroke-gray-500 stroke-[1.25px]" />
-                            </AvatarFallback>
-                          </Avatar>
+                          <AvatarUser src={con.profile_photo} alt={`${con.name}'s profile picture`} classNameAvatar="size-14" />
 
                           <div className="flex-auto">
                             <h2 className="text-xl font-bold text-foreground decoration-2 underline-offset-2 hover:underline">{con.name}</h2>
@@ -167,7 +162,7 @@ function RouteComponent() {
                                 </Button>
                               </ConnectDialog>
                             ) : con.connection_status === ConnectionStatus.PENDING ? (
-                              <Button className="gap-1.5 rounded-full font-bold" variant={'ghost'} size={'xs'} disabled>
+                              <Button className="gap-1.5 rounded-full font-bold" variant={'outline-muted'} size={'xs'} disabled>
                                 <Clock4 className="size-4" />
                                 Pending
                               </Button>

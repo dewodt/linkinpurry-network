@@ -12,7 +12,9 @@ import type { JWTPayload } from '@/dto/auth-dto';
 import { ResponseDtoFactory } from '@/dto/common';
 import { Database } from '@/infrastructures/database/database';
 import { AuthRoute } from '@/routes/auth-route';
+import { ChatRoute } from '@/routes/chat-route';
 import { ConnectionRoute } from '@/routes/connection-route';
+import { NotificationRoute } from '@/routes/notification';
 import type { IRoute } from '@/routes/route';
 import { UserRoute } from '@/routes/user-route';
 
@@ -20,6 +22,7 @@ import { Utils } from './../utils/utils';
 import { Config } from './config';
 import { DependencyContainer } from './container';
 import { logger } from './logger';
+import { WebSocketServer } from './websocket';
 
 /**
  * Global Hono Generic Config
@@ -39,13 +42,13 @@ export class App {
 
   private config: Config;
   private database: Database;
+  private webSocketServer: WebSocketServer;
 
   constructor() {
     this.app = new OpenAPIHono<IGlobalContext>({
       defaultHook: (result, c) => {
         if (!result.success) {
-          const errorFields = Utils.getErrorFieldsFromZodParseResult(result.error);
-          const message = Utils.getErrorMessagesFromZodParseResult(result.error);
+          const { message, errorFields } = Utils.parseZodErrorResult(result.error);
           const responseDto = ResponseDtoFactory.createErrorResponseDto(message, errorFields);
           return c.json(responseDto, 400);
         }
@@ -55,6 +58,7 @@ export class App {
 
     this.config = this.container.get<Config>(Config.Key);
     this.database = this.container.get<Database>(Database.Key);
+    this.webSocketServer = this.container.get<WebSocketServer>(WebSocketServer.Key);
 
     // Setup
     this.setup();
@@ -102,7 +106,13 @@ export class App {
     this.app.use('/bucket/*', serveStatic({ root: './public' }));
 
     // Register all routers
-    const routeKeys = [AuthRoute.Key, UserRoute.Key, ConnectionRoute.Key];
+    const routeKeys = [
+      AuthRoute.Key,
+      UserRoute.Key,
+      ConnectionRoute.Key,
+      ChatRoute.Key,
+      NotificationRoute.Key,
+    ];
     routeKeys.forEach((key) => this.container.get<IRoute>(key).registerRoutes(this.app));
 
     // Docs API
@@ -144,11 +154,16 @@ export class App {
     const config = this.container.get<Config>(Config.Key);
     const port = config.get('PORT');
 
-    // Start server
-    serve({
+    // Start http server
+    const httpServer = serve({
       fetch: this.app.fetch,
       port,
     });
+    logger.info(`Server started on port ${port}`);
+
+    // Start websocket server
+    this.webSocketServer.initialize(httpServer);
+    logger.info('WebSocket server started');
   }
 
   /**
@@ -159,5 +174,6 @@ export class App {
     await this.database.disconnect();
 
     // Add more if needed
+    this.webSocketServer.getIO().close();
   }
 }

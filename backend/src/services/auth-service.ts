@@ -45,8 +45,8 @@ export class AuthService implements IAuthService {
 
   // Inject dependencies
   constructor(
-    @inject(Config.Key) private config: Config,
-    @inject(Database.Key) private database: Database
+    @inject(Config.Key) private readonly config: Config,
+    @inject(Database.Key) private readonly database: Database
   ) {
     this.prisma = this.database.getPrisma();
   }
@@ -70,16 +70,7 @@ export class AuthService implements IAuthService {
 
       if (!user) throw ExceptionFactory.notFound('User not found');
 
-      // note: return the profile photo path with the full URL
-      const fullURL =
-        user.profilePhotoPath.length > 0
-          ? `${this.config.get('BE_URL')}${user.profilePhotoPath}`
-          : '';
-
-      return {
-        ...user,
-        profilePhotoPath: fullURL,
-      };
+      return user;
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
 

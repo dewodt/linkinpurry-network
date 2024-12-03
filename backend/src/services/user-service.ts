@@ -1,16 +1,14 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
 
-import { Config } from '@/core/config';
+import { Bucket } from '@/core/bucket';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import type { IUpdateProfileRequestBodyDto } from '@/dto/user-dto';
 import { Database } from '@/infrastructures/database/database';
 import { ConnectionStatus } from '@/utils/enum';
 
-import { type Optional } from './../types/common';
 import type { IService } from './service';
-import { UploadService } from './upload-service';
 
 // todo: why this optional doesnt work
 interface UserProfile {
@@ -63,9 +61,8 @@ export class UserService implements IUserService {
 
   // Dependencies
   constructor(
-    @inject(Config.Key) private readonly config: Config,
     @inject(Database.Key) private readonly database: Database,
-    @inject(UploadService.Key) private readonly uploadService: UploadService
+    @inject(Bucket.Key) private readonly bucket: Bucket
   ) {
     this.prisma = this.database.getPrisma();
   }
@@ -153,12 +150,6 @@ export class UserService implements IUserService {
 
       if (!profile) throw ExceptionFactory.notFound('User not found');
 
-      // note: return the profile photo path with the full URL
-      const fullURL =
-        profile.profilePhotoPath.length > 0
-          ? `${this.config.get('BE_URL')}${profile.profilePhotoPath}`
-          : '';
-
       // Map to temporary result + access lavel
       const result: UserProfile = {
         // level 1
@@ -167,7 +158,7 @@ export class UserService implements IUserService {
         fullName: profile.fullName || 'N/A',
         skills: profile.skills,
         workHistory: profile.workHistory,
-        profilePhotoPath: fullURL,
+        profilePhotoPath: profile.profilePhotoPath,
         connectionCount: profile._count.sentConnections,
         connectionStatus: currentUserId
           ? profile._count.receivedConnections > 0
@@ -234,7 +225,7 @@ export class UserService implements IUserService {
     let profilePhotoPath: string | null = null;
     if (body.profile_photo) {
       try {
-        profilePhotoPath = await this.uploadService.uploadFile('/avatar', body.profile_photo);
+        profilePhotoPath = await this.bucket.uploadFile('/avatar', body.profile_photo);
       } catch (error) {
         // Internal server error
         if (error instanceof Error) logger.error(error.message);
@@ -258,16 +249,7 @@ export class UserService implements IUserService {
         },
       });
 
-      // note: return the profile photo path with the full URL
-      const fullURL =
-        updatedData.profilePhotoPath.length > 0
-          ? `${this.config.get('BE_URL')}${updatedData.profilePhotoPath}`
-          : '';
-
-      return {
-        ...updatedData,
-        profilePhotoPath: fullURL,
-      };
+      return updatedData;
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);

@@ -29,8 +29,8 @@ export class UserRoute implements IRoute {
 
   // Dependencies
   constructor(
-    @inject(UserService.Key) private userService: UserService,
-    @inject(AuthMiddleware.Key) private authMiddleware: AuthMiddleware
+    @inject(UserService.Key) private readonly userService: UserService,
+    @inject(AuthMiddleware.Key) private readonly authMiddleware: AuthMiddleware
   ) {}
 
   /**

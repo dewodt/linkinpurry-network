@@ -1,12 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate, useRouter } from '@tanstack/react-router';
-import { ChevronDown, FileText, LogOut, Menu, Moon, Search as SearchIcon, Sun, UserCircle2, X } from 'lucide-react';
+import { ChevronDown, FileText, LogOut, Menu, Moon, Search as SearchIcon, Sun, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import React from 'react';
 
 import { LinkedInFindUserIcon, LinkedInHomeIcon, LinkedInLogo, LinkedInMessagingIcon, LinkedInNetworkIcon } from '@/components/icons/linkedin-icons';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarUser } from '@/components/shared/avatar-user';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -19,8 +19,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useSession } from '@/context/session-provider';
 import { useTheme } from '@/context/theme-provider';
-import { useSession } from '@/hooks/use-session';
 import { cn } from '@/lib/utils';
 import { logout } from '@/services/auth';
 import { LogoutErrorResponse, LogoutSuccessResponse } from '@/types/api/auth';
@@ -248,7 +248,6 @@ function UserDropdown({ session }: { session: Session }) {
 
   // Hooks
   const router = useRouter();
-  const navigate = useNavigate();
   const { deleteSession } = useSession();
   const { setTheme, theme } = useTheme();
 
@@ -261,13 +260,12 @@ function UserDropdown({ session }: { session: Session }) {
       toast.dismiss();
       toast.error(error.response?.statusText || 'Error', { description: error.response?.data.message || 'An error occurred' });
     },
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       toast.dismiss();
       toast.success('Success', { description: data.message });
 
       // delete session
-      await deleteSession();
-      await navigate({ to: '/auth/login' });
+      deleteSession();
     },
   });
 
@@ -298,12 +296,7 @@ function UserDropdown({ session }: { session: Session }) {
   return (
     <DropdownMenu open={open} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger className="flex flex-col items-center gap-[1px] focus:outline-none">
-        <Avatar className="size-8 md:size-6">
-          <AvatarImage src={session.profilePhoto} alt="Profile picture" />
-          <AvatarFallback>
-            <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
-          </AvatarFallback>
-        </Avatar>
+        <AvatarUser src={session.profilePhoto} alt={`${session.name}'s profile picture`} classNameAvatar="size-8 md:size-6" />
 
         <div className="hidden flex-row items-center text-muted-foreground hover:text-primary md:flex">
           <p className="text-xs font-medium tracking-wide transition-colors">Me</p>
@@ -314,12 +307,7 @@ function UserDropdown({ session }: { session: Session }) {
       <DropdownMenuContent className="w-72" align="end" sideOffset={20}>
         <DropdownMenuGroup>
           <div className="flex items-center gap-3 p-3">
-            <Avatar className="size-14">
-              <AvatarImage src={session.profilePhoto} alt="Profile picture" />
-              <AvatarFallback>
-                <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
-              </AvatarFallback>
-            </Avatar>
+            <AvatarUser src={session.profilePhoto} alt={`${session.name}'s profile picture`} classNameAvatar="size-14" />
 
             <div className="flex-1">
               <h3 className="font-semibold">{session.name}</h3>
@@ -341,15 +329,29 @@ function UserDropdown({ session }: { session: Session }) {
         {/* Atur atur sebutuhny delete/tambah/edit */}
         <DropdownMenuGroup>
           <DropdownMenuLabel className="px-3 font-semibold text-foreground">Manage</DropdownMenuLabel>
-          <DropdownMenuItem className="px-3 py-2">
-            <FileText className="size-4" />
-            <span>Posts</span>
-          </DropdownMenuItem>
+
+          {/* Posts */}
+          <Link>
+            <DropdownMenuItem className="px-3 py-2">
+              <FileText className="size-4" />
+              <span>Posts</span>
+            </DropdownMenuItem>
+          </Link>
+
+          {/*  Connections */}
+          <Link to="/users/$userId/connections" params={{ userId: session.userId }}>
+            <DropdownMenuItem className="px-3 py-2">
+              <LinkedInNetworkIcon />
+              <span>Connections</span>
+            </DropdownMenuItem>
+          </Link>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
+          <DropdownMenuLabel className="px-3 font-semibold text-foreground">Settings</DropdownMenuLabel>
+
           {/* Theme */}
           <DropdownMenuItem className="px-3 py-2" onSelect={handleToggle}>
             <Sun className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/context/session-provider';
 import { loginRequestBody } from '@/lib/schemas/auth';
 import { login } from '@/services/auth';
 import { LoginErrorResponse, LoginRequestBody, LoginSuccessResponse } from '@/types/api/auth';
@@ -43,6 +43,7 @@ const LogInForm = () => {
     onSuccess: async (data) => {
       toast.dismiss();
       toast.success('Success', { description: data.message });
+
       await navigate({ to: '/' }); // TODO: change to /feed
       await refetchSession();
     },
@@ -53,11 +54,7 @@ const LogInForm = () => {
     resolver: zodResolver(loginRequestBody),
   });
 
-  const {
-    control,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = form;
+  const { control, handleSubmit } = form;
 
   return (
     <div className="flex flex-col gap-5">
@@ -66,7 +63,7 @@ const LogInForm = () => {
           {/* Identifier */}
           <FormField
             control={control}
-            disabled={isSubmitting}
+            disabled={mutation.isPending}
             name="identifier"
             render={({ field }) => (
               <FormItem>
@@ -82,7 +79,7 @@ const LogInForm = () => {
           {/* Password */}
           <FormField
             control={control}
-            disabled={isSubmitting}
+            disabled={mutation.isPending}
             name="password"
             render={({ field }) => (
               <FormItem>
@@ -96,8 +93,8 @@ const LogInForm = () => {
           />
 
           {/* Submit Button */}
-          <Button variant="default" className="mt-1 w-full" type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button variant="default" className="mt-1 w-full" type="submit" disabled={mutation.isPending}>
+            {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Login
           </Button>
         </form>

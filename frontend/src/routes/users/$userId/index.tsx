@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { Clock4, Ellipsis, Pencil, UserCircle2 } from 'lucide-react';
+import { Ellipsis, Pencil } from 'lucide-react';
 
 // @ts-expect-error - babel
 import * as React from 'react';
@@ -8,13 +8,13 @@ import * as React from 'react';
 import { ConnectDialog } from '@/components/connections/connect-dialog';
 import { UnConnectDropdown } from '@/components/connections/unconnect-dropdown';
 import { LinkedInClockIcon, LinkedInConnectIcon } from '@/components/icons/linkedin-icons';
+import { AvatarUser } from '@/components/shared/avatar-user';
 import { ErrorPage } from '@/components/shared/error-page';
 import { HelmetTemplate } from '@/components/shared/helmet';
 import { LoadingPage } from '@/components/shared/loading-page';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { EditProfileDialog } from '@/components/users/update-profile-dialog';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/context/session-provider';
 import { ConnectionStatus } from '@/lib/enum';
 import { cn, formatDate } from '@/lib/utils';
 import { getProfile } from '@/services/user';
@@ -37,7 +37,7 @@ function RouteComponent() {
     isError: isErrorProfile,
     refetch,
   } = useQuery<GetProfileSuccessResponse, GetProfileErrorResponse>({
-    queryKey: ['users', userId],
+    queryKey: ['users', userId, 'profile'],
     queryFn: () => getProfile({ userId }),
   });
 
@@ -63,12 +63,11 @@ function RouteComponent() {
           {/*  Background */}
           <div className="relative h-32 bg-primary/25 md:h-48">
             {/* Avatar */}
-            <Avatar className="absolute -bottom-[60px] left-7 size-[120px] md:-bottom-[48px] md:size-[152px]">
-              <AvatarImage src={profile.data.profile_photo} alt="Profile picture" />
-              <AvatarFallback>
-                <UserCircle2 className="size-full stroke-gray-500 stroke-[1.5px]" />
-              </AvatarFallback>
-            </Avatar>
+            <AvatarUser
+              src={profile.data.profile_photo}
+              alt={`${profile.data.username}'s profile picture`}
+              classNameAvatar="absolute -bottom-[60px] left-7 size-[120px] md:-bottom-[48px] md:size-[152px]"
+            />
           </div>
 
           <div className="relative flex flex-col items-start gap-3 px-6 pb-6 pt-[68px] md:pt-[60px]">

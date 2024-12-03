@@ -5,7 +5,7 @@ import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/context/session-provider';
 import { queryClient } from '@/lib/query';
 import { unConnectUser } from '@/services/connection';
 import { UnConnectUserErrorResponse, UnConnectUserSuccessResponse } from '@/types/api/connection';

@@ -6,6 +6,10 @@ import { z } from 'zod';
 export const configSchema = z.object({
   VITE_BE_URL: z.string({ message: 'BE_URL is required' }).min(1, { message: 'BE_URL is required' }).default('http://localhost:3000'),
   NODE_ENV: z.string({ message: 'NODE_ENV is required' }).min(1, { message: 'NODE_ENV is required' }).default('development'),
+  VAPID_PUBLIC_KEY: z
+    .string({ message: 'VAPID_PUBLIC_KEY is required' })
+    .min(1, { message: 'VAPID_PUBLIC_KEY is required' })
+    .default('BHdRIKBKTLsgW81Y5daavGcsMADBBc-UObNpUpEtgUKB1Bue7Jh-bKgJtd-y1Dxt5-F27MwQoWEWx8jgDwPgAtw'),
 });
 
 export type IConfigSchema = z.infer<typeof configSchema>;

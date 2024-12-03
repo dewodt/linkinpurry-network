@@ -40,8 +40,8 @@ export class ConnectionRoute implements IRoute {
 
   // Dependencies
   constructor(
-    @inject(AuthMiddleware.Key) private authMiddleware: AuthMiddleware,
-    @inject(ConnectionService.Key) private ConnectionService: ConnectionService
+    @inject(AuthMiddleware.Key) private readonly authMiddleware: AuthMiddleware,
+    @inject(ConnectionService.Key) private readonly ConnectionService: ConnectionService
   ) {}
 
   /**
