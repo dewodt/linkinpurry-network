@@ -55,6 +55,7 @@ export function UnConnectDialog({
 
       // current user
       // the connection list + number of conn changes
+
       queryClient.invalidateQueries({
         queryKey: ['users', session?.userId], // prefix
       });
@@ -67,6 +68,11 @@ export function UnConnectDialog({
           queryKey: ['users', currentSeenUserId, 'connections'],
         });
       }
+
+      // Explore page
+      queryClient.invalidateQueries({
+        queryKey: ['users', 'explore'],
+      });
 
       // the connected user (if fetched before)
       // the connection list + number of conn changes

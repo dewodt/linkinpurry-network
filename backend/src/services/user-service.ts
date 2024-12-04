@@ -4,6 +4,7 @@ import { inject, injectable } from 'inversify';
 import { Bucket } from '@/core/bucket';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
+import type { PagePaginationResponseMeta } from '@/dto/common';
 import type { IUpdateProfileRequestBodyDto } from '@/dto/user-dto';
 import { Database } from '@/infrastructures/database/database';
 import { ConnectionStatus } from '@/utils/enum';
@@ -32,6 +33,8 @@ interface UserProfile {
     | undefined;
 }
 
+type UserPreview = Omit<UserProfile, 'feeds' | 'workHistory' | 'skills' | 'connectionCount'>;
+
 type UpdateProfile = Prisma.UserGetPayload<{
   select: {
     id: true;
@@ -44,7 +47,18 @@ type UpdateProfile = Prisma.UserGetPayload<{
 }>;
 
 export interface IUserService extends IService {
+  getUsers(
+    currentUserId: bigint | undefined,
+    search: string | undefined,
+    page: number,
+    limit: number
+  ): Promise<{
+    users: UserPreview[];
+    meta: PagePaginationResponseMeta;
+  }>;
+
   getProfile(currentUserId: bigint | undefined, userId: bigint): Promise<UserProfile>;
+
   updateProfile(
     currentUserId: bigint,
     userId: bigint,
@@ -65,6 +79,155 @@ export class UserService implements IUserService {
     @inject(Bucket.Key) private readonly bucket: Bucket
   ) {
     this.prisma = this.database.getPrisma();
+  }
+
+  /**
+   * Get users
+   * retunrrs the list of all users in the system. If authenticated, dont return current user. search is based on name and username (case insensitive) % %
+   */
+  async getUsers(
+    currentUserId: bigint | undefined,
+    search: string | undefined,
+    page: number,
+    limit: number
+  ) {
+    try {
+      const totalItems = await this.prisma.user.count({
+        where: {
+          AND: [
+            {
+              id: currentUserId
+                ? {
+                    not: currentUserId,
+                  }
+                : undefined,
+            },
+            {
+              OR: [
+                {
+                  username: search
+                    ? {
+                        contains: search,
+                        mode: 'insensitive',
+                      }
+                    : undefined,
+                },
+                {
+                  fullName: search
+                    ? {
+                        contains: search,
+                        mode: 'insensitive',
+                      }
+                    : undefined,
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      // Empty, early return
+      if (totalItems === 0) return { users: [], meta: { page, limit, totalItems, totalPages: 0 } };
+
+      // Validate upper bound of page
+      const totalPages = Math.ceil(totalItems / limit);
+      if (page > totalPages) page = totalPages;
+
+      // Get users
+      const rawUsers = await this.prisma.user.findMany({
+        take: limit,
+        skip: (page - 1) * limit,
+        orderBy: [
+          {
+            fullName: 'asc',
+          },
+          {
+            username: 'asc',
+          },
+        ],
+        where: {
+          AND: [
+            {
+              id: currentUserId
+                ? {
+                    not: currentUserId,
+                  }
+                : undefined,
+            },
+            {
+              OR: [
+                {
+                  username: search
+                    ? {
+                        contains: search,
+                        mode: 'insensitive',
+                      }
+                    : undefined,
+                },
+                {
+                  fullName: search
+                    ? {
+                        contains: search,
+                        mode: 'insensitive',
+                      }
+                    : undefined,
+                },
+              ],
+            },
+          ],
+        },
+        include: {
+          _count: currentUserId
+            ? {
+                select: {
+                  // for connection status (only when authenticated)
+                  // pending or no
+                  receivedRequests: {
+                    where: {
+                      fromId: currentUserId,
+                    },
+                  },
+                  // connected or no
+                  receivedConnections: {
+                    where: {
+                      fromId: currentUserId,
+                    },
+                  },
+                },
+              }
+            : undefined,
+        },
+      });
+
+      const users: UserPreview[] = rawUsers.map((user) => {
+        return {
+          id: user.id,
+          username: user.username,
+          fullName: user.fullName || 'N/A',
+          profilePhotoPath: user.profilePhotoPath,
+          connectionStatus: currentUserId
+            ? user._count.receivedConnections > 0
+              ? ConnectionStatus.ACCEPTED
+              : user._count.receivedRequests > 0
+                ? ConnectionStatus.PENDING
+                : ConnectionStatus.NONE
+            : ConnectionStatus.NONE,
+        };
+      });
+
+      const meta: PagePaginationResponseMeta = {
+        page,
+        limit,
+        totalItems,
+        totalPages,
+      };
+
+      return { users, meta };
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to get users');
+    }
   }
 
   /**

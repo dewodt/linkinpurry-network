@@ -1,6 +1,15 @@
 import { z } from 'zod';
 
 /**
+ * Get users query
+ */
+export const getUsersRequestQuery = z.object({
+  search: z.string().optional(),
+  page: z.number().int().positive().optional().catch(1),
+  limit: z.number().int().positive().optional().catch(15),
+});
+
+/**
  * Update user schema
  */
 export const AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB

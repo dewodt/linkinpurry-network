@@ -60,6 +60,11 @@ export function DecideDialog({ children, decideToUserId, decideToUsername, type 
         queryKey: ['users', decideToUserId],
       });
 
+      // Explore page
+      queryClient.invalidateQueries({
+        queryKey: ['users', 'explore'],
+      });
+
       // revalidate the query at that exact filter
       queryClient.invalidateQueries({
         queryKey: ['my-networks', page], // prefix

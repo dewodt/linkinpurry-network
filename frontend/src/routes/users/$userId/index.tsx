@@ -114,9 +114,11 @@ function RouteComponent() {
               ) : (
                 <div className="flex flex-row items-center gap-2">
                   {/* Message */}
-                  <Button className="rounded-full px-5 font-bold" size="xs">
-                    Message
-                  </Button>
+                  <Link to="/messaging" search={{ withUserId: userId }}>
+                    <Button className="rounded-full px-5 font-bold" size="xs">
+                      Message
+                    </Button>
+                  </Link>
 
                   {/* More (for unconenct) */}
                   <UnConnectDropdown unConnectToUserId={userId} unConnectToUsername={profile.data.username}>

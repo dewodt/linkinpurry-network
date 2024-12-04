@@ -140,7 +140,10 @@ function RouteComponent() {
                 <ol>
                   {connections.data.map((con) => {
                     return (
-                      <li className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5">
+                      <li
+                        key={con.user_id}
+                        className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5"
+                      >
                         <Link to="/users/$userId" params={{ userId: con.user_id }} className="flex flex-auto flex-row items-center gap-3.5">
                           {/* Avatar */}
                           <AvatarUser src={con.profile_photo} alt={`${con.name}'s profile picture`} classNameAvatar="size-14" />

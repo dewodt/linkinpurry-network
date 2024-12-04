@@ -1,6 +1,24 @@
-import { ConnectionStatus } from '@/lib/enum';
+import { z } from 'zod';
 
-import { AxiosErrorResponse, SuccessResponse } from './common';
+import { ConnectionStatus } from '@/lib/enum';
+import { getUsersRequestQuery } from '@/lib/schemas/user';
+
+import { AxiosErrorResponse, SuccessPagePaginationResponse, SuccessResponse } from './common';
+
+/**
+ * Get users
+ */
+export type GetUsersRequestQuery = z.infer<typeof getUsersRequestQuery>;
+
+export type GetUsersSuccessResponse = SuccessPagePaginationResponse<{
+  id: string;
+  username: string;
+  name: string;
+  profile_photo: string;
+  connection_status: ConnectionStatus;
+}>;
+
+export type GetUsersErrorResponse = AxiosErrorResponse;
 
 /**
  * Get profile
