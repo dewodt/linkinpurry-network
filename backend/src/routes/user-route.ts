@@ -93,6 +93,7 @@ export class UserRoute implements IRoute {
 
         // Map to dto
         const responseData: IGetUsersResponseBodyDto = users.map((user) => ({
+          id: user.id.toString(),
           username: user.username,
           name: user.fullName,
           profile_photo: user.profilePhotoPath,

@@ -2,10 +2,21 @@ import { api } from '@/lib/api';
 import {
   GetProfileRequestParams,
   GetProfileSuccessResponse,
+  GetUsersRequestQuery,
+  GetUsersSuccessResponse,
   UpdateProfileRequestBody,
   UpdateProfileRequestParams,
   UpdateProfileSuccessResponse,
 } from '@/types/api/user';
+
+/**
+ * Get users request
+ */
+export const getUsers = async (query: GetUsersRequestQuery): Promise<GetUsersSuccessResponse> => {
+  // await new Promise((resolve) => setTimeout(resolve, 2000));
+  const axiosResponse = await api.get<GetUsersSuccessResponse>('/api/users', { params: query });
+  return axiosResponse.data;
+};
 
 /**
  * Get profile request

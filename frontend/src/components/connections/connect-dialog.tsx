@@ -55,6 +55,11 @@ export function ConnectDialog({ children, currentSeenUserId, connectToUserId, co
         });
       }
 
+      // Explore page
+      queryClient.invalidateQueries({
+        queryKey: ['users', 'explore'],
+      });
+
       // the connected user (if fetched before)
       // the connection list + number of conn changes
       queryClient.invalidateQueries({

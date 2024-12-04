@@ -34,6 +34,10 @@ export type IGetUsersRequestQueryDto = z.infer<typeof getUsersRequestQueryDto>;
 // Response
 export const getUsersResponseBodyDto = z.array(
   z.object({
+    id: z.string().openapi({
+      description: 'ID of the user',
+      example: '1234567890',
+    }),
     username: z.string().openapi({
       description: 'Username of the user',
       example: 'dewodt',

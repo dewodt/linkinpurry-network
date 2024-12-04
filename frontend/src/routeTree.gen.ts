@@ -9,6 +9,7 @@ import { Route as rootRoute } from './routes/__root';
 import { Route as AuthImport } from './routes/_auth';
 import { Route as AuthAuthLoginIndexImport } from './routes/_auth/auth/login/index';
 import { Route as AuthAuthRegisterIndexImport } from './routes/_auth/auth/register/index';
+import { Route as ExploreIndexImport } from './routes/explore/index';
 import { Route as IndexImport } from './routes/index';
 import { Route as MessagingIndexImport } from './routes/messaging/index';
 import { Route as MyNetworkGrowIndexImport } from './routes/my-network/grow/index';
@@ -40,6 +41,12 @@ const MyPostsIndexRoute = MyPostsIndexImport.update({
 const MessagingIndexRoute = MessagingIndexImport.update({
   id: '/messaging/',
   path: '/messaging/',
+  getParentRoute: () => rootRoute,
+} as any);
+
+const ExploreIndexRoute = ExploreIndexImport.update({
+  id: '/explore/',
+  path: '/explore/',
   getParentRoute: () => rootRoute,
 } as any);
 
@@ -101,6 +108,13 @@ declare module '@tanstack/react-router' {
       path: '';
       fullPath: '';
       preLoaderRoute: typeof AuthImport;
+      parentRoute: typeof rootRoute;
+    };
+    '/explore/': {
+      id: '/explore/';
+      path: '/explore';
+      fullPath: '/explore';
+      preLoaderRoute: typeof ExploreIndexImport;
       parentRoute: typeof rootRoute;
     };
     '/messaging/': {
@@ -186,6 +200,7 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren);
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '': typeof AuthRouteWithChildren;
+  '/explore': typeof ExploreIndexRoute;
   '/messaging': typeof MessagingIndexRoute;
   '/my-posts': typeof MyPostsIndexRoute;
   '/my-network/grow': typeof MyNetworkGrowIndexRoute;
@@ -200,6 +215,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '': typeof AuthRouteWithChildren;
+  '/explore': typeof ExploreIndexRoute;
   '/messaging': typeof MessagingIndexRoute;
   '/my-posts': typeof MyPostsIndexRoute;
   '/my-network/grow': typeof MyNetworkGrowIndexRoute;
@@ -215,6 +231,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute;
   '/': typeof IndexRoute;
   '/_auth': typeof AuthRouteWithChildren;
+  '/explore/': typeof ExploreIndexRoute;
   '/messaging/': typeof MessagingIndexRoute;
   '/my-posts/': typeof MyPostsIndexRoute;
   '/my-network/grow/': typeof MyNetworkGrowIndexRoute;
@@ -231,6 +248,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | ''
+    | '/explore'
     | '/messaging'
     | '/my-posts'
     | '/my-network/grow'
@@ -244,6 +262,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | ''
+    | '/explore'
     | '/messaging'
     | '/my-posts'
     | '/my-network/grow'
@@ -257,6 +276,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_auth'
+    | '/explore/'
     | '/messaging/'
     | '/my-posts/'
     | '/my-network/grow/'
@@ -272,6 +292,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AuthRoute: typeof AuthRouteWithChildren;
+  ExploreIndexRoute: typeof ExploreIndexRoute;
   MessagingIndexRoute: typeof MessagingIndexRoute;
   MyPostsIndexRoute: typeof MyPostsIndexRoute;
   MyNetworkGrowIndexRoute: typeof MyNetworkGrowIndexRoute;
@@ -284,6 +305,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
+  ExploreIndexRoute: ExploreIndexRoute,
   MessagingIndexRoute: MessagingIndexRoute,
   MyPostsIndexRoute: MyPostsIndexRoute,
   MyNetworkGrowIndexRoute: MyNetworkGrowIndexRoute,
@@ -303,6 +325,7 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
       "children": [
         "/",
         "/_auth",
+        "/explore/",
         "/messaging/",
         "/my-posts/",
         "/my-network/grow/",
@@ -321,6 +344,9 @@ export const routeTree = rootRoute._addFileChildren(rootRouteChildren)._addFileT
         "/_auth/auth/login/",
         "/_auth/auth/register/"
       ]
+    },
+    "/explore/": {
+      "filePath": "explore/index.tsx"
     },
     "/messaging/": {
       "filePath": "messaging/index.tsx"
