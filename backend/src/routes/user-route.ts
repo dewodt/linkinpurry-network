@@ -11,8 +11,11 @@ import {
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import {
   type IGetProfileResponseBodyDto,
+  type IGetUsersResponseBodyDto,
   type IUpdateProfileResponseBodyDto,
   getProfileResponseBodyDto,
+  getUsersRequestQueryDto,
+  getUsersResponseBodyDto,
   updateProfileRequestBodyDto,
   updateProfileResponseBodyDto,
   userIdRequestParamsDto,
@@ -40,6 +43,9 @@ export class UserRoute implements IRoute {
    * @override
    */
   registerRoutes(app: OpenAPIHono<IGlobalContext>): void {
+    // Get users
+    this.getUsers(app);
+
     // Get user profile
     this.getProfile(app);
 
@@ -48,7 +54,71 @@ export class UserRoute implements IRoute {
   }
 
   /**
-   * Get user profile
+   * Get users (public)
+   *
+   * @param app
+   */
+  private getUsers(app: OpenAPIHono<IGlobalContext>) {
+    // Create route definition
+    const getUsersRoute = createRoute({
+      tags: ['user'],
+      method: 'get',
+      path: '/api/users',
+      summary: 'Get users',
+      description: 'API endpoint for getting users',
+      request: {
+        query: getUsersRequestQueryDto,
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessPagePagination(
+          'Users successfully retrieved',
+          getUsersResponseBodyDto
+        ),
+        500: OpenApiResponseFactory.jsonInternalServerError(
+          'An error occurred while retrieving users'
+        ),
+      },
+    });
+
+    // Register route
+    app.use(getUsersRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: true }));
+    app.openapi(getUsersRoute, async (c) => {
+      // Get validated params
+      const { search, page, limit } = c.req.valid('query');
+      const currentUserId = c.get('user')?.userId;
+
+      try {
+        // Get users
+        const { users, meta } = await this.userService.getUsers(currentUserId, search, page, limit);
+
+        // Map to dto
+        const responseData: IGetUsersResponseBodyDto = users.map((user) => ({
+          username: user.username,
+          name: user.fullName,
+          profile_photo: user.profilePhotoPath,
+          connection_status: user.connectionStatus,
+        }));
+        const responseDto = ResponseDtoFactory.createSuccessPagePaginationResponseDto(
+          'Users successfully retrieved',
+          responseData,
+          meta
+        );
+
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+
+        // Internal server error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
+
+  /**
+   * Get user profile (public)
+   *
    * @param app
    * @returns void
    */

@@ -9,7 +9,53 @@ import { Utils } from '@/utils/utils';
  * Get users list DTO
  */
 // Request
+export const getUsersRequestQueryDto = z
+  .object({
+    search: z.string({ message: 'search must be type of string' }).optional().openapi({
+      description: 'Search query for filtering connections',
+      example: 'John Doe',
+    }),
+    page: z.string({ message: 'page must be type of string' }).optional().openapi({
+      description: 'Page number for pagination',
+      example: '1',
+    }),
+    limit: z.string({ message: 'limit must be type of string' }).optional().openapi({
+      description: 'Limit for pagination',
+      example: '15',
+    }),
+  })
+  .transform(({ page, limit, search }) => ({
+    search,
+    ...Utils.parsePagePagination({ page, limit }),
+  }));
+
+export type IGetUsersRequestQueryDto = z.infer<typeof getUsersRequestQueryDto>;
+
 // Response
+export const getUsersResponseBodyDto = z.array(
+  z.object({
+    username: z.string().openapi({
+      description: 'Username of the user',
+      example: 'dewodt',
+    }),
+    name: z.string().openapi({
+      description: 'Name of the user',
+      example: 'John Doe',
+    }),
+    profile_photo: z.string().openapi({
+      description: 'Profile photo of the user',
+      example: 'https://example.com/my-pict.jpg',
+    }),
+    connection_status: z
+      .enum([ConnectionStatus.ACCEPTED, ConnectionStatus.PENDING, ConnectionStatus.NONE])
+      .openapi({
+        description: 'Status of the connection',
+        example: ConnectionStatus.ACCEPTED,
+      }),
+  })
+);
+
+export type IGetUsersResponseBodyDto = z.infer<typeof getUsersResponseBodyDto>;
 
 /**
  * R
