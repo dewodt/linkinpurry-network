@@ -15,6 +15,8 @@ RUN npm ci
 
 COPY --chown=node:node . .
 
+COPY ./.env.example ./.env
+
 ENV PORT=3000
 
 EXPOSE 3000
