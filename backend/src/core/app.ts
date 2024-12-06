@@ -14,6 +14,7 @@ import { Database } from '@/infrastructures/database/database';
 import { AuthRoute } from '@/routes/auth-route';
 import { ChatRoute } from '@/routes/chat-route';
 import { ConnectionRoute } from '@/routes/connection-route';
+import { FeedRoute } from '@/routes/feed-route';
 import { NotificationRoute } from '@/routes/notification';
 import type { IRoute } from '@/routes/route';
 import { UserRoute } from '@/routes/user-route';
@@ -112,6 +113,7 @@ export class App {
       ConnectionRoute.Key,
       ChatRoute.Key,
       NotificationRoute.Key,
+      FeedRoute.Key,
     ];
     routeKeys.forEach((key) => this.container.get<IRoute>(key).registerRoutes(this.app));
 

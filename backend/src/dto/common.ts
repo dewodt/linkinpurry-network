@@ -178,6 +178,20 @@ export class ResponseDtoFactory {
     };
   }
 
+  // this method was created just to adapt to the specificaition api contract
+  static createDifferentSuccessCursorPaginationResponse<T>(
+    message: string,
+    data: T,
+    meta: CursorPaginationResponseMeta
+  ) {
+    return {
+      success: true as const,
+      message,
+      data,
+      meta,
+    };
+  }
+
   static createSuccessCursorPaginationResponseDto<T>(
     message: string,
     data: T[],

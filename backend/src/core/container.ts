@@ -6,11 +6,13 @@ import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { AuthRoute } from '@/routes/auth-route';
 import { ChatRoute } from '@/routes/chat-route';
 import { ConnectionRoute } from '@/routes/connection-route';
+import { FeedRoute } from '@/routes/feed-route';
 import { NotificationRoute } from '@/routes/notification';
 import { UserRoute } from '@/routes/user-route';
 import { AuthService } from '@/services/auth-service';
 import { ChatService } from '@/services/chat-service';
 import { ConnectionService } from '@/services/connection-service';
+import { FeedService } from '@/services/feed-service';
 import { NotificationService } from '@/services/notification';
 import { UserService } from '@/services/user-service';
 
@@ -27,6 +29,7 @@ export class DependencyContainer {
   private connectionModule: ContainerModule;
   private chatModule: ContainerModule;
   private notificationModule: ContainerModule;
+  private feedModule: ContainerModule;
 
   constructor() {
     // Initialize container
@@ -72,6 +75,12 @@ export class DependencyContainer {
       bind(NotificationRoute.Key).to(NotificationRoute).inSingletonScope();
     });
 
+    // Feed module
+    this.feedModule = new ContainerModule((bind) => {
+      bind(FeedService.Key).to(FeedService).inSingletonScope();
+      bind(FeedRoute.Key).to(FeedRoute).inSingletonScope();
+    });
+
     // Load modules
     this.container.load(this.coreModule);
     this.container.load(this.authModule);
@@ -79,6 +88,7 @@ export class DependencyContainer {
     this.container.load(this.connectionModule);
     this.container.load(this.chatModule);
     this.container.load(this.notificationModule);
+    this.container.load(this.feedModule);
   }
 
   /**
