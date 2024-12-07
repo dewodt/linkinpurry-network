@@ -10,6 +10,7 @@ import { cn, getRelativeTime } from '@/lib/utils';
 
 import { AvatarUser } from '../shared/avatar-user';
 import { DeleteFeedDialog } from './delete-feed-dialog';
+import UpdateFeedDialog from './update-feed-dialog';
 
 export interface CardFeedProps {
   className?: string;
@@ -28,7 +29,7 @@ export interface CardFeedProps {
   // Component options
   isDetailOptionVisible?: boolean;
   onSuccessfullDelete?: () => void;
-  onSuccessfullEdit?: () => void;
+  onSuccessfullUpdate?: () => void;
 }
 
 export default function CardFeed({
@@ -44,12 +45,12 @@ export default function CardFeed({
   currentUserId,
   isDetailOptionVisible = true,
   onSuccessfullDelete,
-  onSuccessfullEdit,
+  onSuccessfullUpdate,
 }: CardFeedProps) {
   // States
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = React.useState(false);
 
   return (
     <Card className={cn(className)}>
@@ -103,10 +104,16 @@ export default function CardFeed({
 
                     {userId === currentUserId && (
                       <>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            setIsDropdownOpen(false);
+                            setIsUpdateDialogOpen(true);
+                          }}
+                        >
                           <SquarePen className="size-4" />
                           Edit
                         </DropdownMenuItem>
+
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
                           onSelect={() => {
@@ -123,6 +130,14 @@ export default function CardFeed({
                 </DropdownMenu>
 
                 {/* Dialogs */}
+                <UpdateFeedDialog
+                  feedId={feedId}
+                  initialData={{ content }}
+                  isUpdateFeedDialogOpen={isUpdateDialogOpen}
+                  setIsUpdateFeedDialogOpen={setIsUpdateDialogOpen}
+                  onSuccessfullUpdate={onSuccessfullUpdate}
+                />
+
                 <DeleteFeedDialog
                   feedId={feedId}
                   isDeleteDialogOpen={isDeleteDialogOpen}
