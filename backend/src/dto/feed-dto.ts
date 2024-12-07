@@ -20,7 +20,7 @@ export const feedWithCreator = z.object({
     description: 'Full name of the user',
     example: 'John Doe',
   }),
-  profile_photo_path: z.string().openapi({
+  profile_photo: z.string().openapi({
     description: 'Profile photo of the user',
     example: 'https://example.com/image.jpg',
   }),

@@ -41,6 +41,9 @@ export interface SuccessResponse<T> extends BaseResponse {
   success: true;
   data: T;
 }
+export interface DifferentSuccessPaginationResponse<T, M extends BasePaginationResponseMeta> extends SuccessResponse<T> {
+  meta: M;
+}
 
 export interface SuccessPaginationResponse<T, M extends BasePaginationResponseMeta> extends SuccessResponse<T[]> {
   meta: M;
@@ -49,6 +52,9 @@ export interface SuccessPaginationResponse<T, M extends BasePaginationResponseMe
 export type SuccessPagePaginationResponse<T> = SuccessPaginationResponse<T, PagePaginationResponseMeta>;
 
 export type SuccessOffsetPaginationResponse<T> = SuccessPaginationResponse<T, OffsetPaginationResponseMeta>;
+
+// to adapt api contract
+export type DifferentSuccessCursorPaginationResponse<T> = DifferentSuccessPaginationResponse<T, CursorPaginationResponseMeta>;
 
 export type SuccessCursorPaginationResponse<T> = SuccessPaginationResponse<T, CursorPaginationResponseMeta>;
 

@@ -15,11 +15,13 @@ import { Route as AuthImport } from './routes/_auth'
 import { Route as IndexImport } from './routes/index'
 import { Route as MyPostsIndexImport } from './routes/my-posts/index'
 import { Route as MessagingIndexImport } from './routes/messaging/index'
+import { Route as FeedIndexImport } from './routes/feed/index'
 import { Route as ExploreIndexImport } from './routes/explore/index'
 import { Route as UsersUserIdIndexImport } from './routes/users/$userId/index'
 import { Route as MyPostsCreateIndexImport } from './routes/my-posts/create/index'
 import { Route as MyPostsFeedIdIndexImport } from './routes/my-posts/$feedId/index'
 import { Route as MyNetworkGrowIndexImport } from './routes/my-network/grow/index'
+import { Route as FeedFeedIdIndexImport } from './routes/feed/$feedId/index'
 import { Route as UsersUserIdConnectionsIndexImport } from './routes/users/$userId/connections/index'
 import { Route as AuthAuthRegisterIndexImport } from './routes/_auth/auth/register/index'
 import { Route as AuthAuthLoginIndexImport } from './routes/_auth/auth/login/index'
@@ -46,6 +48,12 @@ const MyPostsIndexRoute = MyPostsIndexImport.update({
 const MessagingIndexRoute = MessagingIndexImport.update({
   id: '/messaging/',
   path: '/messaging/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const FeedIndexRoute = FeedIndexImport.update({
+  id: '/feed/',
+  path: '/feed/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -76,6 +84,12 @@ const MyPostsFeedIdIndexRoute = MyPostsFeedIdIndexImport.update({
 const MyNetworkGrowIndexRoute = MyNetworkGrowIndexImport.update({
   id: '/my-network/grow/',
   path: '/my-network/grow/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const FeedFeedIdIndexRoute = FeedFeedIdIndexImport.update({
+  id: '/feed/$feedId/',
+  path: '/feed/$feedId/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -123,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreIndexImport
       parentRoute: typeof rootRoute
     }
+    '/feed/': {
+      id: '/feed/'
+      path: '/feed'
+      fullPath: '/feed'
+      preLoaderRoute: typeof FeedIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/messaging/': {
       id: '/messaging/'
       path: '/messaging'
@@ -135,6 +156,13 @@ declare module '@tanstack/react-router' {
       path: '/my-posts'
       fullPath: '/my-posts'
       preLoaderRoute: typeof MyPostsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/feed/$feedId/': {
+      id: '/feed/$feedId/'
+      path: '/feed/$feedId'
+      fullPath: '/feed/$feedId'
+      preLoaderRoute: typeof FeedFeedIdIndexImport
       parentRoute: typeof rootRoute
     }
     '/my-network/grow/': {
@@ -207,8 +235,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthRouteWithChildren
   '/explore': typeof ExploreIndexRoute
+  '/feed': typeof FeedIndexRoute
   '/messaging': typeof MessagingIndexRoute
   '/my-posts': typeof MyPostsIndexRoute
+  '/feed/$feedId': typeof FeedFeedIdIndexRoute
   '/my-network/grow': typeof MyNetworkGrowIndexRoute
   '/my-posts/$feedId': typeof MyPostsFeedIdIndexRoute
   '/my-posts/create': typeof MyPostsCreateIndexRoute
@@ -222,8 +252,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof AuthRouteWithChildren
   '/explore': typeof ExploreIndexRoute
+  '/feed': typeof FeedIndexRoute
   '/messaging': typeof MessagingIndexRoute
   '/my-posts': typeof MyPostsIndexRoute
+  '/feed/$feedId': typeof FeedFeedIdIndexRoute
   '/my-network/grow': typeof MyNetworkGrowIndexRoute
   '/my-posts/$feedId': typeof MyPostsFeedIdIndexRoute
   '/my-posts/create': typeof MyPostsCreateIndexRoute
@@ -238,8 +270,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/explore/': typeof ExploreIndexRoute
+  '/feed/': typeof FeedIndexRoute
   '/messaging/': typeof MessagingIndexRoute
   '/my-posts/': typeof MyPostsIndexRoute
+  '/feed/$feedId/': typeof FeedFeedIdIndexRoute
   '/my-network/grow/': typeof MyNetworkGrowIndexRoute
   '/my-posts/$feedId/': typeof MyPostsFeedIdIndexRoute
   '/my-posts/create/': typeof MyPostsCreateIndexRoute
@@ -255,8 +289,10 @@ export interface FileRouteTypes {
     | '/'
     | ''
     | '/explore'
+    | '/feed'
     | '/messaging'
     | '/my-posts'
+    | '/feed/$feedId'
     | '/my-network/grow'
     | '/my-posts/$feedId'
     | '/my-posts/create'
@@ -269,8 +305,10 @@ export interface FileRouteTypes {
     | '/'
     | ''
     | '/explore'
+    | '/feed'
     | '/messaging'
     | '/my-posts'
+    | '/feed/$feedId'
     | '/my-network/grow'
     | '/my-posts/$feedId'
     | '/my-posts/create'
@@ -283,8 +321,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/explore/'
+    | '/feed/'
     | '/messaging/'
     | '/my-posts/'
+    | '/feed/$feedId/'
     | '/my-network/grow/'
     | '/my-posts/$feedId/'
     | '/my-posts/create/'
@@ -299,8 +339,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   ExploreIndexRoute: typeof ExploreIndexRoute
+  FeedIndexRoute: typeof FeedIndexRoute
   MessagingIndexRoute: typeof MessagingIndexRoute
   MyPostsIndexRoute: typeof MyPostsIndexRoute
+  FeedFeedIdIndexRoute: typeof FeedFeedIdIndexRoute
   MyNetworkGrowIndexRoute: typeof MyNetworkGrowIndexRoute
   MyPostsFeedIdIndexRoute: typeof MyPostsFeedIdIndexRoute
   MyPostsCreateIndexRoute: typeof MyPostsCreateIndexRoute
@@ -312,8 +354,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   ExploreIndexRoute: ExploreIndexRoute,
+  FeedIndexRoute: FeedIndexRoute,
   MessagingIndexRoute: MessagingIndexRoute,
   MyPostsIndexRoute: MyPostsIndexRoute,
+  FeedFeedIdIndexRoute: FeedFeedIdIndexRoute,
   MyNetworkGrowIndexRoute: MyNetworkGrowIndexRoute,
   MyPostsFeedIdIndexRoute: MyPostsFeedIdIndexRoute,
   MyPostsCreateIndexRoute: MyPostsCreateIndexRoute,
@@ -334,8 +378,10 @@ export const routeTree = rootRoute
         "/",
         "/_auth",
         "/explore/",
+        "/feed/",
         "/messaging/",
         "/my-posts/",
+        "/feed/$feedId/",
         "/my-network/grow/",
         "/my-posts/$feedId/",
         "/my-posts/create/",
@@ -356,11 +402,17 @@ export const routeTree = rootRoute
     "/explore/": {
       "filePath": "explore/index.tsx"
     },
+    "/feed/": {
+      "filePath": "feed/index.tsx"
+    },
     "/messaging/": {
       "filePath": "messaging/index.tsx"
     },
     "/my-posts/": {
       "filePath": "my-posts/index.tsx"
+    },
+    "/feed/$feedId/": {
+      "filePath": "feed/$feedId/index.tsx"
     },
     "/my-network/grow/": {
       "filePath": "my-network/grow/index.tsx"

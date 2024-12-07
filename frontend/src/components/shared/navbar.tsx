@@ -331,7 +331,7 @@ function UserDropdown({ session }: { session: Session }) {
           <DropdownMenuLabel className="px-3 font-semibold text-foreground">Manage</DropdownMenuLabel>
 
           {/* Posts */}
-          <Link>
+          <Link to="/my-posts">
             <DropdownMenuItem className="px-3 py-2">
               <FileText className="size-4" />
               <span>Posts</span>
