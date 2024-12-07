@@ -106,7 +106,14 @@ export function UnConnectDialog({
             Cancel
           </Button>
 
-          <Button type="button" className="rounded-full font-bold" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          <Button
+            type="button"
+            variant={'destructive'}
+            className="rounded-full font-bold"
+            size="sm"
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+          >
             Remove
           </Button>
         </DialogFooter>

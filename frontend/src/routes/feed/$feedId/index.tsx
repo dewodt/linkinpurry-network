@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router';
 import { ChevronLeft } from 'lucide-react';
 
 import * as React from 'react';
@@ -24,6 +24,7 @@ function RouteComponent() {
   // hooks
   const { session } = useSession();
   const router = useRouter();
+  const navigate = useNavigate();
 
   // Query
   const {
@@ -78,6 +79,7 @@ function RouteComponent() {
             editedAt={new Date(feedData.data.updated_at)}
             isDetailOptionVisible={false}
             currentUserId={session?.userId || ''}
+            onSuccessfullDelete={() => navigate({ to: '/my-posts' })}
           />
         </section>
       </main>

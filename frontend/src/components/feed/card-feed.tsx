@@ -1,15 +1,20 @@
 import { Link } from '@tanstack/react-router';
 import { Eye, MoreHorizontal, SquarePen, Trash2 } from 'lucide-react';
 
+import React from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn, getRelativeTime } from '@/lib/utils';
 
 import { AvatarUser } from '../shared/avatar-user';
+import { DeleteFeedDialog } from './delete-feed-dialog';
 
 export interface CardFeedProps {
   className?: string;
+
+  // Relevant data
   feedId: string;
   userId: string;
   fullName: string;
@@ -19,7 +24,11 @@ export interface CardFeedProps {
   createdAt: Date;
   editedAt: Date;
   currentUserId: string;
+
+  // Component options
   isDetailOptionVisible?: boolean;
+  onSuccessfullDelete?: () => void;
+  onSuccessfullEdit?: () => void;
 }
 
 export default function CardFeed({
@@ -34,7 +43,14 @@ export default function CardFeed({
   editedAt,
   currentUserId,
   isDetailOptionVisible = true,
+  onSuccessfullDelete,
+  onSuccessfullEdit,
 }: CardFeedProps) {
+  // States
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+
   return (
     <Card className={cn(className)}>
       <CardHeader className="flex flex-row items-center gap-4 space-y-0 px-6 pb-3 pt-6">
@@ -68,7 +84,7 @@ export default function CardFeed({
             {(userId === currentUserId || isDetailOptionVisible) && (
               <>
                 {/* Dropdowns */}
-                <DropdownMenu>
+                <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 self-start p-0">
                       <MoreHorizontal className="h-4 w-4" />
@@ -91,7 +107,13 @@ export default function CardFeed({
                           <SquarePen className="size-4" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive">
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={() => {
+                            setIsDropdownOpen(false);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
                           <Trash2 className="size-4" />
                           Delete
                         </DropdownMenuItem>
@@ -101,6 +123,12 @@ export default function CardFeed({
                 </DropdownMenu>
 
                 {/* Dialogs */}
+                <DeleteFeedDialog
+                  feedId={feedId}
+                  isDeleteDialogOpen={isDeleteDialogOpen}
+                  setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                  onSuccess={onSuccessfullDelete}
+                />
               </>
             )}
           </div>
