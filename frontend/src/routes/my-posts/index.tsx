@@ -29,7 +29,7 @@ function RouteComponent() {
 
   // Intersection observer hook
   const { ref: feedSentinelRef, inView: feedSentinelInView } = useInView({
-    threshold: 0,
+    threshold: 0.25,
   });
 
   // Infinite query
@@ -132,9 +132,11 @@ function RouteComponent() {
               })}
 
               {/* Sentinel */}
-              <li ref={feedSentinelRef} className="flex items-center justify-center">
-                {hasNextPageMyFeed && <LoadingFill className="pt-10" />}
-              </li>
+              {hasNextPageMyFeed && (
+                <li ref={feedSentinelRef} className="flex items-center justify-center">
+                  <LoadingFill className="pt-10" />
+                </li>
+              )}
             </ol>
           )}
         </section>

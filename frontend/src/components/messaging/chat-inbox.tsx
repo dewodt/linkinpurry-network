@@ -1,6 +1,7 @@
 import { InfiniteData, QueryKey, useInfiniteQuery } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useInView } from 'react-intersection-observer';
+import { useDebouncedCallback } from 'use-debounce';
 
 import React from 'react';
 
@@ -21,7 +22,7 @@ export function ChatInbox() {
   const inboxRootRef = React.useRef<HTMLDivElement>(null);
   const { ref: inboxSentinelRef, inView: inboxSentinelInView } = useInView({
     root: inboxRootRef.current,
-    threshold: 0.2,
+    threshold: 0.25,
   });
 
   // Inbox query (infintie query)
@@ -67,14 +68,21 @@ export function ChatInbox() {
     getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
   });
 
+  // Debounced
+  const debouncedFetchNextPageInbox = useDebouncedCallback(() => {
+    if (hasNextPageInbox && !isFetchingNextPageInbox) {
+      fetchNextPageInbox();
+    }
+  }, 300);
+
   const flattenInbox = React.useMemo(() => inboxData?.pages.flatMap((page) => page.data) ?? [], [inboxData]);
 
   // Fetch next page when inbox sentinel is in view
   React.useEffect(() => {
-    if (inboxSentinelInView && !isFetchingNextPageInbox && hasNextPageInbox) {
-      fetchNextPageInbox();
+    if (inboxSentinelInView) {
+      debouncedFetchNextPageInbox();
     }
-  }, [inboxSentinelInView, isFetchingNextPageInbox, hasNextPageInbox, fetchNextPageInbox]);
+  }, [inboxSentinelInView, debouncedFetchNextPageInbox]);
 
   return (
     <div className="flex w-full sm:max-w-[312px] sm:border-r">
@@ -130,9 +138,11 @@ export function ChatInbox() {
                 </li>
               ))}
 
-              <li ref={inboxSentinelRef} className="flex items-center justify-center">
-                {isFetchingNextPageInbox && <LoadingFill className="border-t py-5" />}
-              </li>
+              {hasNextPageInbox && (
+                <li ref={inboxSentinelRef} className="flex items-center justify-center">
+                  <LoadingFill className="border-t py-5" />
+                </li>
+              )}
             </ol>
           </ScrollArea>
         ))}

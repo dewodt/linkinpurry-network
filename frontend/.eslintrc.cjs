@@ -47,13 +47,14 @@ module.exports = {
     ],
     'react/jsx-uses-react': 'off', // off because we're using the new JSX transform
     'react/react-in-jsx-scope': 'off', // off because we're using the new JSX transform
+    'react-refresh/only-export-components': 'off',
 
     // disable if something is weird lol
 
     // TypeScript
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-unused-vars': [
       'warn',
       {

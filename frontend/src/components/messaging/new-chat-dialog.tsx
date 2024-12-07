@@ -3,7 +3,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Search, SearchIcon } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { toast } from 'sonner';
-import { useDebounce } from 'use-debounce';
+import { useDebounce, useDebouncedCallback } from 'use-debounce';
 
 import React from 'react';
 
@@ -130,13 +130,20 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
     getNextPageParam: (lastPage) => (lastPage.meta.page === lastPage.meta.totalPages ? undefined : lastPage.meta.page + 1),
   });
 
+  // Debounce
+  const debouncedFetchNextPage = useDebouncedCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, 300);
+
   const allUsers = data?.pages.flatMap((page) => page.data) ?? [];
 
   React.useEffect(() => {
-    if (inView && !isFetchingNextPage && hasNextPage) {
-      fetchNextPage();
+    if (inView) {
+      debouncedFetchNextPage();
     }
-  }, [inView, isFetchingNextPage, hasNextPage, fetchNextPage]);
+  }, [inView, debouncedFetchNextPage]);
 
   const { mutate, isPending: isMutating } = useMutation({
     mutationFn: async (user: GetConnectionsResponseBody) => {
@@ -189,9 +196,11 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
           </li>
         ))}
 
-        <li ref={sentinelRef} className="flex items-center justify-center">
-          {isFetchingNextPage && <LoadingFill className="border-t py-5" />}
-        </li>
+        {hasNextPage && (
+          <li ref={sentinelRef} className="flex items-center justify-center">
+            <LoadingFill className="border-t py-5" />
+          </li>
+        )}
       </ul>
     </ScrollArea>
   );
