@@ -89,7 +89,14 @@ export function DecideDialog({ children, decideToUserId, decideToUsername, type 
             Cancel
           </Button>
 
-          <Button type="button" className="rounded-full font-bold" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          <Button
+            type="button"
+            variant={type === ConnectionRequestDecision.DECLINE ? 'destructive' : 'default'}
+            className="rounded-full font-bold"
+            size="sm"
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+          >
             {toTitleCase(type)}
           </Button>
         </DialogFooter>

@@ -14,7 +14,7 @@ import { SessionErrorResponse, SessionSuccessResponse } from '@/types/api/auth';
 interface SessionContextValue {
   sessionQuery: UseQueryResult<SessionSuccessResponse, SessionErrorResponse>;
   deleteSession: () => void;
-  updateSession: ({ name, profilePhoto }: { name: string; profilePhoto: string }) => void;
+  updateSession: ({ name, username, profilePhoto }: { name: string; username: string; profilePhoto: string }) => void;
 }
 
 export const SessionContext = React.createContext<SessionContextValue | null>(null);
@@ -24,7 +24,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['session'],
     queryFn: getSession,
     staleTime: 15 * 60 * 1000, // 15 minutes
-    retry: 1,
+    retry: 0,
   });
 
   const { requestPermission } = useNotification();
@@ -46,7 +46,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [queryClient]);
 
   const updateSession = useCallback(
-    ({ name, profilePhoto }: { name: string; profilePhoto: string }) => {
+    ({ name, username, profilePhoto }: { name: string; username: string; profilePhoto: string }) => {
       queryClient.setQueryData<SessionSuccessResponse>(['session'], (prevData) => {
         if (!prevData) return prevData;
 
@@ -55,6 +55,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           data: {
             ...prevData.data,
             name,
+            username,
             profilePhoto,
           },
         };

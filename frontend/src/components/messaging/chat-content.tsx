@@ -1,7 +1,9 @@
+import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import { InfiniteData, QueryKey, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { ChevronLeft } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
+import { useDebouncedCallback } from 'use-debounce';
 
 import React from 'react';
 
@@ -15,7 +17,7 @@ import { AvatarUser } from '../shared/avatar-user';
 import { ErrorFill } from '../shared/error-fill';
 import { LoadingFill } from '../shared/loading-fill';
 import { Button } from '../ui/button';
-import { ScrollArea } from '../ui/scroll-area';
+import { ScrollBar } from '../ui/scroll-area';
 import { SendMessageForm } from './send-message-form';
 
 export function ChatContent() {
@@ -24,13 +26,18 @@ export function ChatContent() {
   const searchParams = useSearch({ from: '/messaging/' });
   const { session } = useSession();
 
+  // scroll preservation mechanism
+  const prevScrollHeightRef = React.useRef<number>(0);
+  const isInitialLoadRef = React.useRef<boolean>(true);
+
   // Intersection observer hook
-  const chatContainerRef = React.useRef<HTMLOListElement>(null);
+  const chatViewportRef = React.useRef<HTMLDivElement>(null);
+  const chatScrollBarRef = React.useRef<HTMLDivElement>(null);
   const chatEndRef = React.useRef<HTMLLIElement>(null);
   const chatRootRef = React.useRef<HTMLDivElement>(null);
   const { ref: chatSentinelRef, inView: chatSentinelInView } = useInView({
     root: chatRootRef.current,
-    threshold: 0,
+    threshold: 0.25,
   });
 
   // Get other user profile (with caching or fetching as fallback)
@@ -58,7 +65,6 @@ export function ChatContent() {
     fetchNextPage: fetchNextPageChat,
     hasNextPage: hasNextPageChat,
     isFetchingNextPage: isFetchingNextPageChat,
-
     error: errorChat,
     refetch: refetchChat,
   } = useInfiniteQuery<
@@ -70,9 +76,8 @@ export function ChatContent() {
   >({
     queryKey: ['chats', searchParams.withUserId, 'content'],
     enabled: !!searchParams.withUserId,
-    retry: 1,
+    retry: 0,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
     refetchInterval: 0,
     initialPageParam: undefined,
     queryFn: async ({ pageParam }) =>
@@ -86,6 +91,13 @@ export function ChatContent() {
     getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
   });
 
+  // Debounced
+  const debouncedFetchNextPageChat = useDebouncedCallback(() => {
+    if (hasNextPageChat && !isFetchingNextPageChat) {
+      fetchNextPageChat();
+    }
+  }, 300);
+
   const flattenChats = React.useMemo(() => (chatData ? chatData.pages.flatMap((page) => page.data).reverse() : []), [chatData]);
 
   const scrollToBottomInstant = React.useCallback(() => {
@@ -96,15 +108,13 @@ export function ChatContent() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [chatEndRef]);
 
+  // Fetch more when scroll to top
   React.useEffect(() => {
-    // Fetch more when scroll to top
-    if (chatSentinelInView && hasNextPageChat && !isFetchingNextPageChat) {
-      fetchNextPageChat();
-
-      // scroll to bottom
-      scrollToBottomInstant();
+    if (chatSentinelInView) {
+      prevScrollHeightRef.current = chatViewportRef.current?.scrollHeight ?? 0;
+      debouncedFetchNextPageChat();
     }
-  }, [hasNextPageChat, isFetchingNextPageChat, chatSentinelInView, fetchNextPageChat, scrollToBottomInstant]);
+  }, [chatSentinelInView, debouncedFetchNextPageChat]);
 
   // When change chat, scroll to bottom aswell
   React.useEffect(() => {
@@ -113,6 +123,26 @@ export function ChatContent() {
       scrollToBottomInstant();
     }
   }, [searchParams.withUserId, isSuccessChat, scrollToBottomInstant]);
+
+  // Effect to handle scroll position preservation
+  React.useEffect(() => {
+    if (!chatViewportRef.current) return;
+
+    // Skip adjustment on initial load
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      return;
+    }
+
+    // Calculate how much new content was added
+    const newScrollHeight = chatViewportRef.current.scrollHeight;
+    const scrollDiff = newScrollHeight - prevScrollHeightRef.current;
+
+    // Adjust scroll position if new content was added
+    if (scrollDiff > 0 && chatRootRef.current && chatScrollBarRef.current) {
+      chatViewportRef.current.scrollTop = scrollDiff;
+    }
+  }, [flattenChats.length]);
 
   // ensure selectedOtherUser is not null
   if (!searchParams.withUserId) return null;
@@ -174,43 +204,51 @@ export function ChatContent() {
               <p className="text-base text-muted-foreground">Send a message to start chatting</p>
             </div>
           ) : (
-            <ScrollArea className="flex flex-auto" ref={chatRootRef} key={searchParams.withUserId}>
-              <ol className="flex flex-col py-2" ref={chatContainerRef}>
-                {/* Sentinel top */}
-                <li ref={chatSentinelRef} className="flex items-center justify-center">
-                  {hasNextPageChat && <LoadingFill className="border-t py-5" />}
-                </li>
+            <ScrollAreaPrimitive.Root ref={chatRootRef} className="relative flex flex-auto overflow-hidden">
+              <ScrollAreaPrimitive.Viewport ref={chatViewportRef} className="h-full w-full rounded-[inherit]">
+                <ol className="flex flex-col py-2">
+                  {/* Sentinel top */}
+                  {hasNextPageChat && (
+                    <li ref={chatSentinelRef} className="flex items-center justify-center">
+                      <LoadingFill className="py-5" />
+                    </li>
+                  )}
 
-                {flattenChats.map((message) => (
-                  <li className="flex flex-row items-start gap-3 bg-background p-4" key={message.chat_id}>
-                    {/* Avatar */}
-                    <AvatarUser
-                      src={message.from_user_id == session?.userId ? session.profilePhoto : otherUserProfile.profile_photo}
-                      alt={`${message.from_user_id == session?.userId ? session.name : otherUserProfile.name}'s profile picture`}
-                      classNameAvatar="size-10"
-                    />
-
-                    {/* Message */}
-                    <div className="flex flex-auto flex-col gap-1">
-                      <div className="flex flex-row items-center gap-2">
-                        {/* Name */}
-                        <p className="text-sm font-bold text-foreground">
-                          {message.from_user_id == session?.userId ? session.name : otherUserProfile.name}
-                        </p>
-
-                        <p className="text-xs font-medium text-muted-foreground">{getRelativeTime(new Date(message.timestamp))}</p>
-                      </div>
+                  {flattenChats.map((message) => (
+                    <li className="flex flex-row items-start gap-3 bg-background p-4" key={message.chat_id}>
+                      {/* Avatar */}
+                      <AvatarUser
+                        src={message.from_user_id == session?.userId ? session.profilePhoto : otherUserProfile.profile_photo}
+                        alt={`${message.from_user_id == session?.userId ? session.name : otherUserProfile.name}'s profile picture`}
+                        classNameAvatar="size-10"
+                      />
 
                       {/* Message */}
-                      <p className="text-sm">{message.message}</p>
-                    </div>
-                  </li>
-                ))}
+                      <div className="flex flex-auto flex-col gap-1">
+                        <div className="flex flex-row items-center gap-2">
+                          {/* Name */}
+                          <p className="text-sm font-bold text-foreground">
+                            {message.from_user_id == session?.userId ? session.name : otherUserProfile.name}
+                          </p>
 
-                {/* Bottom sentinel */}
-                <li ref={chatEndRef}></li>
-              </ol>
-            </ScrollArea>
+                          <p className="text-xs font-medium text-muted-foreground">{getRelativeTime(new Date(message.timestamp))}</p>
+                        </div>
+
+                        {/* Message */}
+                        <p className="text-sm">{message.message}</p>
+                      </div>
+                    </li>
+                  ))}
+
+                  {/* Bottom sentinel */}
+                  <li ref={chatEndRef}></li>
+                </ol>
+              </ScrollAreaPrimitive.Viewport>
+
+              <ScrollBar ref={chatScrollBarRef} />
+
+              <ScrollAreaPrimitive.Corner />
+            </ScrollAreaPrimitive.Root>
           )}
         </>
       )}

@@ -78,12 +78,12 @@ export class ChatRoute implements IRoute {
       const { search, cursor, limit } = c.req.valid('query');
 
       // Get current user id
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {
         const { inboxes, meta } = await this.chatService.getChatInbox(
-          currentUserId,
+          currentUser.userId,
           search,
           cursor,
           limit
@@ -169,12 +169,12 @@ export class ChatRoute implements IRoute {
       const { cursor, limit } = c.req.valid('query');
 
       // Get current user id
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {
         const { history, meta } = await this.chatService.getChatHistory(
-          currentUserId,
+          currentUser.userId,
           otherUserId,
           cursor,
           limit

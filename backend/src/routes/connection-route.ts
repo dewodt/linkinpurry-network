@@ -110,12 +110,12 @@ export class ConnectionRoute implements IRoute {
       const body = c.req.valid('json');
 
       // Get current user ID
-      const { userId } = c.get('user')!; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {
         const { finalState } = await this.ConnectionService.createConnectionRequest(
-          userId,
+          currentUser.userId,
           body.toUserId
         );
 
@@ -186,12 +186,12 @@ export class ConnectionRoute implements IRoute {
       const { search, page, limit } = c.req.valid('query');
 
       // Get current user id
-      const currentUserId = c.get('user')?.userId;
+      const currentUser = c.get('user'); // assured by auth middleware
 
       try {
         // Call service
         const { connections, meta } = await this.ConnectionService.getConnectionsList(
-          currentUserId,
+          currentUser?.userId,
           userId,
           search,
           page,
@@ -261,12 +261,12 @@ export class ConnectionRoute implements IRoute {
       const { page, limit } = c.req.valid('query');
 
       // Get current user id
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {
         const { requests: rawRequests, meta } = await this.ConnectionService.getPendingConnections(
-          currentUserId,
+          currentUser.userId,
           page,
           limit
         );
@@ -347,12 +347,12 @@ export class ConnectionRoute implements IRoute {
       const body = c.req.valid('json');
 
       // Get current user ID
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {
         await this.ConnectionService.decideConnectionRequest(
-          currentUserId,
+          currentUser.userId,
           fromUserId,
           body.decision
         );
@@ -418,11 +418,11 @@ export class ConnectionRoute implements IRoute {
       const { toUserId } = c.req.valid('param');
 
       // Get current user ID
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {
-        await this.ConnectionService.unconnectUser(currentUserId, toUserId);
+        await this.ConnectionService.unconnectUser(currentUser.userId, toUserId);
 
         // Map to dto
         const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(

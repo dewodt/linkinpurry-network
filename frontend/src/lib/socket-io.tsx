@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
 
 import { updateSendMessageQueryDataInbox, updateSendMessageQueryDataMessage } from '@/services/chat';
-import { SendMessageResponseData, SendMessageSuccessResponse } from '@/types/api/chat';
+import { SendMessageSuccessResponse } from '@/types/api/chat';
 import type { ErrorResponse, SuccessResponse } from '@/types/api/common';
 
 import { Config } from './config';

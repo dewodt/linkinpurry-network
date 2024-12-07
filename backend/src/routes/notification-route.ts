@@ -6,7 +6,7 @@ import { InternalServerErrorException } from '@/core/exception';
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import { zodPushSubscriptionDto } from '@/dto/notification';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
-import { NotificationService } from '@/services/notification';
+import { NotificationService } from '@/services/notification-service';
 
 import type { IRoute } from './route';
 
@@ -60,11 +60,11 @@ export class NotificationRoute implements IRoute {
       const body = c.req.valid('json');
 
       // Get current user id
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       try {
         // Call service
-        await this.notificationService.saveSubscription(currentUserId, body);
+        await this.notificationService.saveSubscription(currentUser.userId, body);
 
         const responseDto = ResponseDtoFactory.createSuccessResponseDto(
           'Subscribe to notification successful'

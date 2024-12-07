@@ -1,4 +1,4 @@
-import { InfiniteData, QueryClient, useQueryClient } from '@tanstack/react-query';
+import { InfiniteData, QueryClient } from '@tanstack/react-query';
 
 import { api } from '@/lib/api';
 import { emitWithAck } from '@/lib/socket-io';
@@ -22,7 +22,6 @@ import {
   SendTypingRequestData,
   SendTypingSuccessResponse,
 } from '@/types/api/chat';
-import { GetProfileSuccessResponse } from '@/types/api/user';
 
 import { getProfile } from './user';
 

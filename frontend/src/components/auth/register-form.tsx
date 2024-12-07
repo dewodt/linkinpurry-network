@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useSession } from '@/context/session-provider';
 import { registerRequestBody } from '@/lib/schemas/auth';
 import { register } from '@/services/auth';
-import { RegisterErrorResponse, RegisterRequestBody, RegisterSuccessResponse } from '@/types/api/auth';
+import { RegisterErrorResponse, RegisterFormFields, RegisterRequestBody, RegisterSuccessResponse } from '@/types/api/auth';
 
 const RegisterForm = () => {
   // Router hooks
@@ -49,7 +49,7 @@ const RegisterForm = () => {
   });
 
   // Form Hooks
-  const form = useForm<RegisterRequestBody>({
+  const form = useForm<RegisterFormFields>({
     resolver: zodResolver(registerRequestBody),
   });
 
@@ -58,7 +58,7 @@ const RegisterForm = () => {
   return (
     <div className="flex flex-col gap-5">
       <Form {...form}>
-        <form onSubmit={handleSubmit((val) => mutation.mutate(val))} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit((val) => mutation.mutate(val))} className="flex flex-col gap-5" noValidate>
           {/* Username */}
           <FormField
             control={control}
@@ -117,6 +117,22 @@ const RegisterForm = () => {
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input type="password" placeholder="Password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Confirm password */}
+          <FormField
+            control={control}
+            disabled={mutation.isPending}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm Password</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="Confirm Password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

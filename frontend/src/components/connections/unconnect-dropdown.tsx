@@ -17,38 +17,36 @@ interface UnconnectDropdownProps {
 }
 
 export function UnConnectDropdown({ children, currentSeenUserId, unConnectToUserId, unConnectToUsername }: UnconnectDropdownProps) {
-  // dropdown state
+  // state
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
-
-  // dialog state
   const [unConnectOpen, setUnConnectOpen] = React.useState(false);
 
   return (
-    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+    <>
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+        <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end">
-        {/* Unconnect */}
-        <UnConnectDialog
-          unConnectOpen={unConnectOpen}
-          setDropdownOpen={setDropdownOpen}
-          setUnConnectOpen={setUnConnectOpen}
-          currentSeenUserId={currentSeenUserId}
-          unConnectToUserId={unConnectToUserId}
-          unConnectToUsername={unConnectToUsername}
-        >
+        <DropdownMenuContent align="end">
           <DropdownMenuItem
             className="font-medium text-muted-foreground focus:text-muted-foreground"
-            onSelect={(e) => {
-              e.preventDefault();
+            onSelect={() => {
+              setDropdownOpen(false);
               setUnConnectOpen(true);
             }}
           >
             <LinkedInTrashIcon className="size-5 text-muted-foreground" />
             <span>Remove connection</span>
           </DropdownMenuItem>
-        </UnConnectDialog>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <UnConnectDialog
+        unConnectOpen={unConnectOpen}
+        setUnConnectOpen={setUnConnectOpen}
+        currentSeenUserId={currentSeenUserId}
+        unConnectToUserId={unConnectToUserId}
+        unConnectToUsername={unConnectToUsername}
+      />
+    </>
   );
 }

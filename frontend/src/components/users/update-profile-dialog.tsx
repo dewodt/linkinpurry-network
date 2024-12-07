@@ -58,11 +58,12 @@ const EditProfileDialog = ({ children, initialData }: EditProfileDialogProps) =>
       // update current session data
       updateSession({
         name: data.data.name,
+        username: data.data.username,
         profilePhoto: data.data.profile_photo,
       });
 
       // update ['users', 'id'] data if exists
-      queryClient.setQueryData<GetProfileSuccessResponse>(['users', userId], (prevData) => {
+      queryClient.setQueryData<GetProfileSuccessResponse>(['users', userId, 'profile'], (prevData) => {
         if (!prevData) return prevData;
 
         return {

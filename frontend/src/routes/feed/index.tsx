@@ -16,10 +16,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useSession } from '@/context/session-provider';
 import { AuthGuardLayout } from '@/layouts/auth-guard-layout';
-import { getMyFeed } from '@/services/feed';
-import { GetMyFeedErrorResponse, GetMyFeedSuccessResponse } from '@/types/api/feed';
+import { getFeedTimeline } from '@/services/feed';
+import { GetFeedTimelineErrorResponse, GetFeedTimelineSuccessResponse } from '@/types/api/feed';
 
-export const Route = createFileRoute('/my-posts/')({
+export const Route = createFileRoute('/feed/')({
   component: RouteComponent,
 });
 
@@ -34,34 +34,40 @@ function RouteComponent() {
 
   // Infinite query
   const {
-    data: myFeedData,
-    error: myFeedError,
-    isError: isErrorMyFeed,
-    isPending: isPendingMyFeed,
-    isFetchingNextPage: isFetchingNextPageMyFeed,
-    hasNextPage: hasNextPageMyFeed,
-    fetchNextPage: fetchNextPageMyFeed,
+    data: feedTimelineData,
+    error: feedTimelineError,
+    isError: isErrorFeedTimeline,
+    isPending: isPendingFeedTimeline,
+    isFetchingNextPage: isFetchingNextPageFeedTimeline,
+    hasNextPage: hasNextPageFeedTimeline,
+    fetchNextPage: fetchNextPageFeedTimeline,
     refetch,
-  } = useInfiniteQuery<GetMyFeedSuccessResponse, GetMyFeedErrorResponse, InfiniteData<GetMyFeedSuccessResponse>, QueryKey, string | undefined>({
-    queryKey: ['feed', 'my'],
+  } = useInfiniteQuery<
+    GetFeedTimelineSuccessResponse,
+    GetFeedTimelineErrorResponse,
+    InfiniteData<GetFeedTimelineSuccessResponse>,
+    QueryKey,
+    string | undefined
+  >({
+    queryKey: ['feed', 'timeline'],
     retry: 0,
     refetchOnWindowFocus: false,
     refetchInterval: 0,
     initialPageParam: undefined,
     queryFn: async ({ pageParam = undefined }) => {
-      return await getMyFeed({ cursor: pageParam, limit: 15 });
+      return await getFeedTimeline({ cursor: pageParam, limit: 15 });
     },
     getNextPageParam: (lastPage) => {
       return lastPage.meta.nextCursor || undefined;
     },
   });
 
-  const flattenFeeds = React.useMemo(() => myFeedData?.pages.flatMap((page) => page.data), [myFeedData]) || [];
+  const flattenFeeds = React.useMemo(() => feedTimelineData?.pages.flatMap((page) => page.data.data), [feedTimelineData]) || [];
 
   // Fetch next page when sentinel is in view
   const debouncedFetchNextPage = useDebouncedCallback(() => {
-    if (hasNextPageMyFeed && !isFetchingNextPageMyFeed) {
-      fetchNextPageMyFeed();
+    if (hasNextPageFeedTimeline && !isFetchingNextPageFeedTimeline) {
+      fetchNextPageFeedTimeline();
     }
   }, 300);
 
@@ -72,15 +78,15 @@ function RouteComponent() {
   }, [feedSentinelInView, debouncedFetchNextPage]);
 
   // Pending
-  if (isPendingMyFeed) return <LoadingPage />;
+  if (isPendingFeedTimeline) return <LoadingPage />;
 
   // Errror
-  if (isErrorMyFeed)
+  if (isErrorFeedTimeline)
     return (
       <ErrorPage
-        statusCode={myFeedError?.response?.status}
-        statusText={myFeedError.response?.statusText}
-        message={myFeedError?.response?.data.message}
+        statusCode={feedTimelineError?.response?.status}
+        statusText={feedTimelineError.response?.statusText}
+        message={feedTimelineError?.response?.data.message}
         refetch={refetch}
       />
     );
@@ -94,7 +100,7 @@ function RouteComponent() {
           {/* Create post */}
           <Card>
             <CardContent className="space-y-0 p-6">
-              <h1 className="mb-4 text-xl font-bold">My Posts</h1>
+              <h1 className="mb-4 text-xl font-bold">Home</h1>
               <div className="flex items-center gap-4">
                 <AvatarUser src={session?.profilePhoto || ''} alt={`${session?.name}'s Avatar`} classNameAvatar="size-10" />
 
@@ -119,9 +125,9 @@ function RouteComponent() {
                     <CardFeed
                       feedId={feed.feed_id}
                       userId={feed.user_id}
-                      fullName={session?.name || ''}
-                      username={session?.username || ''}
-                      profilePhoto={session?.profilePhoto || ''}
+                      fullName={feed.full_name}
+                      username={feed.username}
+                      profilePhoto={feed.profile_photo}
                       content={feed.content}
                       createdAt={new Date(feed.created_at)}
                       editedAt={new Date(feed.updated_at)}
@@ -132,7 +138,7 @@ function RouteComponent() {
               })}
 
               {/* Sentinel */}
-              {hasNextPageMyFeed && (
+              {hasNextPageFeedTimeline && (
                 <li ref={feedSentinelRef} className="flex items-center justify-center">
                   <LoadingFill className="pt-10" />
                 </li>
