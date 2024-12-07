@@ -7,9 +7,10 @@ import { logger } from '@/core/logger';
 import { Database } from '@/infrastructures/database/database';
 
 import { NotificationService } from './notification-service';
+import type { IService } from './service';
 
 @injectable()
-export class FeedService {
+export class FeedService implements IService {
   // IoC Key
   static readonly Key = Symbol.for('FeedService');
 
@@ -243,5 +244,40 @@ export class FeedService {
   /**
    * Delete post
    */
-  async deleteFeed(currentUserId: bigint, feedId: bigint) {}
+  async deleteFeed(currentUserId: bigint, feedId: bigint) {
+    // Validate if feed exists
+    let feed: Prisma.FeedGetPayload<{}> | null;
+
+    try {
+      feed = await this.prisma.feed.findUnique({
+        where: {
+          id: feedId,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to delete feed');
+    }
+
+    // Feed not found
+    if (!feed) throw ExceptionFactory.notFound('Feed not found');
+
+    // Validate if current user is the owner of the feed
+    if (feed.userId !== currentUserId)
+      throw ExceptionFactory.forbidden('You can only delete your own feed');
+
+    // Delete feed
+    try {
+      await this.prisma.feed.delete({
+        where: {
+          id: feedId,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to delete feed');
+    }
+  }
 }
