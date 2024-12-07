@@ -1,9 +1,12 @@
 import type { PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
 
+import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import { Database } from '@/infrastructures/database/database';
+
+import { NotificationService } from './notification';
 
 @injectable()
 export class FeedService {
@@ -13,7 +16,11 @@ export class FeedService {
   private prisma: PrismaClient;
 
   // Dependencies
-  constructor(@inject(Database.Key) private readonly database: Database) {
+  constructor(
+    @inject(Config.Key) private readonly config: Config,
+    @inject(Database.Key) private readonly database: Database,
+    @inject(NotificationService.Key) private readonly notificationService: NotificationService
+  ) {
     this.prisma = this.database.getPrisma();
   }
 
@@ -22,12 +29,32 @@ export class FeedService {
    */
   async createFeed(currentUserId: bigint, content: string) {
     try {
+      // Create feed
       const feed = await this.prisma.feed.create({
         data: {
           userId: currentUserId,
           content,
         },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+            },
+          },
+        },
       });
+
+      // Send notification to current user's connections (without awaiting)
+      this.notificationService
+        .sendNotificationToUserConnections(currentUserId, {
+          title: `New Post From ${feed.user.username} | LinkinPurry`,
+          message: "You've got a new post from your connection",
+          url: `${this.config.get('FE_URL')}/feed/${feed.id}`,
+        })
+        .catch((error) => {
+          if (error instanceof Error) logger.error(error.message);
+        });
 
       return {
         feedId: feed.id,
