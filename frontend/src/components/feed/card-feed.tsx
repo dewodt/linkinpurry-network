@@ -65,7 +65,7 @@ export default function CardFeed({
               </div>
             </div>
 
-            {userId === currentUserId && (
+            {(userId === currentUserId || isDetailOptionVisible) && (
               <>
                 {/* Dropdowns */}
                 <DropdownMenu>
@@ -84,14 +84,19 @@ export default function CardFeed({
                         </DropdownMenuItem>
                       </Link>
                     )}
-                    <DropdownMenuItem>
-                      <SquarePen className="size-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive focus:text-destructive">
-                      <Trash2 className="size-4" />
-                      Delete
-                    </DropdownMenuItem>
+
+                    {userId === currentUserId && (
+                      <>
+                        <DropdownMenuItem>
+                          <SquarePen className="size-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive focus:text-destructive">
+                          <Trash2 className="size-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
