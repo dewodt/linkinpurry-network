@@ -197,6 +197,64 @@ export class FeedService implements IService {
   }
 
   /**
+   * Get feed detail
+   */
+  async getFeedDetail(feedId: bigint) {
+    // Validate if feed exists
+    let feed: Prisma.FeedGetPayload<{
+      select: {
+        id: true;
+        userId: true;
+        content: true;
+        createdAt: true;
+        user: {
+          select: {
+            id: true;
+            username: true;
+            fullName: true;
+            profilePhotoPath: true;
+          };
+        };
+      };
+    }> | null;
+
+    try {
+      feed = await this.prisma.feed.findUnique({
+        where: {
+          id: feedId,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              profilePhotoPath: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to get feed detail');
+    }
+
+    // Feed not found
+    if (!feed) throw ExceptionFactory.notFound('Feed not found');
+
+    return {
+      feedId: feed.id,
+      userId: feed.userId,
+      username: feed.user.username,
+      fullName: feed.user.fullName || 'N/A',
+      profilePhotoPath: feed.user.profilePhotoPath,
+      content: feed.content,
+      createdAt: feed.createdAt,
+    };
+  }
+
+  /**
    * Update post
    */
   async updateFeed(currentUserId: bigint, feedId: bigint, content: string) {

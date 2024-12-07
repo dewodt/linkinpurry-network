@@ -15,10 +15,13 @@ import {
   ResponseDtoFactory,
 } from '@/dto/common';
 import {
+  type IGetFeedDetailResponseBodyDto,
   type IGetFeedTimelineResponseBodyDto,
   type IGetMyFeedResponseBodyDto,
   createFeedRequestBodyDto,
   deleteFeedRequestParamsDto,
+  getFeedDetailRequestParamsDto,
+  getFeedDetailResponseBodyDto,
   getFeedTimelineRequestQueryDto,
   getFeedTimelineResponseBodyDto,
   getMyFeedRequestQueryDto,
@@ -51,6 +54,7 @@ export class FeedRoute implements IRoute {
     this.getFeedTimeline(app);
 
     // Get feed detail
+    this.getFeedDetail(app);
 
     // Get current user posts
     this.getMyFeeds(app);
@@ -192,6 +196,70 @@ export class FeedRoute implements IRoute {
       } catch (e) {
         // Handle service exception
         if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+
+        // Internal server error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
+
+  /**
+   * Get feed detail page
+   *
+   * @param app
+   */
+  private getFeedDetail(app: OpenAPIHono<IGlobalContext>): void {
+    // Create route definition
+    const getFeedDetailRoute = createRoute({
+      tags: ['feed'],
+      method: 'get',
+      path: '/api/feed/{feedId}',
+      summary: 'Get feed detail',
+      description: 'Get feed detail',
+      request: {
+        params: getFeedDetailRequestParamsDto,
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessData('Feed detail', getFeedDetailResponseBodyDto),
+        401: OpenApiResponseFactory.jsonUnauthorized('Unauthorized'),
+        404: OpenApiResponseFactory.jsonNotFound('Feed not found'),
+        500: OpenApiResponseFactory.jsonInternalServerError('Internal server error'),
+      },
+    });
+
+    // Register route
+    app.use(
+      getFeedDetailRoute.getRoutingPath(),
+      this.authMiddleware.authorize({ isPublic: false })
+    );
+    app.openapi(getFeedDetailRoute, async (c) => {
+      // Get request params
+      const params = c.req.valid('param');
+
+      try {
+        // Get feed detail
+        const feed = await this.feedService.getFeedDetail(params.feedId);
+
+        // Map to dto
+        const responseData: IGetFeedDetailResponseBodyDto = {
+          feed_id: feed.feedId.toString(),
+          user_id: feed.userId.toString(),
+          username: feed.username,
+          full_name: feed.fullName,
+          profile_photo_path: feed.profilePhotoPath,
+          content: feed.content,
+          created_at: feed.createdAt.toISOString(),
+        };
+        const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
+          'Feed detail',
+          responseData
+        );
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
         // Internal server error
         const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');

@@ -79,6 +79,68 @@ export interface IGetFeedTimelineResponseBodyDto
   extends z.infer<typeof getFeedTimelineResponseBodyDto> {}
 
 /**
+ * Get feed detail
+ */
+// Request params
+export const getFeedDetailRequestParamsDto = z.object({
+  feedId: z
+    .string({ message: 'feedId must be type of string' })
+    .refine((v) => Utils.parseBigIntId(v).isValid, {
+      message: 'feedId must be type of big int and greater than 0',
+    })
+    .transform((v) => BigInt(v))
+    // @ts-ignore
+    .openapi({
+      type: 'bigint',
+      param: {
+        name: 'feedId',
+        in: 'path',
+        required: true,
+        description: 'ID of the feed',
+        example: 1,
+      },
+    }),
+});
+
+export interface IGetFeedDetailRequestParamsDto
+  extends z.infer<typeof getFeedDetailRequestParamsDto> {}
+
+// Response
+export const getFeedDetailResponseBodyDto = z.object({
+  feed_id: z.string().openapi({
+    description: 'ID of the feed',
+    example: '12345',
+  }),
+  user_id: z.string().openapi({
+    description: 'ID of the user',
+    example: '67890',
+  }),
+  username: z.string().openapi({
+    description: 'Username of the user',
+    example: 'dewodt',
+  }),
+  full_name: z.string().openapi({
+    description: 'Full name of the user',
+    example: 'John Doe',
+  }),
+  profile_photo_path: z.string().openapi({
+    description: 'Profile photo of the user',
+    example: 'https://example.com/image.jpg',
+  }),
+  content: z.string().openapi({
+    description: 'Content of the post',
+    example: 'Hello world!',
+  }),
+  created_at: z.string().openapi({
+    description: 'Timestamp of the post',
+    example: '2021-09-01T00:00:00.000Z',
+  }),
+});
+
+export interface IGetFeedDetailResponseBodyDto
+  extends z.infer<typeof getFeedDetailResponseBodyDto> {}
+
+/**
  * Get my feed (no api contract provided, create own.)
  */
 // Request query
