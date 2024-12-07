@@ -7,10 +7,13 @@ import * as React from 'react';
 
 import CardFeed from '@/components/feed/card-feed';
 import CreateFeedDialog from '@/components/feed/create-feed-dialog';
+import { AvatarUser } from '@/components/shared/avatar-user';
 import { ErrorPage } from '@/components/shared/error-page';
 import { HelmetTemplate } from '@/components/shared/helmet';
 import { LoadingFill } from '@/components/shared/loading-fill';
 import { LoadingPage } from '@/components/shared/loading-page';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useSession } from '@/context/session-provider';
 import { AuthGuardLayout } from '@/layouts/auth-guard-layout';
 import { getMyFeed } from '@/services/feed';
@@ -26,7 +29,7 @@ function RouteComponent() {
 
   // Intersection observer hook
   const { ref: feedSentinelRef, inView: feedSentinelInView } = useInView({
-    threshold: 0.5,
+    threshold: 0,
   });
 
   // Infinite query
@@ -43,7 +46,6 @@ function RouteComponent() {
     queryKey: ['feed', 'my'],
     retry: 1,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
     refetchInterval: 0,
     initialPageParam: undefined,
     queryFn: async ({ pageParam = undefined }) => {
@@ -90,7 +92,18 @@ function RouteComponent() {
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
         <section className="flex w-full max-w-3xl flex-col gap-5">
           {/* Create post */}
-          <CreateFeedDialog title="My Posts" />
+          <Card>
+            <CardContent className="space-y-0 p-6">
+              <h1 className="mb-4 text-xl font-bold">My Posts</h1>
+              <div className="flex items-center gap-4">
+                <AvatarUser src={session?.profilePhoto || ''} alt={`${session?.name}'s Avatar`} classNameAvatar="size-10" />
+
+                <CreateFeedDialog>
+                  <Input className="pointer-events-none h-10 rounded-full bg-muted px-5" placeholder="Create new post" />
+                </CreateFeedDialog>
+              </div>
+            </CardContent>
+          </Card>
 
           {flattenFeeds.length === 0 ? (
             // Empty state

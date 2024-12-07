@@ -46,7 +46,6 @@ export function ChatInbox() {
     queryKey: ['chats', 'inbox', searchParams.search],
     retry: 1,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
     refetchInterval: 0,
     initialPageParam: undefined,
     queryFn: async ({ pageParam }) => {

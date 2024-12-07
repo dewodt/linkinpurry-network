@@ -72,7 +72,6 @@ export function ChatContent() {
     enabled: !!searchParams.withUserId,
     retry: 1,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
     refetchInterval: 0,
     initialPageParam: undefined,
     queryFn: async ({ pageParam }) =>

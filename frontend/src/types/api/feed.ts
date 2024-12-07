@@ -1,3 +1,6 @@
+import { z } from 'zod';
+
+import { createFeedRequestBody, updateFeedRequestBody } from '@/lib/schemas/feed';
 import { SuccessCursorPaginationResponse, SuccessResponse } from '@/types/api/common';
 
 import { AxiosErrorResponse, DifferentSuccessCursorPaginationResponse } from './common';
@@ -28,9 +31,7 @@ export interface FeedWithCreator {
  * Create new feed
  */
 // Request
-export interface CreateFeedRequestBody {
-  content: string;
-}
+export interface CreateFeedRequestBody extends z.infer<typeof createFeedRequestBody> {}
 
 // Response
 export type CreateFeedSuccessResponse = SuccessResponse<null>;
@@ -91,9 +92,7 @@ export interface UpdateFeedRequestParams {
   feedId: string;
 }
 
-export interface UpdateFeedRequestBody {
-  content: string;
-}
+export interface UpdateFeedRequestBody extends z.infer<typeof updateFeedRequestBody> {}
 
 // Response
 export type UpdateFeedSuccessResponse = SuccessResponse<null>;
