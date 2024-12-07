@@ -21,5 +21,8 @@ ENV PORT=3000
 
 EXPOSE 3000
 
+# Generate prisma client
+RUN npx prisma generate
+
 # Start app
 CMD ["npm", "run", "start"]
