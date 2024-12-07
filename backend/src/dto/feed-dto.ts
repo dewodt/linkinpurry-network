@@ -123,7 +123,7 @@ export interface IGetMyFeedResponseBodyDto extends z.infer<typeof getMyFeedRespo
  * Create post
  */
 // Request body
-export const createPostRequestBodyDto = z.object({
+export const createFeedRequestBodyDto = z.object({
   content: z
     .string({ message: 'Content is required' }) // handle null or undefined
     .min(1, { message: 'Content is required' }) // handle empty string
@@ -134,7 +134,7 @@ export const createPostRequestBodyDto = z.object({
     }),
 });
 
-export interface ICreatePostRequestBodyDto extends z.infer<typeof createPostRequestBodyDto> {}
+export interface ICreateFeedRequestBodyDto extends z.infer<typeof createFeedRequestBodyDto> {}
 
 // Response
 // No need response, invalidate the query
@@ -143,28 +143,28 @@ export interface ICreatePostRequestBodyDto extends z.infer<typeof createPostRequ
  * Update post
  */
 // Request params
-export const updatePostRequestParamsDto = z.object({
+export const updateFeedRequestParamsDto = z.object({
   feed_id: z.string({ message: 'feed_id must be a string' }).openapi({
     description: 'ID of the feed',
     example: '12345',
   }),
 });
 
-export interface IUpdatePostRequestParamsDto extends z.infer<typeof updatePostRequestParamsDto> {}
+export interface IUpdateFeedRequestParamsDto extends z.infer<typeof updateFeedRequestParamsDto> {}
 
 // Request body
-export const updatePostRequestBodyDto = z.object({
+export const updateFeedRequestBodyDto = z.object({
   content: z
     .string({ message: 'Content is required' }) // handle null or undefined
     .min(1, { message: 'Content is required' }) // handle empty string
     .max(280, { message: 'Content maximum length is 280 characters' })
     .openapi({
-      description: 'Post content',
+      description: 'Feed content',
       example: 'Hello world!',
     }),
 });
 
-export interface IUpdatePostRequestParamsDto extends z.infer<typeof updatePostRequestParamsDto> {}
+export interface IUpdateFeedRequestBodyDto extends z.infer<typeof updateFeedRequestBodyDto> {}
 
 // Response
 // No need response, invalidate the query
@@ -173,14 +173,14 @@ export interface IUpdatePostRequestParamsDto extends z.infer<typeof updatePostRe
  * Delete post
  */
 // Request params
-export const deletePostRequestParamsDto = z.object({
+export const deleteFeedRequestParamsDto = z.object({
   feed_id: z.string({ message: 'feed_id must be a string' }).openapi({
     description: 'ID of the feed',
     example: '12345',
   }),
 });
 
-export interface IDeletePostRequestParamsDto extends z.infer<typeof deletePostRequestParamsDto> {}
+export interface IDeleteFeedRequestParamsDto extends z.infer<typeof deleteFeedRequestParamsDto> {}
 
 // Response
 // No need response, invalidate the querys

@@ -6,6 +6,7 @@ import type { IGlobalContext } from '@/core/app';
 import { InternalServerErrorException } from '@/core/exception';
 import {
   type CursorPaginationResponseMeta,
+  OpenApiRequestFactory,
   OpenApiResponseFactory,
   type PagePaginationResponseMeta,
   ResponseDtoFactory,
@@ -13,6 +14,7 @@ import {
 import {
   type IGetFeedTimelineResponseBodyDto,
   type IGetMyFeedResponseBodyDto,
+  createFeedRequestBodyDto,
   getFeedTimelineRequestQueryDto,
   getFeedTimelineResponseBodyDto,
   getMyFeedRequestQueryDto,
@@ -37,16 +39,74 @@ export class FeedRoute implements IRoute {
   // Register
   registerRoutes(app: OpenAPIHono<IGlobalContext>): void {
     // Create post
+    this.createFeed(app);
+
     // Get feed timeline
     this.getFeedTimeline(app);
 
     // Get current user posts
     this.getMyFeeds(app);
+
     // Delete post
+
     // Update post
   }
 
   // Routes
+
+  /**
+   * Create feed
+   *
+   * @param app
+   */
+  private createFeed(app: OpenAPIHono<IGlobalContext>): void {
+    // Create route definition
+    const createFeedRoute = createRoute({
+      tags: ['feed'],
+      method: 'post',
+      path: '/api/feed',
+      summary: 'Create feed',
+      description: 'Create feed',
+      request: {
+        body: OpenApiRequestFactory.jsonBody('Create feed request body', createFeedRequestBodyDto),
+      },
+      responses: {
+        201: OpenApiResponseFactory.jsonSuccess('Feed created successfully'),
+        401: OpenApiResponseFactory.jsonUnauthorized('Unauthorized'),
+        500: OpenApiResponseFactory.jsonInternalServerError('Internal server error'),
+      },
+    });
+
+    // Register route
+    app.use(createFeedRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
+    app.openapi(createFeedRoute, async (c) => {
+      // Get current user
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+
+      // Get request body
+      const requestBody = c.req.valid('json');
+
+      try {
+        // Create feed
+        await this.feedService.createFeed(currentUserId, requestBody.content);
+
+        // Map to dto
+        const responseDto = ResponseDtoFactory.createSuccessResponseDto(
+          'Feed created successfully'
+        );
+
+        return c.json(responseDto, 201);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+
+        // Internal server error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
+
   /**
    * Get feed timeline
    * @param app
@@ -79,7 +139,7 @@ export class FeedRoute implements IRoute {
     );
     app.openapi(getFeedTimelineRoute, async (c) => {
       // Get current user
-      const currentUserId = c.get('user')!.id as bigint; // asssured by auth middleware
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
 
       // Get query
       const query = c.req.valid('query');
@@ -159,7 +219,7 @@ export class FeedRoute implements IRoute {
     app.use(getMyFeedsRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
     app.openapi(getMyFeedsRoute, async (c) => {
       // Get current user
-      const currentUserId = c.get('user')!.id as bigint; // asssured by auth middleware
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
 
       // Get query
       const query = c.req.valid('query');

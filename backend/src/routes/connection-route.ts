@@ -110,12 +110,12 @@ export class ConnectionRoute implements IRoute {
       const body = c.req.valid('json');
 
       // Get current user ID
-      const { userId } = c.get('user')!; // assured by auth middleware
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {
         const { finalState } = await this.ConnectionService.createConnectionRequest(
-          userId,
+          currentUserId,
           body.toUserId
         );
 
@@ -186,7 +186,7 @@ export class ConnectionRoute implements IRoute {
       const { search, page, limit } = c.req.valid('query');
 
       // Get current user id
-      const currentUserId = c.get('user')?.userId;
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
 
       try {
         // Call service
@@ -261,7 +261,7 @@ export class ConnectionRoute implements IRoute {
       const { page, limit } = c.req.valid('query');
 
       // Get current user id
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {
@@ -347,7 +347,7 @@ export class ConnectionRoute implements IRoute {
       const body = c.req.valid('json');
 
       // Get current user ID
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {
@@ -418,7 +418,7 @@ export class ConnectionRoute implements IRoute {
       const { toUserId } = c.req.valid('param');
 
       // Get current user ID
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
 
       // Call service
       try {

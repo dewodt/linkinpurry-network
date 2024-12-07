@@ -3,7 +3,6 @@ import { inject, injectable } from 'inversify';
 
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
-import type { CursorPaginationResponseMeta } from '@/dto/common';
 import { Database } from '@/infrastructures/database/database';
 
 @injectable()
@@ -16,6 +15,31 @@ export class FeedService {
   // Dependencies
   constructor(@inject(Database.Key) private readonly database: Database) {
     this.prisma = this.database.getPrisma();
+  }
+
+  /**
+   * Create post
+   */
+  async createFeed(currentUserId: bigint, content: string) {
+    try {
+      const feed = await this.prisma.feed.create({
+        data: {
+          userId: currentUserId,
+          content,
+        },
+      });
+
+      return {
+        feedId: feed.id,
+        userId: feed.userId,
+        content: feed.content,
+        createdAt: feed.createdAt.toISOString(),
+      };
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to create feed');
+    }
   }
 
   /**
@@ -143,10 +167,6 @@ export class FeedService {
       throw ExceptionFactory.internalServerError('Failed to get current user feeds');
     }
   }
-
-  /**
-   * Create post
-   */
 
   /**
    * Update post

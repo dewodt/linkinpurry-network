@@ -60,7 +60,7 @@ export class NotificationRoute implements IRoute {
       const body = c.req.valid('json');
 
       // Get current user id
-      const currentUserId = c.get('user')!.userId; // assured by auth middleware
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
 
       try {
         // Call service
