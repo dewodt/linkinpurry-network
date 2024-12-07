@@ -7,6 +7,7 @@ import { AuthRoute } from '@/routes/auth-route';
 import { ChatRoute } from '@/routes/chat-route';
 import { ConnectionRoute } from '@/routes/connection-route';
 import { FeedRoute } from '@/routes/feed-route';
+import { HealthRoute } from '@/routes/health-route';
 import { NotificationRoute } from '@/routes/notification-route';
 import { UserRoute } from '@/routes/user-route';
 import { AuthService } from '@/services/auth-service';
@@ -30,6 +31,7 @@ export class DependencyContainer {
   private chatModule: ContainerModule;
   private notificationModule: ContainerModule;
   private feedModule: ContainerModule;
+  private healthModule: ContainerModule;
 
   constructor() {
     // Initialize container
@@ -81,6 +83,11 @@ export class DependencyContainer {
       bind(FeedRoute.Key).to(FeedRoute).inSingletonScope();
     });
 
+    // Health module
+    this.healthModule = new ContainerModule((bind) => {
+      bind(HealthRoute.Key).to(HealthRoute).inSingletonScope();
+    });
+
     // Load modules
     this.container.load(this.coreModule);
     this.container.load(this.authModule);
@@ -89,6 +96,7 @@ export class DependencyContainer {
     this.container.load(this.chatModule);
     this.container.load(this.notificationModule);
     this.container.load(this.feedModule);
+    this.container.load(this.healthModule);
   }
 
   /**
