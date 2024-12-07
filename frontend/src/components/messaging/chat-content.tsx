@@ -70,7 +70,7 @@ export function ChatContent() {
   >({
     queryKey: ['chats', searchParams.withUserId, 'content'],
     enabled: !!searchParams.withUserId,
-    retry: 1,
+    retry: 0,
     refetchOnWindowFocus: false,
     refetchInterval: 0,
     initialPageParam: undefined,

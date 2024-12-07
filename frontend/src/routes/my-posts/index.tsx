@@ -44,7 +44,7 @@ function RouteComponent() {
     refetch,
   } = useInfiniteQuery<GetMyFeedSuccessResponse, GetMyFeedErrorResponse, InfiniteData<GetMyFeedSuccessResponse>, QueryKey, string | undefined>({
     queryKey: ['feed', 'my'],
-    retry: 1,
+    retry: 0,
     refetchOnWindowFocus: false,
     refetchInterval: 0,
     initialPageParam: undefined,

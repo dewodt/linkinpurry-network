@@ -1,6 +1,12 @@
 import { api } from '@/lib/api';
-import { RegisterRequestBody } from '@/lib/schemas/auth';
-import { LoginRequestBody, LoginSuccessResponse, LogoutSuccessResponse, RegisterSuccessResponse, SessionSuccessResponse } from '@/types/api/auth';
+import {
+  LoginRequestBody,
+  LoginSuccessResponse,
+  LogoutSuccessResponse,
+  RegisterRequestBody,
+  RegisterSuccessResponse,
+  SessionSuccessResponse,
+} from '@/types/api/auth';
 
 /**
  * Session service

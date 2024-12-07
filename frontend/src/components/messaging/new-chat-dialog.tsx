@@ -115,7 +115,7 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
   >({
     queryKey: ['users', session?.userId, 'connections', debouncedSearch],
     enabled: !!debouncedSearch,
-    retry: 1,
+    retry: 0,
     refetchOnWindowFocus: false,
     initialPageParam: 1,
     queryFn: async ({ pageParam }) =>

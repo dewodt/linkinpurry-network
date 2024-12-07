@@ -24,7 +24,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['session'],
     queryFn: getSession,
     staleTime: 15 * 60 * 1000, // 15 minutes
-    retry: 1,
+    retry: 0,
   });
 
   const { requestPermission } = useNotification();

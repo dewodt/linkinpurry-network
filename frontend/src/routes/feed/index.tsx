@@ -50,7 +50,7 @@ function RouteComponent() {
     string | undefined
   >({
     queryKey: ['feed', 'timeline'],
-    retry: 1,
+    retry: 0,
     refetchOnWindowFocus: false,
     refetchInterval: 0,
     initialPageParam: undefined,
