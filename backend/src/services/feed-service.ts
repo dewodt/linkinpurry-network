@@ -101,6 +101,48 @@ export class FeedService {
   /**
    * Get current user feeds
    */
+  async getMyFeeds(currentUserId: bigint, page: number, limit: number) {
+    try {
+      // Get total items
+      const totalItems = await this.prisma.feed.count({
+        where: {
+          userId: currentUserId,
+        },
+      });
+
+      if (totalItems === 0) return { feeds: [], meta: { totalItems, totalPages: 0, page, limit } };
+
+      // Validate upper bound of page
+      const totalPages = Math.ceil(totalItems / limit);
+      if (page > totalPages) page = totalPages;
+
+      // Get feeds
+      const feeds = await this.prisma.feed.findMany({
+        where: {
+          userId: currentUserId,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+
+      return {
+        feeds,
+        meta: {
+          totalItems,
+          totalPages,
+          page,
+          limit,
+        },
+      };
+    } catch (e) {
+      if (e instanceof Error) logger.error(e.message);
+
+      throw ExceptionFactory.internalServerError('Failed to get current user feeds');
+    }
+  }
 
   /**
    * Create post

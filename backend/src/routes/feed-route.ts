@@ -12,8 +12,11 @@ import {
 } from '@/dto/common';
 import {
   type IGetFeedTimelineResponseBodyDto,
+  type IGetMyFeedResponseBodyDto,
   getFeedTimelineRequestQueryDto,
   getFeedTimelineResponseBodyDto,
+  getMyFeedRequestQueryDto,
+  getMyFeedResponseBodyDto,
 } from '@/dto/feed-dto';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { FeedService } from '@/services/feed-service';
@@ -38,11 +41,16 @@ export class FeedRoute implements IRoute {
     this.getFeedTimeline(app);
 
     // Get current user posts
+    this.getMyFeeds(app);
     // Delete post
     // Update post
   }
 
   // Routes
+  /**
+   * Get feed timeline
+   * @param app
+   */
   private getFeedTimeline(app: OpenAPIHono<IGlobalContext>): void {
     // Create route definition
     const getFeedTimelineRoute = createRoute({
@@ -106,6 +114,80 @@ export class FeedRoute implements IRoute {
 
         const responseDto = ResponseDtoFactory.createDifferentSuccessCursorPaginationResponse(
           'Feed timeline',
+          responseData,
+          metaDto
+        );
+
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+
+        // Internal server error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
+
+  /**
+   * Get current user feeds
+   * @param app
+   */
+  private getMyFeeds(app: OpenAPIHono<IGlobalContext>): void {
+    // Create route definition
+    const getMyFeedsRoute = createRoute({
+      tags: ['feed'],
+      method: 'get',
+      path: '/api/my-feed',
+      summary: 'Get current user feeds',
+      description: 'Get current user feeds',
+      request: {
+        query: getMyFeedRequestQueryDto,
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccessPagePagination(
+          'Current user feeds',
+          getMyFeedResponseBodyDto
+        ),
+        401: OpenApiResponseFactory.jsonUnauthorized('Unauthorized'),
+        500: OpenApiResponseFactory.jsonInternalServerError('Internal server error'),
+      },
+    });
+
+    // Register route
+    app.use(getMyFeedsRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
+    app.openapi(getMyFeedsRoute, async (c) => {
+      // Get current user
+      const currentUserId = c.get('user')!.id as bigint; // asssured by auth middleware
+
+      // Get query
+      const query = c.req.valid('query');
+
+      try {
+        // Get current user feeds
+        const { feeds, meta } = await this.feedService.getMyFeeds(
+          currentUserId,
+          query.page,
+          query.limit
+        );
+
+        // Map to dto
+        const responseData: IGetMyFeedResponseBodyDto = feeds.map((feed) => ({
+          feed_id: feed.id.toString(),
+          content: feed.content,
+          created_at: feed.createdAt.toISOString(),
+        }));
+
+        const metaDto: PagePaginationResponseMeta = {
+          page: meta.page,
+          limit: meta.limit,
+          totalItems: meta.totalItems,
+          totalPages: meta.totalPages,
+        };
+
+        const responseDto = ResponseDtoFactory.createSuccessPagePaginationResponseDto(
+          'Current user feeds',
           responseData,
           metaDto
         );

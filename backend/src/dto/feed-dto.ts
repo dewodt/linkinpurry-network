@@ -82,20 +82,20 @@ export interface IGetFeedTimelineResponseBodyDto
  * Get my feed (no api contract provided, create own.)
  */
 // Request query
-export const getMyFeedRequestQueryDto = z.object({
-  search: z.string({ message: 'search must be type of string' }).optional().openapi({
-    description: 'Search query for filtering current user posts',
-    example: 'John Doe',
-  }),
-  page: z.string({ message: 'page must be type of string' }).optional().openapi({
-    description: 'Page number for pagination',
-    example: '1',
-  }),
-  limit: z.string({ message: 'limit must be type of string' }).optional().openapi({
-    description: 'Limit for pagination',
-    example: '15',
-  }),
-});
+export const getMyFeedRequestQueryDto = z
+  .object({
+    page: z.string({ message: 'page must be type of string' }).optional().openapi({
+      description: 'Page number for pagination',
+      example: '1',
+    }),
+    limit: z.string({ message: 'limit must be type of string' }).optional().openapi({
+      description: 'Limit for pagination',
+      example: '15',
+    }),
+  })
+  .transform(({ page, limit }) => ({
+    ...Utils.parsePagePagination({ page, limit }),
+  }));
 
 export interface IGetMyFeedRequestQueryDto extends z.infer<typeof getMyFeedRequestQueryDto> {}
 
