@@ -1,9 +1,12 @@
 import { type OpenAPIHono, createRoute } from '@hono/zod-openapi';
-import type { create } from 'domain';
 import { inject, injectable } from 'inversify';
 
 import type { IGlobalContext } from '@/core/app';
-import { InternalServerErrorException } from '@/core/exception';
+import {
+  ForbiddenException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@/core/exception';
 import {
   type CursorPaginationResponseMeta,
   OpenApiRequestFactory,
@@ -19,6 +22,8 @@ import {
   getFeedTimelineResponseBodyDto,
   getMyFeedRequestQueryDto,
   getMyFeedResponseBodyDto,
+  updateFeedRequestBodyDto,
+  updateFeedRequestParamsDto,
 } from '@/dto/feed-dto';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { FeedService } from '@/services/feed-service';
@@ -47,9 +52,11 @@ export class FeedRoute implements IRoute {
     // Get current user posts
     this.getMyFeeds(app);
 
-    // Delete post
-
     // Update post
+    this.updateFeed(app);
+
+    // Delete post
+    this.deleteFeed(app);
   }
 
   // Routes
@@ -263,4 +270,69 @@ export class FeedRoute implements IRoute {
       }
     });
   }
+
+  /**
+   * Update feed
+   */
+  private updateFeed(app: OpenAPIHono<IGlobalContext>): void {
+    // Create route definition
+    const updateFeedRoute = createRoute({
+      tags: ['feed'],
+      method: 'put',
+      path: '/api/feed/{feedId}',
+      summary: 'Update feed',
+      description: 'Update feed',
+      request: {
+        params: updateFeedRequestParamsDto,
+        body: OpenApiRequestFactory.jsonBody('Update feed request body', updateFeedRequestBodyDto),
+      },
+      responses: {
+        200: OpenApiResponseFactory.jsonSuccess('Feed updated successfully'),
+        400: OpenApiResponseFactory.jsonBadRequest('Validation error'),
+        401: OpenApiResponseFactory.jsonUnauthorized('Unauthorized'),
+        403: OpenApiResponseFactory.jsonForbidden('Trying to update other user feed'),
+        404: OpenApiResponseFactory.jsonNotFound('Feed not found'),
+        500: OpenApiResponseFactory.jsonInternalServerError('Internal server error'),
+      },
+    });
+
+    // Register route
+    app.use(updateFeedRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
+    app.openapi(updateFeedRoute, async (c) => {
+      // Get current user
+      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+
+      // Get request params
+      const params = c.req.valid('param');
+
+      // Get request body
+      const requestBody = c.req.valid('json');
+
+      try {
+        // Update feed
+        await this.feedService.updateFeed(currentUserId, params.feedId, requestBody.content);
+
+        // Map to dto
+        const responseDto = ResponseDtoFactory.createSuccessResponseDto(
+          'Feed updated successfully'
+        );
+
+        return c.json(responseDto, 200);
+      } catch (e) {
+        // Handle service exception
+        if (e instanceof NotFoundException) return c.json(e.toResponseDto(), 404);
+        else if (e instanceof ForbiddenException) return c.json(e.toResponseDto(), 403);
+        else if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
+
+        // Internal server error
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        return c.json(responseDto, 500);
+      }
+    });
+  }
+
+  /**
+   * Delete feed
+   */
+  private deleteFeed(app: OpenAPIHono<IGlobalContext>): void {}
 }

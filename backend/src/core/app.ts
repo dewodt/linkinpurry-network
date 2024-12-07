@@ -15,7 +15,7 @@ import { AuthRoute } from '@/routes/auth-route';
 import { ChatRoute } from '@/routes/chat-route';
 import { ConnectionRoute } from '@/routes/connection-route';
 import { FeedRoute } from '@/routes/feed-route';
-import { NotificationRoute } from '@/routes/notification';
+import { NotificationRoute } from '@/routes/notification-route';
 import type { IRoute } from '@/routes/route';
 import { UserRoute } from '@/routes/user-route';
 

@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { inject, injectable } from 'inversify';
 
 import { Config } from '@/core/config';
@@ -6,7 +6,7 @@ import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import { Database } from '@/infrastructures/database/database';
 
-import { NotificationService } from './notification';
+import { NotificationService } from './notification-service';
 
 @injectable()
 export class FeedService {
@@ -198,8 +198,50 @@ export class FeedService {
   /**
    * Update post
    */
+  async updateFeed(currentUserId: bigint, feedId: bigint, content: string) {
+    // Validate if feed exists
+    let feed: Prisma.FeedGetPayload<{}> | null;
+
+    try {
+      feed = await this.prisma.feed.findUnique({
+        where: {
+          id: feedId,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to update feed');
+    }
+
+    // Feed not found
+    if (!feed) throw ExceptionFactory.notFound('Feed not found');
+
+    // Validate if current user is the owner of the feed
+    if (feed.userId !== currentUserId)
+      throw ExceptionFactory.forbidden('You can only update your own feed');
+
+    // Update feed
+    try {
+      const updatedFeed = await this.prisma.feed.update({
+        where: {
+          id: feedId,
+        },
+        data: {
+          content,
+        },
+      });
+
+      return updatedFeed;
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to update feed');
+    }
+  }
 
   /**
    * Delete post
    */
+  async deleteFeed(currentUserId: bigint, feedId: bigint) {}
 }

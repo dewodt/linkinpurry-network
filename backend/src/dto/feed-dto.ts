@@ -144,10 +144,23 @@ export interface ICreateFeedRequestBodyDto extends z.infer<typeof createFeedRequ
  */
 // Request params
 export const updateFeedRequestParamsDto = z.object({
-  feed_id: z.string({ message: 'feed_id must be a string' }).openapi({
-    description: 'ID of the feed',
-    example: '12345',
-  }),
+  feedId: z
+    .string({ message: 'feedId must be type of string' })
+    .refine((v) => Utils.parseBigIntId(v).isValid, {
+      message: 'feedId must be type of big int and greater than 0',
+    })
+    .transform((v) => BigInt(v))
+    // @ts-ignore
+    .openapi({
+      type: 'bigint',
+      param: {
+        name: 'feedId',
+        in: 'path',
+        required: true,
+        description: 'ID of the feed',
+        example: 1,
+      },
+    }),
 });
 
 export interface IUpdateFeedRequestParamsDto extends z.infer<typeof updateFeedRequestParamsDto> {}
@@ -174,10 +187,23 @@ export interface IUpdateFeedRequestBodyDto extends z.infer<typeof updateFeedRequ
  */
 // Request params
 export const deleteFeedRequestParamsDto = z.object({
-  feed_id: z.string({ message: 'feed_id must be a string' }).openapi({
-    description: 'ID of the feed',
-    example: '12345',
-  }),
+  feedId: z
+    .string({ message: 'feedId must be type of string' })
+    .refine((v) => Utils.parseBigIntId(v).isValid, {
+      message: 'feedId must be type of big int and greater than 0',
+    })
+    .transform((v) => BigInt(v))
+    // @ts-ignore
+    .openapi({
+      type: 'bigint',
+      param: {
+        name: 'feedId',
+        in: 'path',
+        required: true,
+        description: 'ID of the feed',
+        example: 1,
+      },
+    }),
 });
 
 export interface IDeleteFeedRequestParamsDto extends z.infer<typeof deleteFeedRequestParamsDto> {}

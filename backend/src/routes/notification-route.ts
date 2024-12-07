@@ -6,7 +6,7 @@ import { InternalServerErrorException } from '@/core/exception';
 import { OpenApiRequestFactory, OpenApiResponseFactory, ResponseDtoFactory } from '@/dto/common';
 import { zodPushSubscriptionDto } from '@/dto/notification';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
-import { NotificationService } from '@/services/notification';
+import { NotificationService } from '@/services/notification-service';
 
 import type { IRoute } from './route';
 

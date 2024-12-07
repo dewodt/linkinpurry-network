@@ -6,7 +6,7 @@ import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import { Database } from '@/infrastructures/database/database';
 
-import { NotificationService } from './notification';
+import { NotificationService } from './notification-service';
 import type { IService } from './service';
 
 export interface IChatService extends IService {

@@ -7,13 +7,13 @@ import { AuthRoute } from '@/routes/auth-route';
 import { ChatRoute } from '@/routes/chat-route';
 import { ConnectionRoute } from '@/routes/connection-route';
 import { FeedRoute } from '@/routes/feed-route';
-import { NotificationRoute } from '@/routes/notification';
+import { NotificationRoute } from '@/routes/notification-route';
 import { UserRoute } from '@/routes/user-route';
 import { AuthService } from '@/services/auth-service';
 import { ChatService } from '@/services/chat-service';
 import { ConnectionService } from '@/services/connection-service';
 import { FeedService } from '@/services/feed-service';
-import { NotificationService } from '@/services/notification';
+import { NotificationService } from '@/services/notification-service';
 import { UserService } from '@/services/user-service';
 
 import { Bucket } from './bucket';
