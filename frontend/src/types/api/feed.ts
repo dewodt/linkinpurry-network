@@ -73,15 +73,15 @@ export type GetFeedDetailErrorResponse = AxiosErrorResponse;
  * Get my feeds
  */
 // Request
-export interface GetMyFeedsRequestQuery {
+export interface GetMyFeedRequestQuery {
   cursor: string | undefined;
   limit: number;
 }
 
 // Response
-export type GetMyFeedsSuccessResponse = SuccessCursorPaginationResponse<FeedWithoutCreator>;
+export type GetMyFeedSuccessResponse = SuccessCursorPaginationResponse<FeedWithoutCreator>;
 
-export type GetMyFeedsErrorResponse = AxiosErrorResponse;
+export type GetMyFeedErrorResponse = AxiosErrorResponse;
 
 /**
  * Update feed

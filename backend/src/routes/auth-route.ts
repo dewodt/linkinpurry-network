@@ -88,6 +88,7 @@ export class AuthRoute implements IRoute {
         const responseData: ISessionResponseBodyDto = {
           userId: overviewProfile.id.toString(),
           email: overviewProfile.email,
+          username: overviewProfile.username,
           name: overviewProfile.fullName ?? '',
           profilePhoto: overviewProfile.profilePhotoPath,
         };

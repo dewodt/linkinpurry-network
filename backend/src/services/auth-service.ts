@@ -30,7 +30,13 @@ export interface IAuthService extends IService {
 }
 
 type SessionData = Prisma.UserGetPayload<{
-  select: { id: boolean; email: boolean; fullName: boolean; profilePhotoPath: boolean };
+  select: {
+    id: boolean;
+    email: boolean;
+    fullName: boolean;
+    profilePhotoPath: boolean;
+    username: boolean;
+  };
 }>;
 
 /**
@@ -65,6 +71,7 @@ export class AuthService implements IAuthService {
           email: true,
           fullName: true,
           profilePhotoPath: true,
+          username: true,
         },
       });
 

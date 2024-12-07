@@ -8,7 +8,7 @@ import {
   GetFeedDetailSuccessResponse,
   GetFeedTimelineRequestQuery,
   GetFeedTimelineSuccessResponse,
-  GetMyFeedsSuccessResponse,
+  GetMyFeedSuccessResponse,
   UpdateFeedRequestBody,
   UpdateFeedRequestParams,
   UpdateFeedSuccessResponse,
@@ -33,8 +33,8 @@ export async function getFeedTimeline(query: GetFeedTimelineRequestQuery) {
 /**
  * Get my feeds
  */
-export async function getMyFeeds(query: GetFeedTimelineRequestQuery) {
-  const axiosResponse = await api.get<GetMyFeedsSuccessResponse>('/api/my-feed', { params: query });
+export async function getMyFeed(query: GetFeedTimelineRequestQuery) {
+  const axiosResponse = await api.get<GetMyFeedSuccessResponse>('/api/my-feed', { params: query });
   return axiosResponse.data;
 }
 

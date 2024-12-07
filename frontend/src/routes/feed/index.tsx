@@ -33,7 +33,6 @@ function RouteComponent() {
   const {
     data: feedTimelineData,
     error: feedTimelineError,
-    isSuccess: isSuccessFeedTimeline,
     isError: isErrorFeedTimeline,
     isPending: isPendingFeedTimeline,
     isFetchingNextPage: isFetchingNextPageFeedTimeline,
@@ -92,12 +91,12 @@ function RouteComponent() {
 
   return (
     <AuthGuardLayout level="authenticated-only">
-      {isSuccessFeedTimeline && <HelmetTemplate title="Feed | LinkinPurry" />}
+      <HelmetTemplate title="Feed | LinkinPurry" />
 
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
         <section className="flex w-full max-w-3xl flex-col gap-5">
           {/* Create post */}
-          <CreateFeedDialog />
+          <CreateFeedDialog title="Home" />
 
           {flattenFeeds.length === 0 ? (
             // Empty state
