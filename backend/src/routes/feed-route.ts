@@ -176,7 +176,8 @@ export class FeedRoute implements IRoute {
             full_name: feed.fullName,
             profile_photo_path: feed.profilePhotoPath,
             content: feed.content,
-            created_at: feed.createdAt,
+            created_at: feed.createdAt.toISOString(),
+            updated_at: feed.updatedAt.toISOString(),
           })),
         };
 
@@ -250,6 +251,7 @@ export class FeedRoute implements IRoute {
           profile_photo_path: feed.profilePhotoPath,
           content: feed.content,
           created_at: feed.createdAt.toISOString(),
+          updated_at: feed.updatedAt.toISOString(),
         };
         const responseDto = ResponseDtoFactory.createSuccessDataResponseDto(
           'Feed detail',
@@ -284,7 +286,7 @@ export class FeedRoute implements IRoute {
         query: getMyFeedRequestQueryDto,
       },
       responses: {
-        200: OpenApiResponseFactory.jsonSuccessPagePagination(
+        200: OpenApiResponseFactory.jsonSuccessCursorPagination(
           'Current user feeds',
           getMyFeedResponseBodyDto
         ),
@@ -304,27 +306,28 @@ export class FeedRoute implements IRoute {
 
       try {
         // Get current user feeds
-        const { feeds, meta } = await this.feedService.getMyFeeds(
+        const { myFeeds, meta } = await this.feedService.getMyFeeds(
           currentUserId,
-          query.page,
+          query.cursor,
           query.limit
         );
 
         // Map to dto
-        const responseData: IGetMyFeedResponseBodyDto = feeds.map((feed) => ({
-          feed_id: feed.id.toString(),
+        const responseData: IGetMyFeedResponseBodyDto = myFeeds.map((feed) => ({
+          feed_id: feed.feedId.toString(),
+          user_id: feed.userId.toString(),
           content: feed.content,
           created_at: feed.createdAt.toISOString(),
+          updated_at: feed.updatedAt.toISOString(),
         }));
 
-        const metaDto: PagePaginationResponseMeta = {
-          page: meta.page,
+        const metaDto: CursorPaginationResponseMeta = {
+          cursor: meta.cursor ? meta.cursor.toString() : null,
+          nextCursor: meta.nextCursor ? meta.nextCursor.toString() : null,
           limit: meta.limit,
-          totalItems: meta.totalItems,
-          totalPages: meta.totalPages,
         };
 
-        const responseDto = ResponseDtoFactory.createSuccessPagePaginationResponseDto(
+        const responseDto = ResponseDtoFactory.createSuccessCursorPaginationResponseDto(
           'Current user feeds',
           responseData,
           metaDto

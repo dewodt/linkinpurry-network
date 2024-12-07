@@ -2,6 +2,85 @@ import { z } from '@hono/zod-openapi';
 
 import { Utils } from '@/utils/utils';
 
+// Base
+export const feedWithCreator = z.object({
+  feed_id: z.string().openapi({
+    description: 'ID of the feed',
+    example: '12345',
+  }),
+  user_id: z.string().openapi({
+    description: 'ID of the user',
+    example: '67890',
+  }),
+  username: z.string().openapi({
+    description: 'Username of the user',
+    example: 'dewodt',
+  }),
+  full_name: z.string().openapi({
+    description: 'Full name of the user',
+    example: 'John Doe',
+  }),
+  profile_photo_path: z.string().openapi({
+    description: 'Profile photo of the user',
+    example: 'https://example.com/image.jpg',
+  }),
+  content: z.string().openapi({
+    description: 'Content of the post',
+    example: 'Hello world!',
+  }),
+  created_at: z.string().openapi({
+    description: 'Timestamp of the post',
+    example: '2021-09-01T00:00:00.000Z',
+  }),
+  updated_at: z.string().openapi({
+    description: 'Timestamp of the post',
+    example: '2021-09-01T00:00:00.000Z',
+  }),
+});
+
+export const feedWithoutCreator = z.object({
+  feed_id: z.string().openapi({
+    description: 'ID of the feed',
+    example: '12345',
+  }),
+  user_id: z.string().openapi({
+    description: 'ID of the user',
+    example: '67890',
+  }),
+  content: z.string().openapi({
+    description: 'Content of the post',
+    example: 'Hello world!',
+  }),
+  created_at: z.string().openapi({
+    description: 'Timestamp of the post',
+    example: '2021-09-01T00:00:00.000Z',
+  }),
+  updated_at: z.string().openapi({
+    description: 'Timestamp of the post',
+    example: '2021-09-01T00:00:00.000Z',
+  }),
+});
+
+/**
+ * Create post
+ */
+// Request body
+export const createFeedRequestBodyDto = z.object({
+  content: z
+    .string({ message: 'Content is required' }) // handle null or undefined
+    .min(1, { message: 'Content is required' }) // handle empty string
+    .max(280, { message: 'Content maximum length is 280 characters' })
+    .openapi({
+      description: 'Post content',
+      example: 'Hello world!',
+    }),
+});
+
+export interface ICreateFeedRequestBodyDto extends z.infer<typeof createFeedRequestBodyDto> {}
+
+// Response
+// No need response, invalidate the query
+
 /**
  * Get Feed timeline
  */
@@ -41,38 +120,7 @@ export const getFeedTimelineResponseBodyDto = z.object({
   }),
 
   // actual data (paginated)
-  data: z.array(
-    z.object({
-      feed_id: z.string().openapi({
-        description: 'ID of the feed',
-        example: '12345',
-      }),
-      user_id: z.string().openapi({
-        description: 'ID of the user',
-        example: '67890',
-      }),
-      username: z.string().openapi({
-        description: 'Username of the user',
-        example: 'dewodt',
-      }),
-      full_name: z.string().openapi({
-        description: 'Full name of the user',
-        example: 'John Doe',
-      }),
-      profile_photo_path: z.string().openapi({
-        description: 'Profile photo of the user',
-        example: 'https://example.com/image.jpg',
-      }),
-      content: z.string().openapi({
-        description: 'Content of the post',
-        example: 'Hello world!',
-      }),
-      created_at: z.string().openapi({
-        description: 'Timestamp of the post',
-        example: '2021-09-01T00:00:00.000Z',
-      }),
-    })
-  ),
+  data: z.array(feedWithCreator),
 });
 
 export interface IGetFeedTimelineResponseBodyDto
@@ -106,36 +154,7 @@ export interface IGetFeedDetailRequestParamsDto
   extends z.infer<typeof getFeedDetailRequestParamsDto> {}
 
 // Response
-export const getFeedDetailResponseBodyDto = z.object({
-  feed_id: z.string().openapi({
-    description: 'ID of the feed',
-    example: '12345',
-  }),
-  user_id: z.string().openapi({
-    description: 'ID of the user',
-    example: '67890',
-  }),
-  username: z.string().openapi({
-    description: 'Username of the user',
-    example: 'dewodt',
-  }),
-  full_name: z.string().openapi({
-    description: 'Full name of the user',
-    example: 'John Doe',
-  }),
-  profile_photo_path: z.string().openapi({
-    description: 'Profile photo of the user',
-    example: 'https://example.com/image.jpg',
-  }),
-  content: z.string().openapi({
-    description: 'Content of the post',
-    example: 'Hello world!',
-  }),
-  created_at: z.string().openapi({
-    description: 'Timestamp of the post',
-    example: '2021-09-01T00:00:00.000Z',
-  }),
-});
+export const getFeedDetailResponseBodyDto = feedWithCreator;
 
 export interface IGetFeedDetailResponseBodyDto
   extends z.infer<typeof getFeedDetailResponseBodyDto> {}
@@ -144,62 +163,34 @@ export interface IGetFeedDetailResponseBodyDto
  * Get my feed (no api contract provided, create own.)
  */
 // Request query
-export const getMyFeedRequestQueryDto = z
-  .object({
-    page: z.string({ message: 'page must be type of string' }).optional().openapi({
-      description: 'Page number for pagination',
+export const getMyFeedRequestQueryDto = z.object({
+  cursor: z
+    .string({ message: 'cursor must be a string, bigint' })
+    .optional()
+    .refine((v) => v === undefined || Utils.parseBigIntId(v).isValid, {
+      message: 'cursor must be a string, bigint',
+    })
+    .transform((val) => (val !== undefined ? BigInt(val) : undefined))
+    .openapi({
+      description: 'Cursor for the next page',
       example: '1',
     }),
-    limit: z.string({ message: 'limit must be type of string' }).optional().openapi({
+  limit: z
+    .string({ message: 'limit must be a string' })
+    .optional()
+    .transform((val) => Utils.parseLimitPagination({ limit: val }))
+    .openapi({
       description: 'Limit for pagination',
       example: '15',
     }),
-  })
-  .transform(({ page, limit }) => ({
-    ...Utils.parsePagePagination({ page, limit }),
-  }));
+});
 
 export interface IGetMyFeedRequestQueryDto extends z.infer<typeof getMyFeedRequestQueryDto> {}
 
 // Response
-export const getMyFeedResponseBodyDto = z.array(
-  z.object({
-    feed_id: z.string().openapi({
-      description: 'ID of the feed',
-      example: '12345',
-    }),
-    content: z.string().openapi({
-      description: 'Content of the post',
-      example: 'Hello world!',
-    }),
-    created_at: z.string().openapi({
-      description: 'Timestamp of the post',
-      example: '2021-09-01T00:00:00.000Z',
-    }),
-  })
-);
+export const getMyFeedResponseBodyDto = z.array(feedWithoutCreator);
 
 export interface IGetMyFeedResponseBodyDto extends z.infer<typeof getMyFeedResponseBodyDto> {}
-
-/**
- * Create post
- */
-// Request body
-export const createFeedRequestBodyDto = z.object({
-  content: z
-    .string({ message: 'Content is required' }) // handle null or undefined
-    .min(1, { message: 'Content is required' }) // handle empty string
-    .max(280, { message: 'Content maximum length is 280 characters' })
-    .openapi({
-      description: 'Post content',
-      example: 'Hello world!',
-    }),
-});
-
-export interface ICreateFeedRequestBodyDto extends z.infer<typeof createFeedRequestBodyDto> {}
-
-// Response
-// No need response, invalidate the query
 
 /**
  * Update post

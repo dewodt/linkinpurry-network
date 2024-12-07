@@ -61,7 +61,8 @@ export class FeedService implements IService {
         feedId: feed.id,
         userId: feed.userId,
         content: feed.content,
-        createdAt: feed.createdAt.toISOString(),
+        createdAt: feed.createdAt,
+        updatedAt: feed.updatedAt,
       };
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
@@ -130,7 +131,8 @@ export class FeedService implements IService {
         fullName: feed.user.fullName || 'N/A',
         profilePhotoPath: feed.user.profilePhotoPath,
         content: feed.content,
-        createdAt: feed.createdAt.toISOString(),
+        createdAt: feed.createdAt,
+        updatedAt: feed.updatedAt,
       }));
 
       const meta = {
@@ -153,21 +155,8 @@ export class FeedService implements IService {
   /**
    * Get current user feeds
    */
-  async getMyFeeds(currentUserId: bigint, page: number, limit: number) {
+  async getMyFeeds(currentUserId: bigint, cursor: bigint | undefined, limit: number) {
     try {
-      // Get total items
-      const totalItems = await this.prisma.feed.count({
-        where: {
-          userId: currentUserId,
-        },
-      });
-
-      if (totalItems === 0) return { feeds: [], meta: { totalItems, totalPages: 0, page, limit } };
-
-      // Validate upper bound of page
-      const totalPages = Math.ceil(totalItems / limit);
-      if (page > totalPages) page = totalPages;
-
       // Get feeds
       const feeds = await this.prisma.feed.findMany({
         where: {
@@ -176,18 +165,34 @@ export class FeedService implements IService {
         orderBy: {
           id: 'desc',
         },
-        skip: (page - 1) * limit,
-        take: limit,
+        cursor: cursor ? { id: cursor } : undefined,
+        take: limit + 1,
       });
 
+      // Check if there is next page
+      let nextCursor: bigint | undefined;
+      if (feeds.length > limit) {
+        const nextFeed = feeds.pop();
+        if (nextFeed) nextCursor = nextFeed.id;
+      }
+
+      const myFeeds = feeds.map((feed) => ({
+        feedId: feed.id,
+        userId: feed.userId,
+        content: feed.content,
+        createdAt: feed.createdAt,
+        updatedAt: feed.updatedAt,
+      }));
+
+      const meta = {
+        cursor,
+        nextCursor,
+        limit,
+      };
+
       return {
-        feeds,
-        meta: {
-          totalItems,
-          totalPages,
-          page,
-          limit,
-        },
+        myFeeds,
+        meta,
       };
     } catch (e) {
       if (e instanceof Error) logger.error(e.message);
@@ -207,6 +212,7 @@ export class FeedService implements IService {
         userId: true;
         content: true;
         createdAt: true;
+        updatedAt: true;
         user: {
           select: {
             id: true;
@@ -251,6 +257,7 @@ export class FeedService implements IService {
       profilePhotoPath: feed.user.profilePhotoPath,
       content: feed.content,
       createdAt: feed.createdAt,
+      updatedAt: feed.updatedAt,
     };
   }
 
