@@ -30,7 +30,10 @@ export type LoginErrorResponse = AxiosErrorResponse;
 /**
  * Register
  */
-export type RegisterRequestBody = z.infer<typeof registerRequestBody>;
+
+export type RegisterFormFields = z.infer<typeof registerRequestBody>;
+
+export type RegisterRequestBody = Omit<RegisterFormFields, 'confirmPassword'>;
 
 export interface RegisterResponseBody {
   token: string;

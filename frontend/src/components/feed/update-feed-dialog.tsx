@@ -68,7 +68,7 @@ export default function UpdateFeedDialog({
 
       // my profile
       queryClient.invalidateQueries({
-        queryKey: ['users', session?.userId],
+        queryKey: ['users', session?.userId], // prefix
       });
 
       // reset dirty state
