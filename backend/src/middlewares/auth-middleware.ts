@@ -31,7 +31,7 @@ export class AuthMiddleware implements IAuthMiddleware {
   /**
    * Authorize middleware
    */
-  authorize({ isPublic }: { isPublic: boolean } = { isPublic: true }): MiddlewareFunction {
+  authorize({ isPublic }: { isPublic: boolean } = { isPublic: false }): MiddlewareFunction {
     return async (c, next) => {
       // Get token
       const resolvedToken = this.getTokenFromCookie(c) || this.getTokenFromBearerToken(c) || null;
@@ -67,7 +67,7 @@ export class AuthMiddleware implements IAuthMiddleware {
     };
   }
 
-  authorizeSocket({ isPublic }: { isPublic: boolean } = { isPublic: true }) {
+  authorizeSocket({ isPublic }: { isPublic: boolean } = { isPublic: false }) {
     return async (socket: TSocket, next: (err?: Error) => void) => {
       // Get token
       const resolvedToken =

@@ -79,10 +79,10 @@ export class AuthRoute implements IRoute {
     app.openapi(getSessionRoute, async (c) => {
       try {
         // Get current user id
-        const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+        const currentUser = c.get('user')!; // assured by auth middleware
 
         // Call service
-        const overviewProfile = await this.authService.session(currentUserId);
+        const overviewProfile = await this.authService.session(currentUser.userId);
 
         // Map to dto
         const responseData: ISessionResponseBodyDto = {

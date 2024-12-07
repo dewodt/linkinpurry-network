@@ -85,11 +85,16 @@ export class UserRoute implements IRoute {
     app.openapi(getUsersRoute, async (c) => {
       // Get validated params
       const { search, page, limit } = c.req.valid('query');
-      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+      const currentUser = c.get('user');
 
       try {
         // Get users
-        const { users, meta } = await this.userService.getUsers(currentUserId, search, page, limit);
+        const { users, meta } = await this.userService.getUsers(
+          currentUser?.userId,
+          search,
+          page,
+          limit
+        );
 
         // Map to dto
         const responseData: IGetUsersResponseBodyDto = users.map((user) => ({

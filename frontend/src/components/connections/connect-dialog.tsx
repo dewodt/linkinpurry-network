@@ -30,7 +30,6 @@ export function ConnectDialog({ children, currentSeenUserId, connectToUserId, co
     mutationFn: async () => connectUser({ toUserId: connectToUserId }),
     onMutate: () => {
       toast.loading('Loading...', { description: 'Please wait', duration: Infinity });
-      setConnectOpen(false);
     },
     onError: (error) => {
       toast.dismiss();
@@ -39,6 +38,7 @@ export function ConnectDialog({ children, currentSeenUserId, connectToUserId, co
     onSuccess: (data) => {
       toast.dismiss();
       toast.success('Success', { description: data.message });
+      setConnectOpen(false);
 
       // current user
       // the connection list + number of conn changes

@@ -60,11 +60,11 @@ export class NotificationRoute implements IRoute {
       const body = c.req.valid('json');
 
       // Get current user id
-      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       try {
         // Call service
-        await this.notificationService.saveSubscription(currentUserId, body);
+        await this.notificationService.saveSubscription(currentUser.userId, body);
 
         const responseDto = ResponseDtoFactory.createSuccessResponseDto(
           'Subscribe to notification successful'

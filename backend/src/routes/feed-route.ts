@@ -95,14 +95,14 @@ export class FeedRoute implements IRoute {
     app.use(createFeedRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
     app.openapi(createFeedRoute, async (c) => {
       // Get current user
-      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Get request body
       const requestBody = c.req.valid('json');
 
       try {
         // Create feed
-        await this.feedService.createFeed(currentUserId, requestBody.content);
+        await this.feedService.createFeed(currentUser.userId, requestBody.content);
 
         // Map to dto
         const responseDto = ResponseDtoFactory.createSuccessResponseDto(
@@ -153,7 +153,7 @@ export class FeedRoute implements IRoute {
     );
     app.openapi(getFeedTimelineRoute, async (c) => {
       // Get current user
-      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Get query
       const query = c.req.valid('query');
@@ -161,7 +161,7 @@ export class FeedRoute implements IRoute {
       try {
         // Get feed timeline
         const { feedTimeLine, meta } = await this.feedService.getFeedTimeline(
-          currentUserId,
+          currentUser.userId,
           query.cursor,
           query.limit
         );
@@ -299,7 +299,7 @@ export class FeedRoute implements IRoute {
     app.use(getMyFeedsRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
     app.openapi(getMyFeedsRoute, async (c) => {
       // Get current user
-      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Get query
       const query = c.req.valid('query');
@@ -307,7 +307,7 @@ export class FeedRoute implements IRoute {
       try {
         // Get current user feeds
         const { myFeeds, meta } = await this.feedService.getMyFeeds(
-          currentUserId,
+          currentUser.userId,
           query.cursor,
           query.limit
         );
@@ -374,7 +374,7 @@ export class FeedRoute implements IRoute {
     app.use(updateFeedRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
     app.openapi(updateFeedRoute, async (c) => {
       // Get current user
-      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Get request params
       const params = c.req.valid('param');
@@ -384,7 +384,7 @@ export class FeedRoute implements IRoute {
 
       try {
         // Update feed
-        await this.feedService.updateFeed(currentUserId, params.feedId, requestBody.content);
+        await this.feedService.updateFeed(currentUser.userId, params.feedId, requestBody.content);
 
         // Map to dto
         const responseDto = ResponseDtoFactory.createSuccessResponseDto(
@@ -432,14 +432,14 @@ export class FeedRoute implements IRoute {
     app.use(deleteFeedRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
     app.openapi(deleteFeedRoute, async (c) => {
       // Get current user
-      const { userId: currentUserId } = c.get('user')!; // assured by auth middleware
+      const currentUser = c.get('user')!; // assured by auth middleware
 
       // Get request params
       const params = c.req.valid('param');
 
       try {
         // Delete feed
-        await this.feedService.deleteFeed(currentUserId, params.feedId);
+        await this.feedService.deleteFeed(currentUser.userId, params.feedId);
 
         // Map to dto
         const responseDto = ResponseDtoFactory.createSuccessResponseDto(
