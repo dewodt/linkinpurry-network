@@ -55,7 +55,6 @@ export function UnConnectDialog({
 
       // current user
       // the connection list + number of conn changes
-
       queryClient.invalidateQueries({
         queryKey: ['users', session?.userId], // prefix
       });
@@ -78,6 +77,21 @@ export function UnConnectDialog({
       // the connection list + number of conn changes
       queryClient.invalidateQueries({
         queryKey: ['users', unConnectToUserId], // prefix
+      });
+
+      // Invalidate the feed (might cant see his/her fee again)
+      queryClient.invalidateQueries({
+        queryKey: ['feed', 'timeline'],
+      });
+
+      // Chat inbox
+      queryClient.invalidateQueries({
+        queryKey: ['chats', 'inbox'],
+      });
+
+      // Chat history with the user
+      queryClient.invalidateQueries({
+        queryKey: ['chats', unConnectToUserId, 'content'],
       });
     },
   });

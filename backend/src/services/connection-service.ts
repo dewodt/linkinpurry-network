@@ -607,16 +607,30 @@ export class ConnectionService implements IConnectionService {
 
     if (!isConnectionExist) throw ExceptionFactory.notFound('Connection not found');
 
-    // Remove the connection
+    // Remove the connection, chat and everything related to the connection
     try {
-      // no need transaction (delete * from where )
-      await this.prisma.connection.deleteMany({
-        where: {
-          OR: [
-            { fromId: currentUserId, toId: userId },
-            { fromId: userId, toId: currentUserId },
-          ],
-        },
+      await this.prisma.$transaction(async (tx) => {
+        await Promise.all([
+          // Connection
+          tx.connection.deleteMany({
+            where: {
+              OR: [
+                { fromId: currentUserId, toId: userId },
+                { fromId: userId, toId: currentUserId },
+              ],
+            },
+          }),
+
+          // Chat history
+          tx.chat.deleteMany({
+            where: {
+              OR: [
+                { fromId: currentUserId, toId: userId },
+                { fromId: userId, toId: currentUserId },
+              ],
+            },
+          }),
+        ]);
       });
     } catch (error) {
       // Internal server error

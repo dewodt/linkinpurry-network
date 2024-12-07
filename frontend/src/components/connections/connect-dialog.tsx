@@ -65,6 +65,11 @@ export function ConnectDialog({ children, currentSeenUserId, connectToUserId, co
       queryClient.invalidateQueries({
         queryKey: ['users', connectToUserId], // prefix
       });
+
+      // Invalidate the feed (might see his/her new feed)
+      queryClient.invalidateQueries({
+        queryKey: ['feed', 'timeline'],
+      });
     },
   });
 
