@@ -11,7 +11,6 @@ import { ConnectionStatus } from '@/utils/enum';
 
 import type { IService } from './service';
 
-// todo: why this optional doesnt work
 interface UserProfile {
   // level 1
   id: bigint;

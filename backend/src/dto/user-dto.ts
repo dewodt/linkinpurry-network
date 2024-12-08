@@ -188,7 +188,6 @@ export interface IGetProfileResponseBodyDto extends z.infer<typeof getProfileRes
  */
 // Request
 export const updateProfileRequestBodyDto = z.object({
-  // TODO: Email changable or no?
   username: z
     .string({ message: 'Username is required' })
     .min(1, { message: 'Username is required' })

@@ -2,6 +2,8 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { SearchIcon, SquarePen } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
 
+import React from 'react';
+
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { NewChatDialog } from './new-chat-dialog';
@@ -12,8 +14,9 @@ export function ChatHeader() {
   const searchParams = useSearch({ from: '/messaging/' });
 
   // Store search state at url
+  const [searchInput, setSearchInput] = React.useState<string>(searchParams.search || '');
   const debouncedSearchCallback = useDebouncedCallback(
-    (val: string) => navigate({ to: '/messaging', search: { ...searchParams, search: val } }),
+    (val: string) => navigate({ to: '/messaging', search: { ...searchParams, search: val || undefined } }),
     500,
   );
 
@@ -38,7 +41,11 @@ export function ChatHeader() {
               id="search-messages"
               placeholder="Search messages"
               className="h-9 bg-muted pl-9 text-sm"
-              onChange={(e) => debouncedSearchCallback(e.target.value)}
+              value={searchInput}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+                debouncedSearchCallback(e.target.value);
+              }}
             />
           </form>
         </search>

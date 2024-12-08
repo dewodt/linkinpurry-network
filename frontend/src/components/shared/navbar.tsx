@@ -56,10 +56,8 @@ export const Navbar = () => {
 
     // navigate to search page with query params
     await navigate({
-      to: '/', // TODO: search page
-      search: {
-        query: searchQuery,
-      },
+      to: '/explore',
+      search: { search: searchQuery },
     });
   };
 

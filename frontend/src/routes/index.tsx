@@ -1,19 +1,23 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { MessageCircle, Search, Users } from 'lucide-react';
 
-// @ts-expect-error - babel resolver
 import * as React from 'react';
 
 import { AvatarUser } from '@/components/shared/avatar-user';
 import { HelmetTemplate } from '@/components/shared/helmet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSession } from '@/context/session-provider';
 
 export const Route = createFileRoute('/')({
   component: HomeComponent,
 });
 
 function HomeComponent() {
+  // Hooks
+  const { session } = useSession();
+
+  // Content
   const features = [
     {
       icon: Users,
@@ -73,20 +77,24 @@ function HomeComponent() {
             </div>
 
             {/* Action buttons */}
-            {/* TODO: Connect with session login */}
             <div className="space-x-4 lg:space-x-6">
-              <Button variant="default" className="px-6">
-                Get Started
-              </Button>
-              <Button variant="secondary" className="px-6">
-                Learn More
-              </Button>
+              <Link to="/explore">
+                <Button variant="default" className="px-6">
+                  Get Started
+                </Button>
+              </Link>
+
+              <Link to="/" hash="why-chose-us">
+                <Button variant="secondary" className="px-6">
+                  Learn More
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
 
         {/* Why Chose Us */}
-        <section className="flex w-full items-center justify-center bg-muted px-5 py-24 md:px-8 md:py-28 lg:py-32 xl:py-48">
+        <section id="why-chose-us" className="flex w-full items-center justify-center bg-muted px-5 py-24 md:px-8 md:py-28 lg:py-32 xl:py-48">
           <div className="container">
             <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Why Choose Us?</h2>
 
@@ -112,7 +120,7 @@ function HomeComponent() {
         </section>
 
         {/* What our users say */}
-        <section className="flex w-full items-center justify-center px-5 py-24 md:px-8 md:py-28 lg:py-32 xl:py-48">
+        <section id="what-our-users-say" className="flex w-full items-center justify-center px-5 py-24 md:px-8 md:py-28 lg:py-32 xl:py-48">
           <div className="container">
             <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">What Our Users Say</h2>
 
@@ -137,7 +145,6 @@ function HomeComponent() {
         </section>
 
         {/* Join us now */}
-        {/* TODO: Connect with session logic */}
         <section className="flex w-full items-center justify-center bg-muted px-5 py-24 md:px-8 md:py-28 lg:py-32 xl:py-48">
           <div className="container flex flex-col items-center gap-3 text-center lg:gap-5">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Join Our Community Today</h2>
@@ -146,11 +153,19 @@ function HomeComponent() {
               Start building meaningful professional relationships and unlock new opportunities.
             </p>
 
-            <Link to="/auth/register">
-              <Button type="submit" className="px-7">
-                Register Now
-              </Button>
-            </Link>
+            {session ? (
+              <Link to="/explore">
+                <Button type="submit" className="px-7">
+                  Explore Now
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/auth/register">
+                <Button type="submit" className="px-7">
+                  Register Now
+                </Button>
+              </Link>
+            )}
           </div>
         </section>
       </main>

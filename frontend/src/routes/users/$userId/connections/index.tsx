@@ -154,7 +154,6 @@ function RouteComponent() {
                           </div>
                         </Link>
 
-                        {/* TODO: Message logic */}
                         <div className="flex flex-row items-center gap-2 self-end sm:self-auto">
                           {session &&
                             session.userId !== con.user_id &&
@@ -170,10 +169,11 @@ function RouteComponent() {
                                 Pending
                               </Button>
                             ) : (
-                              // TODO: Connect message logic
-                              <Button className="rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
-                                Message
-                              </Button>
+                              <Link to="/messaging" search={{ withUserId: con.user_id }}>
+                                <Button className="rounded-full font-bold" variant={'outline-primary'} size={'xs'}>
+                                  Message
+                                </Button>
+                              </Link>
                             ))}
 
                           {/* Dropdown actions */}
