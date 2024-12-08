@@ -207,12 +207,18 @@ export class ConnectionService implements IConnectionService {
         // Invalidate the cache of both users (connection count of both users in profile updated)
         const profile1CachePrefix = `user-profile:${currentUserId}`;
         const profile2CachePrefix = `user-profile:${userId}`;
-        const [cnt1, cnt2] = await Promise.all([
+        const feedTimeline1CachePrefix = `feeds:${currentUserId}`;
+        const feedTimeline2CachePrefix = `feeds:${userId}`;
+        const [cnt1, cnt2, cnt3, cnt4] = await Promise.all([
           this.redisClient.deleteWithPrefix(profile1CachePrefix),
           this.redisClient.deleteWithPrefix(profile2CachePrefix),
+          this.redisClient.deleteWithPrefix(feedTimeline1CachePrefix),
+          this.redisClient.deleteWithPrefix(feedTimeline2CachePrefix),
         ]);
         if (cnt1 > 0) logger.info(`Cache invalidated (prefix): ${profile1CachePrefix}`);
         if (cnt2 > 0) logger.info(`Cache invalidated (prefix): ${profile2CachePrefix}`);
+        if (cnt3 > 0) logger.info(`Cache invalidated (prefix): ${feedTimeline1CachePrefix}`);
+        if (cnt4 > 0) logger.info(`Cache invalidated (prefix): ${feedTimeline2CachePrefix}`);
       } catch (error) {
         // Internal server error
         if (error instanceof Error) logger.error(error.message);
@@ -560,12 +566,18 @@ export class ConnectionService implements IConnectionService {
         // Invalidate the profile cache of both users
         const profile1CachePrefix = `user-profile:${currentUserId}`;
         const profile2CachePrefix = `user-profile:${fromUserId}`;
-        const [cnt1, cnt2] = await Promise.all([
+        const feedTimeline1CachePrefix = `feeds:${currentUserId}`;
+        const feedTimeline2CachePrefix = `feeds:${fromUserId}`;
+        const [cnt1, cnt2, cnt3, cnt4] = await Promise.all([
           this.redisClient.deleteWithPrefix(profile1CachePrefix),
           this.redisClient.deleteWithPrefix(profile2CachePrefix),
+          this.redisClient.deleteWithPrefix(feedTimeline1CachePrefix),
+          this.redisClient.deleteWithPrefix(feedTimeline2CachePrefix),
         ]);
         if (cnt1 > 0) logger.info(`Cache invalidated (prefix): ${profile1CachePrefix}`);
         if (cnt2 > 0) logger.info(`Cache invalidated (prefix): ${profile2CachePrefix}`);
+        if (cnt3 > 0) logger.info(`Cache invalidated (prefix): ${feedTimeline1CachePrefix}`);
+        if (cnt4 > 0) logger.info(`Cache invalidated (prefix): ${feedTimeline2CachePrefix}`);
       } catch (error) {
         // Internal server error
         if (error instanceof Error) logger.error(error.message);
@@ -660,12 +672,18 @@ export class ConnectionService implements IConnectionService {
       // Invalidate the profile cache of both users
       const profile1CachePrefix = `user-profile:${currentUserId}`;
       const profile2CachePrefix = `user-profile:${userId}`;
-      const [cnt1, cnt2] = await Promise.all([
+      const timeline1CachePrefix = `feeds:${currentUserId}`;
+      const timeline2CachePrefix = `feeds:${userId}`;
+      const [cnt1, cnt2, cnt3, cnt4] = await Promise.all([
         this.redisClient.deleteWithPrefix(profile1CachePrefix),
         this.redisClient.deleteWithPrefix(profile2CachePrefix),
+        this.redisClient.deleteWithPrefix(timeline1CachePrefix),
+        this.redisClient.deleteWithPrefix(timeline2CachePrefix),
       ]);
       if (cnt1 > 0) logger.info(`Cache invalidated (prefix): ${profile1CachePrefix}`);
       if (cnt2 > 0) logger.info(`Cache invalidated (prefix): ${profile2CachePrefix}`);
+      if (cnt3 > 0) logger.info(`Cache invalidated (prefix): ${timeline1CachePrefix}`);
+      if (cnt4 > 0) logger.info(`Cache invalidated (prefix): ${timeline2CachePrefix}`);
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);

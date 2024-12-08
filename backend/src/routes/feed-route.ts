@@ -160,7 +160,7 @@ export class FeedRoute implements IRoute {
 
       try {
         // Get feed timeline
-        const { feedTimeLine, meta } = await this.feedService.getFeedTimeline(
+        const { feeds, meta } = await this.feedService.getFeedTimeline(
           currentUser.userId,
           query.cursor,
           query.limit
@@ -169,15 +169,15 @@ export class FeedRoute implements IRoute {
         // Map to dto
         const responseData: IGetFeedTimelineResponseBodyDto = {
           cursor: meta.cursor ? meta.cursor.toString() : null,
-          data: feedTimeLine.map((feed) => ({
+          data: feeds.map((feed) => ({
             feed_id: feed.feedId.toString(),
             user_id: feed.userId.toString(),
             username: feed.username,
             full_name: feed.fullName,
             profile_photo: feed.profilePhotoPath,
             content: feed.content,
-            created_at: feed.createdAt.toISOString(),
-            updated_at: feed.updatedAt.toISOString(),
+            created_at: feed.createdAt,
+            updated_at: feed.updatedAt,
           })),
         };
 
