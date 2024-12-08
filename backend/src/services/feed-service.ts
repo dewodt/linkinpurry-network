@@ -5,6 +5,7 @@ import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import { Database } from '@/infrastructures/database/database';
+import { RedisClient } from '@/infrastructures/redis/redis';
 
 import { NotificationService } from './notification-service';
 import type { IService } from './service';
@@ -20,6 +21,7 @@ export class FeedService implements IService {
   constructor(
     @inject(Config.Key) private readonly config: Config,
     @inject(Database.Key) private readonly database: Database,
+    @inject(RedisClient.Key) private readonly redisClient: RedisClient,
     @inject(NotificationService.Key) private readonly notificationService: NotificationService
   ) {
     this.prisma = this.database.getPrisma();
@@ -56,6 +58,11 @@ export class FeedService implements IService {
         .catch((error) => {
           if (error instanceof Error) logger.error(error.message);
         });
+
+      // Invalidate profile cache
+      const profileCachePrefix = `user-profile:${currentUserId}`;
+      const deleteCount = await this.redisClient.deleteWithPrefix(profileCachePrefix);
+      if (deleteCount > 0) logger.info(`Cache invalidated (prefix): ${profileCachePrefix}`);
 
       return {
         feedId: feed.id,
@@ -298,6 +305,11 @@ export class FeedService implements IService {
         },
       });
 
+      // Invalidate profile cache
+      const profileCachePrefix = `user-profile:${currentUserId}`;
+      const deleteCount = await this.redisClient.deleteWithPrefix(profileCachePrefix);
+      if (deleteCount > 0) logger.info(`Cache invalidated (prefix): ${profileCachePrefix}`);
+
       return updatedFeed;
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
@@ -339,6 +351,11 @@ export class FeedService implements IService {
           id: feedId,
         },
       });
+
+      // Invalidate profile cache
+      const profileCachePrefix = `user-profile:${currentUserId}`;
+      const deleteCount = await this.redisClient.deleteWithPrefix(profileCachePrefix);
+      if (deleteCount > 0) logger.info(`Cache invalidated (prefix): ${profileCachePrefix}`);
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
 

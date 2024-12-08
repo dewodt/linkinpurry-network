@@ -5,6 +5,7 @@ import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import type { PagePaginationResponseMeta } from '@/dto/common';
 import { Database } from '@/infrastructures/database/database';
+import { RedisClient } from '@/infrastructures/redis/redis';
 import { ConnectionRequestDecision, ConnectionStatus } from '@/utils/enum';
 
 import { type IService } from './service';
@@ -71,7 +72,10 @@ export class ConnectionService implements IConnectionService {
   private prisma: PrismaClient;
 
   // Inject dependencies
-  constructor(@inject(Database.Key) private readonly database: Database) {
+  constructor(
+    @inject(Database.Key) private readonly database: Database,
+    @inject(RedisClient.Key) private readonly redisClient: RedisClient
+  ) {
     this.prisma = this.database.getPrisma();
   }
 
@@ -199,6 +203,16 @@ export class ConnectionService implements IConnectionService {
             }),
           ]);
         });
+
+        // Invalidate the cache of both users (connection count of both users in profile updated)
+        const profile1CachePrefix = `user-profile:${currentUserId}`;
+        const profile2CachePrefix = `user-profile:${userId}`;
+        const [cnt1, cnt2] = await Promise.all([
+          this.redisClient.deleteWithPrefix(profile1CachePrefix),
+          this.redisClient.deleteWithPrefix(profile2CachePrefix),
+        ]);
+        if (cnt1 > 0) logger.info(`Cache invalidated (prefix): ${profile1CachePrefix}`);
+        if (cnt2 > 0) logger.info(`Cache invalidated (prefix): ${profile2CachePrefix}`);
       } catch (error) {
         // Internal server error
         if (error instanceof Error) logger.error(error.message);
@@ -542,6 +556,16 @@ export class ConnectionService implements IConnectionService {
             }),
           ]);
         });
+
+        // Invalidate the profile cache of both users
+        const profile1CachePrefix = `user-profile:${currentUserId}`;
+        const profile2CachePrefix = `user-profile:${fromUserId}`;
+        const [cnt1, cnt2] = await Promise.all([
+          this.redisClient.deleteWithPrefix(profile1CachePrefix),
+          this.redisClient.deleteWithPrefix(profile2CachePrefix),
+        ]);
+        if (cnt1 > 0) logger.info(`Cache invalidated (prefix): ${profile1CachePrefix}`);
+        if (cnt2 > 0) logger.info(`Cache invalidated (prefix): ${profile2CachePrefix}`);
       } catch (error) {
         // Internal server error
         if (error instanceof Error) logger.error(error.message);
@@ -632,6 +656,16 @@ export class ConnectionService implements IConnectionService {
           }),
         ]);
       });
+
+      // Invalidate the profile cache of both users
+      const profile1CachePrefix = `user-profile:${currentUserId}`;
+      const profile2CachePrefix = `user-profile:${userId}`;
+      const [cnt1, cnt2] = await Promise.all([
+        this.redisClient.deleteWithPrefix(profile1CachePrefix),
+        this.redisClient.deleteWithPrefix(profile2CachePrefix),
+      ]);
+      if (cnt1 > 0) logger.info(`Cache invalidated (prefix): ${profile1CachePrefix}`);
+      if (cnt2 > 0) logger.info(`Cache invalidated (prefix): ${profile2CachePrefix}`);
     } catch (error) {
       // Internal server error
       if (error instanceof Error) logger.error(error.message);
