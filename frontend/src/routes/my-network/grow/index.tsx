@@ -56,7 +56,7 @@ function RouteComponent() {
         <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-sm">
           {/* Header */}
           <header className="flex flex-col gap-2 border-b p-5 sm:gap-0">
-            <h1 className="text-lg font-semibold">{isSuccessConnections && <>{connections.meta.totalItems}</>} Pending Connections</h1>
+            <h1 className="text-lg font-bold">{isSuccessConnections && <>{connections.meta.totalItems}</>} Pending Connections</h1>
 
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-medium text-muted-foreground">
@@ -101,8 +101,10 @@ function RouteComponent() {
                           <AvatarUser src={con.profile_photo} alt={`${con.name}'s profile picture`} classNameAvatar="size-14" />
 
                           <div className="flex-auto">
-                            <h2 className="text-xl font-bold text-foreground decoration-2 underline-offset-2 hover:underline">{con.name}</h2>
-                            <p className="line-clamp-3 text-sm font-medium text-muted-foreground sm:line-clamp-2">{con.work_history}</p>
+                            <h2 className="line-clamp-1 break-all text-lg font-semibold text-foreground decoration-2 underline-offset-2 hover:underline">
+                              {con.name}
+                            </h2>
+                            <p className="line-clamp-3 break-all text-sm font-medium text-muted-foreground sm:line-clamp-2">{con.work_history}</p>
                           </div>
                         </Link>
 

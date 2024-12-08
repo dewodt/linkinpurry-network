@@ -82,9 +82,9 @@ function RouteComponent() {
 
             {/* Texts */}
             <div className="flex flex-col items-start gap-1">
-              <h1 className="text-2xl font-bold text-foreground">{profile.data.name}</h1>
+              <h1 className="line-clamp-1 break-all text-2xl font-bold text-foreground">{profile.data.name}</h1>
 
-              <p className="text-base font-medium text-muted-foreground">@{profile.data.username}</p>
+              <p className="line-clamp-1 break-all text-base font-medium text-muted-foreground">@{profile.data.username}</p>
 
               {/* Connection count */}
               <Link
@@ -140,7 +140,11 @@ function RouteComponent() {
           <h2 className="text-xl font-bold text-foreground">Experience</h2>
 
           <div>
-            {profile.data.work_history ? <p>{profile.data.work_history}</p> : <p className="text-muted-foreground">No work history added.</p>}
+            {profile.data.work_history ? (
+              <p className="break-words">{profile.data.work_history}</p>
+            ) : (
+              <p className="text-muted-foreground">No work history added.</p>
+            )}
           </div>
         </section>
 
@@ -148,7 +152,9 @@ function RouteComponent() {
         <section className="w-full max-w-3xl space-y-1 overflow-hidden rounded-xl border border-border bg-background p-6 shadow-sm">
           <h2 className="text-xl font-bold text-foreground">Skills</h2>
 
-          <div>{profile.data.skills ? <p>{profile.data.skills}</p> : <p className="text-muted-foreground">No skills added.</p>}</div>
+          <div>
+            {profile.data.skills ? <p className="break-words">{profile.data.skills}</p> : <p className="text-muted-foreground">No skills added.</p>}
+          </div>
         </section>
 
         {/* Recent posts */}
@@ -165,7 +171,7 @@ function RouteComponent() {
                       <Link to="/feed/$feedId" params={{ feedId: post.id }}>
                         <article className="flex flex-col gap-1">
                           <p className="text-sm font-medium text-muted-foreground">{formatDate(post.created_at)}</p>
-                          <p className="line-clamp-3 text-base text-foreground">{post.content}</p>
+                          <p className="break-words text-base text-foreground">{post.content}</p>
                         </article>
                       </Link>
                     </li>

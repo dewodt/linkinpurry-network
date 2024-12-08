@@ -63,11 +63,13 @@ export default function CardFeed({
           <div className="flex items-center justify-between">
             <div>
               <Link to="/users/$userId" params={{ userId }}>
-                <p className="text-sm font-semibold decoration-2 underline-offset-2 hover:text-primary hover:underline">{fullName}</p>
+                <p className="line-clamp-1 break-all text-sm font-semibold decoration-2 underline-offset-2 hover:text-primary hover:underline">
+                  {fullName}
+                </p>
               </Link>
 
               <Link to="/users/$userId" params={{ userId }}>
-                <p className="text-sm font-medium text-muted-foreground">@{username}</p>
+                <p className="line-clamp-1 break-all text-sm font-medium text-muted-foreground">@{username}</p>
               </Link>
 
               <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
@@ -87,7 +89,7 @@ export default function CardFeed({
                 {/* Dropdowns */}
                 <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 self-start p-0">
+                    <Button variant="ghost" className="h-8 w-8 flex-none self-start p-0">
                       <MoreHorizontal className="h-4 w-4" />
                       <span className="sr-only">Open menu</span>
                     </Button>

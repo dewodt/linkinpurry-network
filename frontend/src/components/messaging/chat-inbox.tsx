@@ -73,7 +73,7 @@ export function ChatInbox() {
     if (hasNextPageInbox && !isFetchingNextPageInbox) {
       fetchNextPageInbox();
     }
-  }, 300);
+  }, 150);
 
   const flattenInbox = React.useMemo(() => inboxData?.pages.flatMap((page) => page.data) ?? [], [inboxData]);
 

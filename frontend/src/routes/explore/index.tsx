@@ -140,10 +140,10 @@ function RouteComponent() {
                             {/* Avatar */}
                             <AvatarUser src={user.profile_photo} alt={`${user.username}'s profile picture`} classNameAvatar="size-20" />
                             <div className="space-y-0.5 text-center">
-                              <p className="line-clamp-1 text-lg font-semibold text-foreground decoration-2 underline-offset-2 hover:underline">
+                              <p className="line-clamp-1 break-all text-lg font-semibold text-foreground decoration-2 underline-offset-2 hover:underline">
                                 {user.name}
                               </p>
-                              <p className="line-clamp-1 text-sm font-medium text-muted-foreground">@{user.username}</p>
+                              <p className="line-clamp-1 break-all text-sm font-medium text-muted-foreground">@{user.username}</p>
                             </div>
                           </Link>
 

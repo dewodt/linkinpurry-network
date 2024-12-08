@@ -63,7 +63,7 @@ function RouteComponent() {
     if (hasNextPageMyFeed && !isFetchingNextPageMyFeed) {
       fetchNextPageMyFeed();
     }
-  }, 300);
+  }, 150);
 
   React.useEffect(() => {
     if (feedSentinelInView) {

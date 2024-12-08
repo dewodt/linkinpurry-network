@@ -135,7 +135,7 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, 300);
+  }, 150);
 
   const allUsers = data?.pages.flatMap((page) => page.data) ?? [];
 
@@ -189,8 +189,8 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
             >
               <AvatarUser classNameAvatar="size-12" src={user.profile_photo} alt={`${user.username}'s profile picture`} />
               <div className="space-y-1">
-                <h4 className="line-clamp-1 text-start text-base font-medium leading-tight">{user.name}</h4>
-                <p className="line-clamp-1 text-start text-sm leading-tight text-muted-foreground">@{user.username}</p>
+                <h4 className="line-clamp-1 break-all text-start text-base font-medium leading-tight">{user.name}</h4>
+                <p className="line-clamp-1 break-all text-start text-sm leading-tight text-muted-foreground">@{user.username}</p>
               </div>
             </button>
           </li>

@@ -102,8 +102,8 @@ export default function UpdateFeedDialog({
             <AvatarUser src={session?.profilePhoto || ''} alt={`${session?.name}'s Profile photo`} classNameAvatar="size-12" />
 
             <div>
-              <DialogTitle className="text-base">{session?.name}</DialogTitle>
-              <p className="text-sm font-medium text-muted-foreground">@{session?.username}</p>
+              <DialogTitle className="line-clamp-1 break-all text-base">{session?.name}</DialogTitle>
+              <p className="line-clamp-1 break-all text-sm font-medium text-muted-foreground">@{session?.username}</p>
             </div>
           </div>
         </DialogHeader>
@@ -131,7 +131,7 @@ export default function UpdateFeedDialog({
             />
 
             <div className="flex items-center justify-end border-t pt-4">
-              <Button className="rounded-full px-5" size="sm" type="submit" disabled={mutation.isPending}>
+              <Button className="rounded-full px-5" size="sm" type="submit" disabled={mutation.isPending || !form.formState.isDirty}>
                 {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update
               </Button>

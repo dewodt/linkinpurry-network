@@ -100,7 +100,7 @@ export function ChatContent() {
     if (hasNextPageChat && !isFetchingNextPageChat) {
       fetchNextPageChat();
     }
-  }, 300);
+  }, 150);
 
   const flattenChats = React.useMemo(() => (chatData ? chatData.pages.flatMap((page) => page.data).reverse() : []), [chatData]);
 
@@ -203,7 +203,7 @@ export function ChatContent() {
             <Link to="/users/$userId" params={{ userId: searchParams.withUserId }}>
               <div className="w-full space-y-0.5">
                 {/* name */}
-                <h1 className="line-clamp-1 max-w-xs break-words text-sm font-bold text-foreground">{otherUserProfile.name}</h1>
+                <h1 className="line-clamp-1 break-all text-sm font-bold text-foreground">{otherUserProfile.name}</h1>
 
                 {/* Typing status Status */}
                 {isOtherUserTyping && <p className="text-xs font-medium text-muted-foreground">Typing...</p>}

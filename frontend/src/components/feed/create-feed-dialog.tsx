@@ -96,8 +96,8 @@ export default function CreateFeedDialog({ children }: CreateFeedDialogProps) {
             <AvatarUser src={session?.profilePhoto || ''} alt={`${session?.name}'s Profile photo`} classNameAvatar="size-12" />
 
             <div>
-              <DialogTitle className="text-base">{session?.name}</DialogTitle>
-              <p className="text-sm font-medium text-muted-foreground">@{session?.username}</p>
+              <DialogTitle className="line-clamp-1 break-all text-base">{session?.name}</DialogTitle>
+              <p className="line-clamp-1 break-all text-sm font-medium text-muted-foreground">@{session?.username}</p>
             </div>
           </div>
         </DialogHeader>

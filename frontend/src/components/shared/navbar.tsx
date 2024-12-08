@@ -308,8 +308,8 @@ function UserDropdown({ session }: { session: Session }) {
             <AvatarUser src={session.profilePhoto} alt={`${session.name}'s profile picture`} classNameAvatar="size-14" />
 
             <div className="flex-1">
-              <h3 className="font-semibold">{session.name}</h3>
-              <p className="text-sm text-muted-foreground">{session.email}</p>
+              <h3 className="line-clamp-1 break-all font-semibold">{session.name}</h3>
+              <p className="line-clamp-1 break-all text-sm text-muted-foreground">{session.email}</p>
             </div>
           </div>
 
