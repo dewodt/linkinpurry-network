@@ -8,7 +8,7 @@ import React from 'react';
 
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { sendMessageRequestData } from '@/lib/schemas/chat';
-import { sendMessage, updateSendMessageQueryDataInbox, updateSendMessageQueryDataMessage } from '@/services/chat';
+import { sendMessage, sendStopTyping, sendTyping, updateSendMessageQueryDataInbox, updateSendMessageQueryDataMessage } from '@/services/chat';
 import { SendMessageErrorResponse, SendMessageRequestData, SendMessageSuccessResponse } from '@/types/api/chat';
 
 import { Button } from '../ui/button';
@@ -31,7 +31,62 @@ export function SendMessageForm({ scrollToBottomSmooth }: SendMessageFormProps) 
     },
   });
 
-  const { control, handleSubmit } = form;
+  const { control, handleSubmit, watch } = form;
+
+  const isTypingRef = React.useRef(false);
+  const stopTypingTimeoutRef = React.useRef<number>();
+
+  // Watch message field for changes
+  const message = watch('message');
+
+  // Handle typing status
+  const handleTyping = React.useCallback(() => {
+    if (!searchParams.withUserId) return;
+
+    // Clear any existing timeout
+    if (stopTypingTimeoutRef.current) {
+      clearTimeout(stopTypingTimeoutRef.current);
+    }
+    // Only send typing event if we weren't already typing
+    if (!isTypingRef.current) {
+      isTypingRef.current = true;
+      sendTyping({ to_user_id: searchParams.withUserId });
+    }
+
+    // Set new timeout for stop typing
+    stopTypingTimeoutRef.current = setTimeout(() => {
+      if (!isTypingRef.current || !searchParams.withUserId) return;
+
+      sendStopTyping({ to_user_id: searchParams.withUserId });
+      isTypingRef.current = false;
+    }, 1000);
+  }, [searchParams.withUserId]);
+
+  // Watch for message changes
+  React.useEffect(() => {
+    if (message) {
+      handleTyping();
+    }
+
+    return () => {
+      if (stopTypingTimeoutRef.current) {
+        clearTimeout(stopTypingTimeoutRef.current);
+      }
+    };
+  }, [message, handleTyping]);
+
+  // Clean up on unmount or chat change
+  React.useEffect(() => {
+    return () => {
+      if (isTypingRef.current && searchParams.withUserId) {
+        sendStopTyping({ to_user_id: searchParams.withUserId });
+        isTypingRef.current = false;
+      }
+      if (stopTypingTimeoutRef.current) {
+        clearTimeout(stopTypingTimeoutRef.current);
+      }
+    };
+  }, [searchParams.withUserId]);
 
   // Mutations
   const mutation = useMutation<SendMessageSuccessResponse, SendMessageErrorResponse, SendMessageRequestData>({
@@ -51,6 +106,15 @@ export function SendMessageForm({ scrollToBottomSmooth }: SendMessageFormProps) 
 
       // Update chat message query data
       updateSendMessageQueryDataMessage(queryClient, response.data);
+
+      // Stop typing indicator
+      if (isTypingRef.current && searchParams.withUserId) {
+        sendStopTyping({ to_user_id: searchParams.withUserId });
+        isTypingRef.current = false;
+      }
+      if (stopTypingTimeoutRef.current) {
+        clearTimeout(stopTypingTimeoutRef.current);
+      }
 
       // Scroll bottom & focus again
       await new Promise((resolve) => setTimeout(resolve, 25));
@@ -76,6 +140,7 @@ export function SendMessageForm({ scrollToBottomSmooth }: SendMessageFormProps) 
     const timeoutId = setTimeout(() => {
       form.setFocus('message');
     }, 25);
+
     return () => clearTimeout(timeoutId);
   }, [searchParams.withUserId, form]);
 
@@ -99,12 +164,11 @@ export function SendMessageForm({ scrollToBottomSmooth }: SendMessageFormProps) 
             <FormItem>
               <FormLabel className="sr-only">Message</FormLabel>
               <FormControl>
-                <Textarea placeholder="Write a message..." className="max-h-52 bg-muted" onKeyDown={handleEnter} {...field}></Textarea>
+                <Textarea placeholder="Write a message..." className="max-h-52 bg-muted" onKeyDown={handleEnter} {...field} />
               </FormControl>
             </FormItem>
           )}
         />
-
         {/* Submit */}
         <div className="flex flex-auto justify-end">
           <Button type="submit" variant="default" size="xs" className="rounded-full px-3.5">

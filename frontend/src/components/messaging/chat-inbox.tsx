@@ -127,12 +127,13 @@ export function ChatInbox() {
                     {/* Name & message preview */}
                     <div className="flex flex-auto flex-col text-left">
                       <div className="flex flex-auto flex-row items-center justify-between gap-1">
-                        <h2 className="line-clamp-1 text-lg font-semibold text-foreground">{inbox.other_user_full_name}</h2>
+                        <h2 className="line-clamp-1 break-all text-lg font-semibold text-foreground">{inbox.other_user_full_name}</h2>
 
                         {/* Time preview */}
-                        <p className="text-xs font-medium">{getRelativeTime(new Date(inbox.latest_message_timestamp))}</p>
+                        <p className="flex-none text-xs font-medium">{getRelativeTime(new Date(inbox.latest_message_timestamp))}</p>
                       </div>
-                      <p className="line-clamp-2 text-sm text-muted-foreground">{inbox.latest_message}</p>
+
+                      <p className="line-clamp-2 break-all text-sm text-muted-foreground">{inbox.latest_message}</p>
                     </div>
                   </button>
                 </li>
@@ -140,7 +141,7 @@ export function ChatInbox() {
 
               {hasNextPageInbox && (
                 <li ref={inboxSentinelRef} className="flex items-center justify-center">
-                  <LoadingFill className="border-t py-5" />
+                  <LoadingFill className="py-5" />
                 </li>
               )}
             </ol>

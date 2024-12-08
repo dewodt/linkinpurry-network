@@ -81,7 +81,7 @@ export class ChatGateway implements IWebSocketGateway {
     socket.on('joinChatRooms', this.handleJoinChatRooms(socket, nsp, io));
     socket.on('sendMessage', this.handleSendMessage(socket, nsp, io));
     socket.on('sendTyping', this.handleSendTyping(socket, nsp, io));
-    socket.on('stopTyping', this.handleStopTyping(socket, nsp, io));
+    socket.on('sendStopTyping', this.handleStopTyping(socket, nsp, io));
 
     logger.info(`New chat connection | ID:${socket.id} | FROM: ${socket.handshake.address}`);
   }

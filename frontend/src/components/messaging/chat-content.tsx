@@ -8,6 +8,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import React from 'react';
 
 import { useSession } from '@/context/session-provider';
+import { listenEvent } from '@/lib/socket-io';
 import { getRelativeTime } from '@/lib/utils';
 import { getChatHistory, getOtherUserProfile } from '@/services/chat';
 import { GetChatHistoryErrorResponse, GetChatHistorySuccessResponse, GetOtherUserProfile } from '@/types/api/chat';
@@ -21,6 +22,9 @@ import { ScrollBar } from '../ui/scroll-area';
 import { SendMessageForm } from './send-message-form';
 
 export function ChatContent() {
+  // states
+  const [isOtherUserTyping, setIsOtherUserTyping] = React.useState<boolean>(false);
+
   // hooks
   const navigate = useNavigate();
   const searchParams = useSearch({ from: '/messaging/' });
@@ -144,6 +148,17 @@ export function ChatContent() {
     }
   }, [flattenChats.length]);
 
+  // Listen for typing events
+  listenEvent('typing', () => {
+    // console.log('in typing event');
+    setIsOtherUserTyping(true);
+  });
+
+  listenEvent('stopTyping', () => {
+    // console.log('in stopTyping event');
+    setIsOtherUserTyping(false);
+  });
+
   // ensure selectedOtherUser is not null
   if (!searchParams.withUserId) return null;
 
@@ -188,12 +203,10 @@ export function ChatContent() {
             <Link to="/users/$userId" params={{ userId: searchParams.withUserId }}>
               <div className="w-full space-y-0.5">
                 {/* name */}
-                <h1 className="text-sm font-bold text-foreground">{otherUserProfile.name}</h1>
+                <h1 className="line-clamp-1 max-w-xs break-words text-sm font-bold text-foreground">{otherUserProfile.name}</h1>
 
-                {/* Status */}
-                {/* {isSuccessUserStatus && userStatus.data.status === UserStatus.ONLINE && (
-              <p className="text-xs font-medium text-muted-foreground">Online</p>
-            )} */}
+                {/* Typing status Status */}
+                {isOtherUserTyping && <p className="text-xs font-medium text-muted-foreground">Typing...</p>}
               </div>
             </Link>
           </div>
@@ -224,14 +237,14 @@ export function ChatContent() {
                       />
 
                       {/* Message */}
-                      <div className="flex flex-auto flex-col gap-1">
+                      <div className="flex w-full max-w-xs flex-auto flex-col gap-1 break-words">
                         <div className="flex flex-row items-center gap-2">
                           {/* Name */}
-                          <p className="text-sm font-bold text-foreground">
+                          <p className="line-clamp-2 text-sm font-bold text-foreground">
                             {message.from_user_id == session?.userId ? session.name : otherUserProfile.name}
                           </p>
 
-                          <p className="text-xs font-medium text-muted-foreground">{getRelativeTime(new Date(message.timestamp))}</p>
+                          <p className="flex-none text-xs font-medium text-muted-foreground">{getRelativeTime(new Date(message.timestamp))}</p>
                         </div>
 
                         {/* Message */}

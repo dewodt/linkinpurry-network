@@ -23,7 +23,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const sessionQuery = useQuery<SessionSuccessResponse, SessionErrorResponse>({
     queryKey: ['session'],
     queryFn: getSession,
-    staleTime: 15 * 60 * 1000, // 15 minutes
     retry: 0,
   });
 
@@ -34,9 +33,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const deleteSession = useCallback(() => {
     // Clear query cache
     queryClient.clear();
-    queryClient.removeQueries({
-      predicate: () => true,
-    });
+    queryClient.removeQueries({ predicate: () => true });
 
     // Disconnect from socket
     socket.disconnect();
@@ -69,8 +66,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       // Everytime session query succeeded, connect to socket
       socket.connect();
 
-      requestPermission();
       // Prompt notification request
+      requestPermission();
     } else if (sessionQuery.isError) {
       // If session data exists but query failed (expired), delete session
       if (sessionQuery.error?.response?.status === 401 && sessionQuery.data?.data) {
