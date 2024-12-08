@@ -7,13 +7,14 @@ import { logger } from '@/core/logger';
 import type { PagePaginationResponseMeta } from '@/dto/common';
 import type { IUpdateProfileRequestBodyDto } from '@/dto/user-dto';
 import { Database } from '@/infrastructures/database/database';
+import { RedisClient } from '@/infrastructures/redis/redis';
 import { ConnectionStatus } from '@/utils/enum';
 
 import type { IService } from './service';
 
 interface UserProfile {
   // level 1
-  id: bigint;
+  id: string;
   username: string;
   fullName: string;
   profilePhotoPath: string;
@@ -25,7 +26,7 @@ interface UserProfile {
   // level 2
   feeds?:
     | {
-        id: bigint;
+        id: string;
         content: string;
         createdAt: Date;
       }[]
@@ -75,6 +76,7 @@ export class UserService implements IUserService {
   // Dependencies
   constructor(
     @inject(Database.Key) private readonly database: Database,
+    @inject(RedisClient.Key) private readonly redis: RedisClient,
     @inject(Bucket.Key) private readonly bucket: Bucket
   ) {
     this.prisma = this.database.getPrisma();
@@ -200,7 +202,7 @@ export class UserService implements IUserService {
 
       const users: UserPreview[] = rawUsers.map((user) => {
         return {
-          id: user.id,
+          id: user.id.toString(),
           username: user.username,
           fullName: user.fullName || 'N/A',
           profilePhotoPath: user.profilePhotoPath,
@@ -231,6 +233,12 @@ export class UserService implements IUserService {
 
   /**
    * Get user profile by ID + connection state
+   * Cache dependency:
+   * - current user edit profile (done)
+   * - current user create new post, delete post, update post (done)
+   * - current user accept connection, delete connection, connect to a pending req to this user
+   * - anyone accept to this user or connect to this user with a pending req (done)
+   * result is different for each user because of the connectionStatusField, so we need to cache it per user
    *
    * @param userId
    * @param currentUserId
@@ -238,6 +246,18 @@ export class UserService implements IUserService {
    * @throws ServiceException
    */
   async getProfile(currentUserId: bigint | undefined, userId: bigint) {
+    // Caching Layer
+    // id 0 -> public user
+    // id else -> authenticated user
+    const cacheKey = `user-profile:${userId}:${currentUserId || 0}`;
+
+    const result = await this.redis.getJson<UserProfile>(cacheKey);
+    if (result) {
+      logger.info(`Cache hit: ${cacheKey}`);
+      return result;
+    }
+
+    // Database Layer
     // Simple check if user exists
     let isUserExists = false;
     try {
@@ -315,7 +335,7 @@ export class UserService implements IUserService {
       // Map to temporary result + access lavel
       const result: UserProfile = {
         // level 1
-        id: profile.id,
+        id: profile.id.toString(),
         username: profile.username,
         fullName: profile.fullName || 'N/A',
         skills: profile.skills,
@@ -331,8 +351,16 @@ export class UserService implements IUserService {
           : ConnectionStatus.NONE,
 
         // Level 2
-        feeds: isLevel2 ? profile.feeds : undefined,
+        feeds: isLevel2
+          ? profile.feeds.map((feed) => ({ ...feed, id: feed.id.toString() }))
+          : undefined,
       };
+
+      // Cache the result into redis (set TTL to 1 hour)
+      // id 0 -> public user
+      // id else -> authenticated user
+      await this.redis.setJson(cacheKey, result, 3600);
+      logger.info(`Cache miss: ${cacheKey}`);
 
       return result;
     } catch (error) {
@@ -410,6 +438,11 @@ export class UserService implements IUserService {
           profilePhotoPath: profilePhotoPath || undefined,
         },
       });
+
+      // Clear cache
+      const cachePrefix = `user-profile:${currentUserId}`;
+      const deletedCount = await this.redis.deleteWithPrefix(cachePrefix);
+      if (deletedCount > 0) logger.info(`Cache invalidated (prefix): ${cachePrefix}*`);
 
       return updatedData;
     } catch (error) {

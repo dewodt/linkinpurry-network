@@ -5,9 +5,28 @@ import { Config } from '@/core/config';
 import { ExceptionFactory } from '@/core/exception';
 import { logger } from '@/core/logger';
 import { Database } from '@/infrastructures/database/database';
+import { RedisClient } from '@/infrastructures/redis/redis';
 
 import { NotificationService } from './notification-service';
 import type { IService } from './service';
+
+interface FeedTimelineServiceResponse {
+  feeds: {
+    feedId: string;
+    userId: string;
+    username: string;
+    fullName: string;
+    profilePhotoPath: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+  }[];
+  meta: {
+    cursor: string | null;
+    nextCursor: string | null;
+    limit: number;
+  };
+}
 
 @injectable()
 export class FeedService implements IService {
@@ -20,6 +39,7 @@ export class FeedService implements IService {
   constructor(
     @inject(Config.Key) private readonly config: Config,
     @inject(Database.Key) private readonly database: Database,
+    @inject(RedisClient.Key) private readonly redis: RedisClient,
     @inject(NotificationService.Key) private readonly notificationService: NotificationService
   ) {
     this.prisma = this.database.getPrisma();
@@ -57,6 +77,16 @@ export class FeedService implements IService {
           if (error instanceof Error) logger.error(error.message);
         });
 
+      // Invalidate profile cache and timeline cache
+      const profileCachePrefix = `user-profile:${currentUserId}`;
+      const feedTimelineCachePrefix = `feeds:${currentUserId}`;
+      const [cnt1, cnt2] = await Promise.all([
+        this.redis.deleteWithPrefix(profileCachePrefix),
+        this.redis.deleteWithPrefix(feedTimelineCachePrefix),
+      ]);
+      if (cnt1 > 0) logger.info(`Cache invalidated (prefix): ${profileCachePrefix}`);
+      if (cnt2 > 0) logger.info(`Cache invalidated (prefix): ${feedTimelineCachePrefix}`);
+
       return {
         feedId: feed.id,
         userId: feed.userId,
@@ -74,8 +104,26 @@ export class FeedService implements IService {
   /**
    * Get feed timeline
    * Get the current user posts and its networks posts sorted by post created_at and also cursor paginated
+   * Cache dependency:
+   * - Current user create new post, update post, delete post (done)
+   * - New connection (user accepted a connection or send a request to a pending) (done)
+   * - Delete connection (remove from cache) (done)
    */
-  async getFeedTimeline(currentUserId: bigint, cursor: bigint | undefined, limit: number) {
+  async getFeedTimeline(
+    currentUserId: bigint,
+    cursor: bigint | undefined,
+    limit: number
+  ): Promise<FeedTimelineServiceResponse> {
+    // Caching layer
+    const cacheKey = `feeds:${currentUserId}:${cursor}:${limit}`;
+
+    const result = await this.redis.getJson<FeedTimelineServiceResponse>(cacheKey);
+    if (result) {
+      logger.info(`Cache hit: ${cacheKey}`);
+      return result;
+    }
+
+    // Database layer
     try {
       // Get current user timeline
       const currentUserFeedTimeline = await this.prisma.feed.findMany({
@@ -124,27 +172,30 @@ export class FeedService implements IService {
         if (nextFeed) nextCursor = nextFeed.id;
       }
 
-      const feedTimeLine = currentUserFeedTimeline.map((feed) => ({
-        feedId: feed.id,
-        userId: feed.userId,
+      const feeds = currentUserFeedTimeline.map((feed) => ({
+        feedId: feed.id.toString(),
+        userId: feed.userId.toString(),
         username: feed.user.username,
         fullName: feed.user.fullName || 'N/A',
         profilePhotoPath: feed.user.profilePhotoPath,
         content: feed.content,
-        createdAt: feed.createdAt,
-        updatedAt: feed.updatedAt,
+        createdAt: feed.createdAt.toISOString(),
+        updatedAt: feed.updatedAt.toISOString(),
       }));
 
       const meta = {
-        cursor,
-        nextCursor,
+        cursor: cursor ? cursor.toString() : null,
+        nextCursor: nextCursor ? nextCursor.toString() : null,
         limit,
       };
 
-      return {
-        feedTimeLine,
-        meta,
-      };
+      const result = { feeds, meta };
+
+      // Update cache
+      await this.redis.setJson(cacheKey, result, 3600);
+      logger.info(`Cache miss: ${cacheKey}`);
+
+      return result;
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
 
@@ -298,6 +349,16 @@ export class FeedService implements IService {
         },
       });
 
+      // Invalidate profile cache
+      const profileCachePrefix = `user-profile:${currentUserId}`;
+      const feedTimelineCachePrefix = `feeds:${currentUserId}`;
+      const [cnt1, cnt2] = await Promise.all([
+        this.redis.deleteWithPrefix(profileCachePrefix),
+        this.redis.deleteWithPrefix(feedTimelineCachePrefix),
+      ]);
+      if (cnt1 > 0) logger.info(`Cache invalidated (prefix): ${profileCachePrefix}`);
+      if (cnt2 > 0) logger.info(`Cache invalidated (prefix): ${feedTimelineCachePrefix}`);
+
       return updatedFeed;
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
@@ -339,6 +400,16 @@ export class FeedService implements IService {
           id: feedId,
         },
       });
+
+      // Invalidate profile cache
+      const profileCachePrefix = `user-profile:${currentUserId}`;
+      const feedTimelineCachePrefix = `feeds:${currentUserId}`;
+      const [cnt1, cnt2] = await Promise.all([
+        this.redis.deleteWithPrefix(profileCachePrefix),
+        this.redis.deleteWithPrefix(feedTimelineCachePrefix),
+      ]);
+      if (cnt1 > 0) logger.info(`Cache invalidated (prefix): ${profileCachePrefix}`);
+      if (cnt2 > 0) logger.info(`Cache invalidated (prefix): ${feedTimelineCachePrefix}`);
     } catch (error) {
       if (error instanceof Error) logger.error(error.message);
 

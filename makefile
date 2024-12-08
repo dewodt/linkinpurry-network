@@ -4,6 +4,9 @@ network:
 db:
 	docker compose --env-file ./backend/.env.docker up --build linkinpurry-db
 
+redis:
+	docker compose --env-file ./backend/.env.docker up --build linkinpurry-redis
+
 # For local migration, not in container
 prisma-migrate:
 	cd backend && npx dotenv -e .env.local prisma migrate dev

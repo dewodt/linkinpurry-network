@@ -52,6 +52,11 @@ export const ConfigSchema = z.object({
     .string({ message: 'POSTGRES_HOST must be a string' })
     .min(1, { message: 'POSTGRES_HOST must not be empty' }),
 
+  // Redis
+  REDIS_URL: z
+    .string({ message: 'REDIS_URL must be a string' })
+    .min(1, { message: 'REDIS_URL must not be empty' }),
+
   // Add more environment variables here
 });
 
