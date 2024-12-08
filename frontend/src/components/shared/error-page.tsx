@@ -28,7 +28,7 @@ export function ErrorPage({
 
       <main className={cn('flex min-h-[calc(100vh-4rem)] flex-auto items-center justify-center bg-muted p-6 py-12 sm:p-12 lg:p-24', className)}>
         <section className="flex w-full max-w-md">
-          <Card className="w-full justify-center px-9 py-14 shadow-md">
+          <Card className="w-full justify-center px-9 py-14">
             <div className="flex flex-col items-center gap-4 text-center">
               {/* Icon */}
               {statusCode === 404 ? (

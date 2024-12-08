@@ -23,7 +23,7 @@ function RouteComponent() {
       <HelmetTemplate title="Messaging | LinkinPurry" />
 
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
-        <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-md">
+        <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-sm">
           {/* Header */}
           <ChatHeader />
 

@@ -17,7 +17,7 @@ function RouteComponent() {
       <HelmetTemplate title="Login | LinkinPurry" />
 
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto items-center justify-center bg-muted p-6 py-12 sm:p-12 lg:p-24">
-        <Card className="w-full max-w-sm shadow-md">
+        <Card className="w-full max-w-sm">
           {/* Title */}
           <CardHeader>
             <h1 className="text-center text-2xl font-bold text-primary lg:text-3xl">Login</h1>

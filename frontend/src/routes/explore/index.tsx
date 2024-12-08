@@ -12,6 +12,7 @@ import { ErrorFill } from '@/components/shared/error-fill';
 import { LoadingFill } from '@/components/shared/loading-fill';
 import { WarningFill } from '@/components/shared/warning-fill';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Pagination,
@@ -70,38 +71,44 @@ function RouteComponent() {
   };
 
   return (
-    <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 p-6 py-12 sm:p-12">
+    <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
       <section className="flex w-full max-w-3xl flex-col gap-8">
         {/* Title & search bar */}
-        <header className="flex flex-col items-center gap-4 lg:gap-6">
-          <h1 className="text-center text-3xl font-bold text-foreground lg:text-4xl">Expand Your Network</h1>
+        <Card>
+          <CardContent className="space-y-0 p-6">
+            <h1 className="mb-4 text-xl font-bold">Expand Your Network</h1>
+            <div className="flex items-center gap-4">
+              <AvatarUser src={session?.profilePhoto || ''} alt={`${session?.name}'s Avatar`} classNameAvatar="size-10" />
 
-          <search className="flex w-full flex-auto sm:max-w-[420px]">
-            <form className="relative flex-auto" onSubmit={handleFormSubmit}>
-              <label htmlFor="search-connection" className="sr-only"></label>
-              <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                id="search-user"
-                placeholder="Search a user"
-                className="h-9 bg-muted pl-9"
-                value={searchInput}
-                onChange={(e) => {
-                  setSearchInput(e.target.value);
-                  debouncedCallbackSearch(e.target.value);
-                }}
-              />
-            </form>
-          </search>
-        </header>
+              <search className="flex w-full flex-auto">
+                <form className="relative flex-auto" onSubmit={handleFormSubmit}>
+                  <label htmlFor="search-connection" className="sr-only"></label>
+                  <SearchIcon className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    id="search-user"
+                    placeholder="Search a user"
+                    className="h-10 rounded-full bg-muted pl-10"
+                    value={searchInput}
+                    onChange={(e) => {
+                      setSearchInput(e.target.value);
+                      debouncedCallbackSearch(e.target.value);
+                    }}
+                  />
+                </form>
+              </search>
+              {/* <Input className="h-10 rounded-full bg-muted px-5" placeholder="Create new post" /> */}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Pendingt state */}
-        {isPendingUsers && <LoadingFill className="h-32 bg-background" />}
+        {isPendingUsers && <LoadingFill className="h-40" />}
 
         {/* Error state */}
         {isErrorUsers && (
           <ErrorFill
-            className="h-32 bg-background"
+            className="h-40"
             statusCode={errorUsers?.response?.status}
             statusText={errorUsers.response?.statusText}
             message={errorUsers?.response?.data.message}
@@ -114,14 +121,14 @@ function RouteComponent() {
           <div className="flex flex-col gap-4">
             {/* Content */}
             {users.meta.totalItems === 0 ? (
-              <WarningFill className="h-32 bg-background" message="No users found" />
+              <WarningFill className="h-40" message="No users found" />
             ) : (
               <>
                 <ol className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {users.data.map((user) => {
                     return (
                       <li key={user.id}>
-                        <div className="relative flex flex-col gap-1 overflow-hidden rounded-xl border border-border bg-background shadow-md">
+                        <div className="relative flex flex-col gap-1 overflow-hidden rounded-xl border border-border bg-background shadow-sm">
                           {/* Background Color */}
                           <div className="h-20 bg-primary/25" />
 

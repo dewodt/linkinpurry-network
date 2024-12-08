@@ -51,7 +51,7 @@ function RouteComponent() {
 
   // debounced for automatic submit
   const debouncedSearchCallback = useDebouncedCallback(
-    (val: string) => navigate({ to: '/users/$userId/connections', params: { userId }, search: { search: val, page: 1 } }), // reset page to 1
+    (val: string) => navigate({ to: '/users/$userId/connections', params: { userId }, search: { search: val || undefined, page: 1 } }), // reset page to 1
     500,
   );
 
@@ -84,7 +84,7 @@ function RouteComponent() {
       {isSuccessConnections && <HelmetTemplate title={`Connections | LinkinPurry`} />}
 
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
-        <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-md">
+        <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-sm">
           {/* Header */}
           <header className="flex flex-col gap-2 border-b p-5 sm:gap-0">
             <h1 className="text-lg font-semibold">{isSuccessConnections && <>{connections.meta.totalItems}</>} Connections</h1>

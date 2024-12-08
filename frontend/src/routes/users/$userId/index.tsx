@@ -59,7 +59,7 @@ function RouteComponent() {
 
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
         {/* Profile section */}
-        <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-md">
+        <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background shadow-sm">
           {/*  Background */}
           <div className="relative h-32 bg-primary/25 md:h-48">
             {/* Avatar */}
@@ -136,7 +136,7 @@ function RouteComponent() {
         </section>
 
         {/* Work experience */}
-        <section className="w-full max-w-3xl space-y-1 overflow-hidden rounded-xl border border-border bg-background p-6 shadow-md">
+        <section className="w-full max-w-3xl space-y-1 overflow-hidden rounded-xl border border-border bg-background p-6 shadow-sm">
           <h2 className="text-xl font-bold text-foreground">Experience</h2>
 
           <div>
@@ -145,27 +145,29 @@ function RouteComponent() {
         </section>
 
         {/* Skills */}
-        <section className="w-full max-w-3xl space-y-1 overflow-hidden rounded-xl border border-border bg-background p-6 shadow-md">
+        <section className="w-full max-w-3xl space-y-1 overflow-hidden rounded-xl border border-border bg-background p-6 shadow-sm">
           <h2 className="text-xl font-bold text-foreground">Skills</h2>
 
           <div>{profile.data.skills ? <p>{profile.data.skills}</p> : <p className="text-muted-foreground">No skills added.</p>}</div>
         </section>
 
         {/* Recent posts */}
-        {profile.data.relevant_posts != undefined && (
-          <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background p-6 shadow-md">
+        {profile.data.relevant_posts && (
+          <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background p-6 shadow-sm">
             <h2 className="text-xl font-bold text-foreground">Recent Posts</h2>
 
             {profile.data.relevant_posts.length > 0 ? (
               <ol>
-                {profile.data.relevant_posts.map((post) => {
-                  const isLast = profile.data.relevant_posts && profile.data.relevant_posts.length - 1;
+                {profile.data.relevant_posts.map((post, idx) => {
+                  const isLast = profile.data.relevant_posts && profile.data.relevant_posts.length - 1 === idx;
                   return (
-                    <li key={post.id} className={cn('border-b py-3', isLast && 'border-b-0 pb-0')}>
-                      <article className="flex flex-col gap-1">
-                        <p className="text-sm font-medium text-muted-foreground">{formatDate(post.created_at)}</p>
-                        <p className="line-clamp-3 text-base text-foreground">{post.content}</p>
-                      </article>
+                    <li key={post.id} className={cn('py-4', isLast ? 'border-b-0 pb-0' : 'border-b')}>
+                      <Link to="/feed/$feedId" params={{ feedId: post.id }}>
+                        <article className="flex flex-col gap-1">
+                          <p className="text-sm font-medium text-muted-foreground">{formatDate(post.created_at)}</p>
+                          <p className="line-clamp-3 text-base text-foreground">{post.content}</p>
+                        </article>
+                      </Link>
                     </li>
                   );
                 })}
