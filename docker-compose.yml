@@ -18,6 +18,14 @@ services:
           "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h ${POSTGRES_HOST} -p ${POSTGRES_PORT}",
         ]
 
+  linkinpurry-redis:
+    container_name: linkinpurry-redis
+    image: redis:6
+    ports:
+      - "6379:6379"
+    networks:
+      - linkinpurry-network
+
   # BE Development (with hot reload)
   linkinpurry-be-dev:
     container_name: linkinpurry-be-dev

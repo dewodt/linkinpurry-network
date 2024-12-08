@@ -11,6 +11,7 @@ import 'reflect-metadata';
 import type { JWTPayload } from '@/dto/auth-dto';
 import { ResponseDtoFactory } from '@/dto/common';
 import { Database } from '@/infrastructures/database/database';
+import { RedisClient } from '@/infrastructures/redis/redis';
 import { AuthRoute } from '@/routes/auth-route';
 import { ChatRoute } from '@/routes/chat-route';
 import { ConnectionRoute } from '@/routes/connection-route';
@@ -44,6 +45,7 @@ export class App {
 
   private config: Config;
   private database: Database;
+  private redis: RedisClient;
   private webSocketServer: WebSocketServer;
 
   constructor() {
@@ -60,6 +62,7 @@ export class App {
 
     this.config = this.container.get<Config>(Config.Key);
     this.database = this.container.get<Database>(Database.Key);
+    this.redis = this.container.get<RedisClient>(RedisClient.Key);
     this.webSocketServer = this.container.get<WebSocketServer>(WebSocketServer.Key);
 
     // Setup
@@ -153,6 +156,9 @@ export class App {
   public listen(): void {
     // Connect to database
     this.database.connect();
+
+    // Conect to redis (automatically)
+    // this.redis.connect();
 
     // Get config & port
     const config = this.container.get<Config>(Config.Key);

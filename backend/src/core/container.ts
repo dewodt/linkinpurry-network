@@ -2,6 +2,7 @@ import { Container, ContainerModule } from 'inversify';
 
 import { ChatGateway } from '@/gateways/chat-gateway';
 import { Database } from '@/infrastructures/database/database';
+import { RedisClient } from '@/infrastructures/redis/redis';
 import { AuthMiddleware } from '@/middlewares/auth-middleware';
 import { AuthRoute } from '@/routes/auth-route';
 import { ChatRoute } from '@/routes/chat-route';
@@ -41,6 +42,7 @@ export class DependencyContainer {
     this.coreModule = new ContainerModule((bind) => {
       bind(Config.Key).to(Config).inSingletonScope();
       bind(Database.Key).to(Database).inSingletonScope();
+      bind(RedisClient.Key).to(RedisClient).inSingletonScope();
       bind(Bucket.Key).to(Bucket).inSingletonScope();
       bind(WebSocketServer.Key).to(WebSocketServer).inSingletonScope();
     });
