@@ -16,7 +16,14 @@ api.interceptors.response.use(
 
     if (response && response.status === 401) {
       const currentPath = window.location.pathname;
-      if (currentPath !== '/auth/login') {
+
+      const publicRoutesStatic = ['/', '/auth/login', '/auth/register', '/explore'];
+      const publicRoutesStartsWith = ['/users/'];
+      if (
+        currentPath !== '/auth/login' &&
+        !publicRoutesStatic.includes(currentPath) &&
+        !publicRoutesStartsWith.some((route) => currentPath.startsWith(route))
+      ) {
         window.location.href = '/auth/login';
       }
     }

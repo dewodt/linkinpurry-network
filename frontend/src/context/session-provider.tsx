@@ -70,15 +70,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       // Prompt notification request
       requestPermission();
-    } else if (sessionQuery.isError) {
-      // If session data exists but query failed (expired), delete session
-      if (sessionQuery.error?.response?.status === 401) {
-        deleteSession();
-      }
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionQuery.isSuccess, sessionQuery.isError, sessionQuery.error]);
+  }, [sessionQuery.isSuccess, sessionQuery.error]);
 
   return <SessionContext.Provider value={{ sessionQuery, deleteSession, updateSession }}>{children}</SessionContext.Provider>;
 }

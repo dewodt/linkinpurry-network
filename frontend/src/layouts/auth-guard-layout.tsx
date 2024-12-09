@@ -17,7 +17,8 @@ export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
   const navigate = useNavigate();
   const currentPath = window.location.pathname;
 
-  const isRedirectLogin = level === 'authenticated-only' && currentPath !== '/auth/login' && isErrorSession && errorSession?.response?.status === 401;
+  // no need, because we have axios interceptor
+  // const isRedirectLogin = level === 'authenticated-only' && currentPath !== '/auth/login' && isErrorSession && errorSession?.response?.status === 401;
 
   const isRedirectHome = level === 'unauthenticated-only' && isSuccessSession && currentPath !== '/';
 
@@ -25,10 +26,11 @@ export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
   useEffect(() => {
     if (isRedirectHome) {
       navigate({ to: '/' });
-    } else if (isRedirectLogin) {
-      navigate({ to: '/auth/login' });
     }
-  }, [isRedirectHome, isRedirectLogin, navigate]);
+    // else if (isRedirectLogin) {
+    //   navigate({ to: '/auth/login' });
+    // }
+  }, [isRedirectHome, navigate]);
 
   if (level === 'authenticated-only') {
     if (isLoadingSession) {
@@ -46,7 +48,7 @@ export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
       );
     }
 
-    // 401 or success will be redirected to login page
+    // 401 (redirected to login) or success will render child
     return <>{children}</>;
   } else if (level === 'unauthenticated-only') {
     if (isLoadingSession || isSuccessSession) {
@@ -64,9 +66,8 @@ export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
       );
     }
 
-    if (isErrorSession && errorSession?.response?.status === 401) {
-      return <>{children}</>;
-    }
+    // Other (error + 401) will render child
+    return <>{children}</>;
   }
 
   return null;
