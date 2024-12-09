@@ -1,6 +1,8 @@
 # LinkInPurry
 
-## How To Run
+## Description
+
+LinkInPurry is a professional networking platform built for O.W.C.A. (Organisasi Warga Cool Abiez) agents to connect, share updates, and communicate securely. The platform is built as a Single Page Application (SPA) using React for the frontend and Hono.js for the backend, offering real-time features and a seamless user experience.
 
 ## How To Install & Run
 
@@ -36,7 +38,19 @@
    docker compose up --build linkinpurry-db
    ```
 
-5. Apply the migration to the database
+5. Run redis.
+
+   ```bash
+   make redis
+   ```
+
+   or
+
+   ```bash
+   docker compose --env-file ./backend/.env.docker up --build linkinpurry-redis
+   ```
+
+6. Apply the migration to the database
 
    ```bash
    make prisma-migrate
@@ -48,7 +62,20 @@
    cd backend && npx dotenv -e .env.local prisma migrate dev
    ```
 
-6. Run the backend service
+7. Run the database seeder (for non-empty starting state)
+
+   ```bash
+   make seeder
+   ```
+
+   or
+
+   ```bash
+   docker compose --env-file ./backend/.env.docker up --build linkinpurry-seeder
+
+   ```
+
+8. Run the backend service
 
    - For development,
 
@@ -74,7 +101,7 @@
      docker compose --env-file ./backend/.env.docker up --build linkinpurry-be-prod
      ```
 
-7. Run the frontend SPA
+9. Run the frontend SPA
 
    - For development,
 
@@ -100,28 +127,46 @@
      docker compose --env-file ./frontend/.env.docker up --build linkinpurry-fe-prod
      ```
 
-8. Stop the container
+10. Stop all of the container (other stop commands can be seen from the makefile file)
 
-   ```bash
-   make stop
-   ```
+    ```bash
+    make stop
+    ```
 
-   or
+    or
 
-   ```bash
-   docker compose down
-   ```
+    ```bash
+    docker compose down
+    ```
 
-9. Hard reset (delete docker volume for database & image storage)
+11. Hard reset (delete docker volume for database & image storage)
 
-   ```bash
-   make reset
-   ```
+    ```bash
+    make reset
+    ```
 
-   or
+    or
 
-   ```bash
-   docker compose down
-   docker volume rm linkinpurry-db-data
-   docker volume rm linkinpurry-upload-data
-   ```
+    ```bash
+    docker compose down
+    docker volume rm linkinpurry-db-data
+    docker volume rm linkinpurry-upload-data
+    ```
+
+## API Documentation
+
+After running the backend service, you can go visit [http://localhost:3000/docs](http://localhost:3000/docs) to see the API documentation.
+
+## Contributors
+
+### Server-side:
+
+13522009: Connection list, request list endpoint.
+13522011: Semua endpoint
+13522015: Request connect endpoint.
+
+### Client side:
+
+13522009: Connection list, request list page
+13522011: Semua page
+13522015: Feed Page, Login Page, Register Page
