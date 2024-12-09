@@ -141,7 +141,7 @@ function RouteComponent() {
 
           <div>
             {profile.body.work_history ? (
-              <p className="break-words">{profile.body.work_history}</p>
+              <p className="break-words whitespace-pre-line">{profile.body.work_history}</p>
             ) : (
               <p className="text-muted-foreground">No work history added.</p>
             )}
@@ -153,7 +153,7 @@ function RouteComponent() {
           <h2 className="text-xl font-bold text-foreground">Skills</h2>
 
           <div>
-            {profile.body.skills ? <p className="break-words">{profile.body.skills}</p> : <p className="text-muted-foreground">No skills added.</p>}
+            {profile.body.skills ? <p className="break-words whitespace-pre-line">{profile.body.skills}</p> : <p className="text-muted-foreground">No skills added.</p>}
           </div>
         </section>
 
