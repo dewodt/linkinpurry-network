@@ -12,7 +12,7 @@ interface AuthGuardLayoutProps {
 }
 
 export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
-  const { session, isSuccessSession, isLoadingSession, isErrorSession, errorSession, refetchSession } = useSession();
+  const { isSuccessSession, isLoadingSession, isErrorSession, errorSession, refetchSession } = useSession();
 
   const navigate = useNavigate();
   const currentPath = window.location.pathname;
@@ -21,6 +21,7 @@ export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
 
   const isRedirectHome = level === 'unauthenticated-only' && isSuccessSession && currentPath !== '/';
 
+  // For soft redirect (not to refresh)
   useEffect(() => {
     if (isRedirectHome) {
       navigate({ to: '/' });
@@ -30,7 +31,7 @@ export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
   }, [isRedirectHome, isRedirectLogin, navigate]);
 
   if (level === 'authenticated-only') {
-    if (isLoadingSession || (isErrorSession && errorSession?.response?.status === 401)) {
+    if (isLoadingSession) {
       return <LoadingPage />;
     }
 
@@ -45,9 +46,8 @@ export function AuthGuardLayout({ children, level }: AuthGuardLayoutProps) {
       );
     }
 
-    if (isSuccessSession && session) {
-      return <>{children}</>;
-    }
+    // 401 or success will be redirected to login page
+    return <>{children}</>;
   } else if (level === 'unauthenticated-only') {
     if (isLoadingSession || isSuccessSession) {
       return <LoadingPage />;

@@ -39,7 +39,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     socket.disconnect();
 
     // Navigate to login page
-    window.location.href = '/auth/login';
+    if (window.location.pathname !== '/auth/login') {
+      window.location.href = '/auth/login';
+    }
   }, [queryClient]);
 
   const updateSession = useCallback(
@@ -70,13 +72,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       requestPermission();
     } else if (sessionQuery.isError) {
       // If session data exists but query failed (expired), delete session
-      if (sessionQuery.error?.response?.status === 401 && sessionQuery.data?.data) {
+      if (sessionQuery.error?.response?.status === 401) {
         deleteSession();
       }
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionQuery.isSuccess, sessionQuery.data, sessionQuery.isError, sessionQuery.error, deleteSession]);
+  }, [sessionQuery.isSuccess, sessionQuery.isError, sessionQuery.error]);
 
   return <SessionContext.Provider value={{ sessionQuery, deleteSession, updateSession }}>{children}</SessionContext.Provider>;
 }
