@@ -58,9 +58,9 @@ export async function getOtherUserProfile({ otherUserId }: GetOtherUserProfileRe
   // Last attemp
   const axiosResponse = await getProfile({ userId: otherUserId });
   return {
-    name: axiosResponse.data.name,
-    profile_photo: axiosResponse.data.profile_photo,
-    username: axiosResponse.data.username,
+    name: axiosResponse.body.name,
+    profile_photo: axiosResponse.body.profile_photo,
+    username: axiosResponse.body.username,
   };
 }
 
@@ -125,14 +125,14 @@ export function updateSendMessageQueryDataInbox(queryClient: QueryClient, respon
       if (!oldData) return oldData;
 
       // Find if the inbox is in the list
-      const pageIdx = oldData.pages.findIndex((page) => page.data.some((inbox) => inbox.other_user_id === responseData.other_user_id));
+      const pageIdx = oldData.pages.findIndex((page) => page.body.some((inbox) => inbox.other_user_id === responseData.other_user_id));
 
       if (pageIdx === -1) {
         // If not found, add it to the first page
         const firstPage = oldData.pages[0];
         const newFirstPage: GetChatInboxSuccessResponse = {
           ...firstPage,
-          data: [
+          body: [
             {
               other_user_id: responseData.other_user_id,
               other_user_full_name: responseData.other_user_full_name,
@@ -142,7 +142,7 @@ export function updateSendMessageQueryDataInbox(queryClient: QueryClient, respon
               latest_message: responseData.message,
               latest_message_timestamp: responseData.timestamp,
             },
-            ...firstPage.data,
+            ...firstPage.body,
           ],
         };
         const newPages = [newFirstPage, ...oldData.pages.slice(1)];
@@ -156,12 +156,12 @@ export function updateSendMessageQueryDataInbox(queryClient: QueryClient, respon
         const foundPage = oldData.pages[pageIdx];
         const updatedFoundPage: GetChatInboxSuccessResponse = {
           ...foundPage,
-          data: foundPage.data.filter((inbox) => inbox.other_user_id !== responseData.other_user_id),
+          body: foundPage.body.filter((inbox) => inbox.other_user_id !== responseData.other_user_id),
         };
         const firstPage = oldData.pages[0];
         const newFirstPage: GetChatInboxSuccessResponse = {
           ...firstPage,
-          data: [
+          body: [
             {
               other_user_full_name: responseData.other_user_full_name,
               other_user_id: responseData.other_user_id,
@@ -171,7 +171,7 @@ export function updateSendMessageQueryDataInbox(queryClient: QueryClient, respon
               latest_message: responseData.message,
               latest_message_timestamp: responseData.timestamp,
             },
-            ...firstPage.data.filter((inbox) => inbox.other_user_id !== responseData.other_user_id),
+            ...firstPage.body.filter((inbox) => inbox.other_user_id !== responseData.other_user_id),
           ],
         };
 
@@ -204,14 +204,14 @@ export function updateSendMessageQueryDataMessage(queryClient: QueryClient, resp
     const firstPage = oldData.pages[0];
     const newPage: GetChatHistorySuccessResponse = {
       ...firstPage,
-      data: [
+      body: [
         {
           from_user_id: responseData.from_user_id,
           message: responseData.message,
           chat_id: responseData.message_id,
           timestamp: responseData.timestamp,
         },
-        ...firstPage.data,
+        ...firstPage.body,
       ],
     };
     const updatedPage = [newPage, ...oldData.pages.slice(1)];

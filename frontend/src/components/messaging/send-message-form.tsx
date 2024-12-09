@@ -102,10 +102,10 @@ export function SendMessageForm({ scrollToBottomSmooth }: SendMessageFormProps) 
       });
 
       // Update inbox query data
-      updateSendMessageQueryDataInbox(queryClient, response.data);
+      updateSendMessageQueryDataInbox(queryClient, response.body);
 
       // Update chat message query data
-      updateSendMessageQueryDataMessage(queryClient, response.data);
+      updateSendMessageQueryDataMessage(queryClient, response.body);
 
       // Stop typing indicator
       if (isTypingRef.current && searchParams.withUserId) {

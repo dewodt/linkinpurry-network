@@ -3,6 +3,7 @@ services:
   linkinpurry-db:
     container_name: linkinpurry-db
     image: postgres:17
+    # image: nicholasliem/wbd-m2-db-image:latest
     env_file:
       - ./backend/.env.docker
     ports:

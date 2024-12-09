@@ -19,7 +19,7 @@ import { GetProfileSuccessResponse, UpdateProfileErrorResponse, UpdateProfileReq
 
 interface EditProfileDialogProps {
   children: React.ReactNode;
-  initialData: GetProfileSuccessResponse['data'];
+  initialData: GetProfileSuccessResponse['body'];
 }
 
 const EditProfileDialog = ({ children, initialData }: EditProfileDialogProps) => {
@@ -57,9 +57,9 @@ const EditProfileDialog = ({ children, initialData }: EditProfileDialogProps) =>
 
       // update current session data
       updateSession({
-        name: data.data.name,
-        username: data.data.username,
-        profilePhoto: data.data.profile_photo,
+        name: data.body.name,
+        username: data.body.username,
+        profilePhoto: data.body.profile_photo,
       });
 
       // update ['users', 'id'] data if exists
@@ -69,14 +69,14 @@ const EditProfileDialog = ({ children, initialData }: EditProfileDialogProps) =>
         return {
           ...prevData,
           data: {
-            ...prevData.data,
+            ...prevData.body,
 
             // put data
-            username: data.data.username,
-            name: data.data.name,
-            profile_photo: data.data.profile_photo,
-            work_history: data.data.work_history,
-            skills: data.data.skills,
+            username: data.body.username,
+            name: data.body.name,
+            profile_photo: data.body.profile_photo,
+            work_history: data.body.work_history,
+            skills: data.body.skills,
           },
         };
       });
@@ -86,11 +86,11 @@ const EditProfileDialog = ({ children, initialData }: EditProfileDialogProps) =>
 
       // reset dirty state
       form.reset({
-        username: data.data.username,
-        name: data.data.name,
+        username: data.body.username,
+        name: data.body.name,
         profile_photo: undefined,
-        work_history: data.data.work_history || '',
-        skills: data.data.skills || '',
+        work_history: data.body.work_history || '',
+        skills: data.body.skills || '',
       });
     },
   });
