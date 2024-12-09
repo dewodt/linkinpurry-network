@@ -78,21 +78,26 @@ export class Database {
 
       // Create users in batches
       logger.info('Creating users...');
-      const hashedPassword = await bcrypt.hash('Password1!', 10);
+      // const hashedPassword = await bcrypt.hash('Password1!', 10);
 
       for (let batch = 0; batch < USER_COUNT; batch += BATCH_SIZE) {
         const endIndex = Math.min(batch + BATCH_SIZE, USER_COUNT);
-        const userBatch = Array.from({ length: endIndex - batch }, (_, i) => ({
-          id: BigInt(batch + i + 1),
-          username: `user${batch + i + 1}`,
-          email: `user${batch + i + 1}@example.com`,
-          passwordHash: hashedPassword,
-          fullName: faker.person.fullName(),
-          workHistory: faker.lorem.paragraphs(),
-          skills: faker.lorem.words(5),
-          profilePhotoPath: faker.image.avatar(),
-          createdAt: faker.date.past(),
-        }));
+        const userBatch = await Promise.all(
+          Array.from({ length: endIndex - batch }, async (_, i) => {
+            const hashedPassword = await bcrypt.hash(`password${batch + i + 1}`, 10);
+            return {
+              id: BigInt(batch + i + 1),
+              username: `user${batch + i + 1}wbd`,
+              email: `user${batch + i + 1}wbd@example.com`,
+              passwordHash: hashedPassword,
+              fullName: faker.person.fullName(),
+              workHistory: faker.lorem.paragraphs(),
+              skills: faker.lorem.words(5),
+              profilePhotoPath: faker.image.avatar(),
+              createdAt: faker.date.past(),
+            };
+          })
+        );
 
         await this.prisma.user.createMany({ data: userBatch });
         logger.info(`Created users ${batch + 1} to ${endIndex}`);

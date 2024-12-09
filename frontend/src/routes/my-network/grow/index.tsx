@@ -90,7 +90,7 @@ function RouteComponent() {
               ) : (
                 // Data
                 <ol>
-                  {connections.data.map((con) => {
+                  {connections.body.map((con) => {
                     return (
                       <li
                         className="flex flex-col items-start gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:gap-5"

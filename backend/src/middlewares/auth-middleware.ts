@@ -53,7 +53,7 @@ export class AuthMiddleware implements IAuthMiddleware {
           c.set('user', jwtPayload);
         } catch (error) {
           // Remove token from cookie (if exists)
-          deleteCookie(c, 'auth-token');
+          deleteCookie(c, 'token');
 
           // If token is not public and not verified
           if (!isPublic) {
@@ -122,7 +122,7 @@ export class AuthMiddleware implements IAuthMiddleware {
    * Get token from cookie
    */
   private getTokenFromCookie(c: Context): string | null {
-    const authToken = getCookie(c, 'auth-token');
+    const authToken = getCookie(c, 'token');
 
     return authToken || null;
   }
@@ -143,7 +143,7 @@ export class AuthMiddleware implements IAuthMiddleware {
       {} as Record<string, string>
     );
 
-    return cookies['auth-token'] || null;
+    return cookies['token'] || null;
   }
 
   /**

@@ -66,7 +66,7 @@ export class Utils {
   }) => {
     const pageResult = isNaN(Number(page)) || Number(page) <= 0 ? defaultPage : Number(page);
     const limitResult =
-      isNaN(Number(limit)) || Number(limit) <= 0 || Number(limit) > 50 // upperboundary for limit
+      isNaN(Number(limit)) || Number(limit) <= 0 || Number(limit) > 100 // upperboundary for limit
         ? defaultLimit
         : Number(limit);
 

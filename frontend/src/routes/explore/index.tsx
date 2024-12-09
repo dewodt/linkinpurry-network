@@ -129,7 +129,7 @@ function RouteComponent() {
               ) : (
                 <>
                   <ol className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {users.data.map((user) => {
+                    {users.body.map((user) => {
                       return (
                         <li key={user.id}>
                           <div className="relative flex flex-col gap-1 overflow-hidden rounded-xl border border-border bg-background shadow-sm">

@@ -74,7 +74,7 @@ export type CursorPaginationResponseMeta = z.infer<typeof zodCursorPaginationRes
  */
 export interface SuccessResponseDto<T> extends BaseResponseDto {
   success: true;
-  data: T;
+  body: T;
 }
 
 /**
@@ -140,40 +140,40 @@ export class ResponseDtoFactory {
     return {
       success: true,
       message: message,
-      data: null,
+      body: null,
     };
   }
 
-  static createSuccessDataResponseDto<T>(message: string, data: T): SuccessResponseDto<T> {
+  static createSuccessDataResponseDto<T>(message: string, body: T): SuccessResponseDto<T> {
     return {
       success: true,
       message,
-      data,
+      body,
     };
   }
 
   static createSuccessPagePaginationResponseDto<T>(
     message: string,
-    data: T[],
+    body: T[],
     meta: PagePaginationResponseMeta
   ): SuccessPagePaginationResponseDto<T> {
     return {
       success: true,
       message,
-      data,
+      body,
       meta,
     };
   }
 
   static createSuccessOffsetPaginationResponseDto<T>(
     message: string,
-    data: T[],
+    body: T[],
     meta: OffsetPaginationResponseMeta
   ): SuccessOffsetPaginationResponseDto<T> {
     return {
       success: true,
       message,
-      data,
+      body,
       meta,
     };
   }
@@ -181,26 +181,26 @@ export class ResponseDtoFactory {
   // this method was created just to adapt to the specificaition api contract
   static createDifferentSuccessCursorPaginationResponse<T>(
     message: string,
-    data: T,
+    body: T,
     meta: CursorPaginationResponseMeta
   ) {
     return {
       success: true as const,
       message,
-      data,
+      body,
       meta,
     };
   }
 
   static createSuccessCursorPaginationResponseDto<T>(
     message: string,
-    data: T[],
+    body: T[],
     meta: CursorPaginationResponseMeta
   ): SuccessCursorPaginationResponseDto<T> {
     return {
       success: true,
       message,
-      data,
+      body,
       meta,
     };
   }
@@ -308,7 +308,7 @@ export class OpenApiResponseFactory {
               description: 'Success flag',
               example: true,
             }),
-            data: z.null().openapi({
+            body: z.null().openapi({
               description: 'Response data',
               example: null,
             }),
@@ -318,7 +318,7 @@ export class OpenApiResponseFactory {
     };
   }
 
-  static jsonSuccessData<T extends ZodType>(description: string, data: T) {
+  static jsonSuccessData<T extends ZodType>(description: string, body: T) {
     return {
       description,
       content: {
@@ -328,14 +328,14 @@ export class OpenApiResponseFactory {
               description: 'Success flag',
               example: true,
             }),
-            data,
+            body,
           }),
         },
       },
     };
   }
 
-  static jsonSuccessPagePagination<T extends ZodType>(description: string, data: T) {
+  static jsonSuccessPagePagination<T extends ZodType>(description: string, body: T) {
     return {
       description,
       content: {
@@ -345,7 +345,7 @@ export class OpenApiResponseFactory {
               description: 'Success flag',
               example: true,
             }),
-            data,
+            body,
             meta: zodPagePaginationResponseMeta,
           }),
         },
@@ -353,7 +353,7 @@ export class OpenApiResponseFactory {
     };
   }
 
-  static jsonSuccessOffsetPagination<T extends ZodType>(description: string, data: T) {
+  static jsonSuccessOffsetPagination<T extends ZodType>(description: string, body: T) {
     return {
       description,
       content: {
@@ -363,7 +363,7 @@ export class OpenApiResponseFactory {
               description: 'Success flag',
               example: true,
             }),
-            data,
+            body,
             meta: zodOffsetPaginationResponseMeta,
           }),
         },
@@ -371,7 +371,7 @@ export class OpenApiResponseFactory {
     };
   }
 
-  static jsonSuccessCursorPagination<T extends ZodType>(description: string, data: T) {
+  static jsonSuccessCursorPagination<T extends ZodType>(description: string, body: T) {
     return {
       description,
       content: {
@@ -381,7 +381,7 @@ export class OpenApiResponseFactory {
               description: 'Success flag',
               example: true,
             }),
-            data,
+            body,
             meta: zodCursorPaginationResponseMeta,
           }),
         },

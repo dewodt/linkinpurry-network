@@ -69,14 +69,14 @@ function RouteComponent() {
 
           {/* Feed */}
           <CardFeed
-            feedId={feedData.data.feed_id}
-            userId={feedData.data.user_id}
-            fullName={feedData.data.full_name}
-            username={feedData.data.username}
-            profilePhoto={feedData.data.profile_photo}
-            content={feedData.data.content}
-            createdAt={new Date(feedData.data.created_at)}
-            editedAt={new Date(feedData.data.updated_at)}
+            feedId={feedData.body.feed_id}
+            userId={feedData.body.user_id}
+            fullName={feedData.body.full_name}
+            username={feedData.body.username}
+            profilePhoto={feedData.body.profile_photo}
+            content={feedData.body.content}
+            createdAt={new Date(feedData.body.created_at)}
+            editedAt={new Date(feedData.body.updated_at)}
             isDetailOptionVisible={false}
             currentUserId={session?.userId || ''}
             onSuccessfullDelete={() => navigate({ to: '/my-posts' })}

@@ -138,7 +138,7 @@ function RouteComponent() {
                 </div>
               ) : (
                 <ol>
-                  {connections.data.map((con) => {
+                  {connections.body.map((con) => {
                     return (
                       <li
                         key={con.user_id}

@@ -300,6 +300,7 @@ export class AuthService implements IAuthService {
       httpOnly: true,
       secure: true,
       sameSite: 'none', // spa with different domain
+      // maxAge: 60, // 1 hour
       maxAge: 60 * 60, // 1 hour
     };
   }

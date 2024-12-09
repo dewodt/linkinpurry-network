@@ -55,7 +55,7 @@ function RouteComponent() {
 
   return (
     <>
-      {isSuccessProfile && <HelmetTemplate title={`${profile.data.username}'s Profile | LinkinPurry`} />}
+      {isSuccessProfile && <HelmetTemplate title={`${profile.body.username}'s Profile | LinkinPurry`} />}
 
       <main className="flex min-h-[calc(100vh-4rem)] flex-auto flex-col items-center gap-5 bg-muted p-6 py-12 sm:p-12">
         {/* Profile section */}
@@ -64,8 +64,8 @@ function RouteComponent() {
           <div className="relative h-32 bg-primary/25 md:h-48">
             {/* Avatar */}
             <AvatarUser
-              src={profile.data.profile_photo}
-              alt={`${profile.data.username}'s profile picture`}
+              src={profile.body.profile_photo}
+              alt={`${profile.body.username}'s profile picture`}
               classNameAvatar="absolute -bottom-[60px] left-7 size-[120px] md:-bottom-[48px] md:size-[152px]"
             />
           </div>
@@ -73,7 +73,7 @@ function RouteComponent() {
           <div className="relative flex flex-col items-start gap-3 px-6 pb-6 pt-[68px] md:pt-[60px]">
             {/* Edit button (only if userid = session id) */}
             {session && session.userId === userId && (
-              <EditProfileDialog initialData={profile.data}>
+              <EditProfileDialog initialData={profile.body}>
                 <Button size="icon" variant="ghost" className="absolute right-4 top-4 rounded-full text-muted-foreground">
                   <Pencil className="size-5" />
                 </Button>
@@ -82,9 +82,9 @@ function RouteComponent() {
 
             {/* Texts */}
             <div className="flex flex-col items-start gap-1">
-              <h1 className="line-clamp-1 break-all text-2xl font-bold text-foreground">{profile.data.name}</h1>
+              <h1 className="line-clamp-1 break-all text-2xl font-bold text-foreground">{profile.body.name}</h1>
 
-              <p className="line-clamp-1 break-all text-base font-medium text-muted-foreground">@{profile.data.username}</p>
+              <p className="line-clamp-1 break-all text-base font-medium text-muted-foreground">@{profile.body.username}</p>
 
               {/* Connection count */}
               <Link
@@ -92,21 +92,21 @@ function RouteComponent() {
                 params={{ userId }}
                 className="text-sm font-semibold text-primary decoration-2 underline-offset-2 hover:underline"
               >
-                {profile.data.connection_count > 500 ? '500+ connections' : `${profile.data.connection_count} connections`}
+                {profile.body.connection_count > 500 ? '500+ connections' : `${profile.body.connection_count} connections`}
               </Link>
             </div>
 
             {/* Connect / unconnect button (for auth only + not current user) */}
             {session &&
               session.userId !== userId &&
-              (profile.data.connection_status === ConnectionStatus.NONE ? (
-                <ConnectDialog connectToUserId={userId} connectToUsername={profile.data.username}>
+              (profile.body.connection_status === ConnectionStatus.NONE ? (
+                <ConnectDialog connectToUserId={userId} connectToUsername={profile.body.username}>
                   <Button className="gap-1.5 rounded-full font-bold" size="xs">
                     <LinkedInConnectIcon className="size-4" />
                     Connect
                   </Button>
                 </ConnectDialog>
-              ) : profile.data.connection_status === ConnectionStatus.PENDING ? (
+              ) : profile.body.connection_status === ConnectionStatus.PENDING ? (
                 <Button className="gap-1.5 rounded-full font-bold" variant="outline-muted" size="xs" disabled>
                   <LinkedInClockIcon className="size-4" />
                   Pending
@@ -121,7 +121,7 @@ function RouteComponent() {
                   </Link>
 
                   {/* More (for unconenct) */}
-                  <UnConnectDropdown unConnectToUserId={userId} unConnectToUsername={profile.data.username}>
+                  <UnConnectDropdown unConnectToUserId={userId} unConnectToUsername={profile.body.username}>
                     <Button
                       size="icon-xs"
                       variant="ghost"
@@ -140,8 +140,8 @@ function RouteComponent() {
           <h2 className="text-xl font-bold text-foreground">Experience</h2>
 
           <div>
-            {profile.data.work_history ? (
-              <p className="break-words">{profile.data.work_history}</p>
+            {profile.body.work_history ? (
+              <p className="break-words">{profile.body.work_history}</p>
             ) : (
               <p className="text-muted-foreground">No work history added.</p>
             )}
@@ -153,19 +153,19 @@ function RouteComponent() {
           <h2 className="text-xl font-bold text-foreground">Skills</h2>
 
           <div>
-            {profile.data.skills ? <p className="break-words">{profile.data.skills}</p> : <p className="text-muted-foreground">No skills added.</p>}
+            {profile.body.skills ? <p className="break-words">{profile.body.skills}</p> : <p className="text-muted-foreground">No skills added.</p>}
           </div>
         </section>
 
         {/* Recent posts */}
-        {profile.data.relevant_posts && (
+        {profile.body.relevant_posts && (
           <section className="w-full max-w-3xl overflow-hidden rounded-xl border border-border bg-background p-6 shadow-sm">
             <h2 className="text-xl font-bold text-foreground">Recent Posts</h2>
 
-            {profile.data.relevant_posts.length > 0 ? (
+            {profile.body.relevant_posts.length > 0 ? (
               <ol>
-                {profile.data.relevant_posts.map((post, idx) => {
-                  const isLast = profile.data.relevant_posts && profile.data.relevant_posts.length - 1 === idx;
+                {profile.body.relevant_posts.map((post, idx) => {
+                  const isLast = profile.body.relevant_posts && profile.body.relevant_posts.length - 1 === idx;
                   return (
                     <li key={post.id} className={cn('py-4', isLast ? 'border-b-0 pb-0' : 'border-b')}>
                       <Link to="/feed/$feedId" params={{ feedId: post.id }}>

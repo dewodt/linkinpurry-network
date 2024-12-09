@@ -56,7 +56,7 @@ function RouteComponent() {
     },
   });
 
-  const flattenFeeds = React.useMemo(() => myFeedData?.pages.flatMap((page) => page.data), [myFeedData]) || [];
+  const flattenFeeds = React.useMemo(() => myFeedData?.pages.flatMap((page) => page.body), [myFeedData]) || [];
 
   // Fetch next page when sentinel is in view
   const debouncedFetchNextPage = useDebouncedCallback(() => {

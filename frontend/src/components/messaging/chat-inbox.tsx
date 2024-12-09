@@ -58,7 +58,7 @@ export function ChatInbox() {
       });
 
       // join chat rooms
-      const otherUserIds = response.data.map((inbox) => inbox.other_user_id);
+      const otherUserIds = response.body.map((inbox) => inbox.other_user_id);
       if (otherUserIds.length > 0) {
         await joinChatRooms({ user_ids: otherUserIds });
       }
@@ -75,7 +75,7 @@ export function ChatInbox() {
     }
   }, 150);
 
-  const flattenInbox = React.useMemo(() => inboxData?.pages.flatMap((page) => page.data) ?? [], [inboxData]);
+  const flattenInbox = React.useMemo(() => inboxData?.pages.flatMap((page) => page.body) ?? [], [inboxData]);
 
   // Fetch next page when inbox sentinel is in view
   React.useEffect(() => {

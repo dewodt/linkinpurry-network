@@ -52,7 +52,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         return {
           ...prevData,
           data: {
-            ...prevData.data,
+            ...prevData.body,
             name,
             username,
             profilePhoto,
@@ -94,7 +94,7 @@ export function useSession() {
 
   const sessionData = React.useMemo(() => {
     if (sessionQuery.isSuccess) {
-      return sessionQuery.data.data;
+      return sessionQuery.data.body;
     }
 
     return undefined;

@@ -102,7 +102,7 @@ export function ChatContent() {
     }
   }, 150);
 
-  const flattenChats = React.useMemo(() => (chatData ? chatData.pages.flatMap((page) => page.data).reverse() : []), [chatData]);
+  const flattenChats = React.useMemo(() => (chatData ? chatData.pages.flatMap((page) => page.body).reverse() : []), [chatData]);
 
   const scrollToBottomInstant = React.useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'instant', block: 'end' });

@@ -151,7 +151,7 @@ export class AuthRoute implements IRoute {
         );
 
         // Set cookie
-        setCookie(c, 'auth-token', token, this.authService.generateCookieOptions());
+        setCookie(c, 'token', token, this.authService.generateCookieOptions());
 
         return c.json(responseDto, 200);
       } catch (e) {
@@ -217,7 +217,7 @@ export class AuthRoute implements IRoute {
         );
 
         // Set cookie
-        setCookie(c, 'auth-token', token, this.authService.generateCookieOptions());
+        setCookie(c, 'token', token, this.authService.generateCookieOptions());
 
         return c.json(responseDto, 200);
       } catch (e) {
@@ -256,7 +256,7 @@ export class AuthRoute implements IRoute {
     app.openapi(logoutRoute, async (c) => {
       try {
         // Delete cookie
-        deleteCookie(c, 'auth-token');
+        deleteCookie(c, 'token');
 
         return c.json(ResponseDtoFactory.createSuccessResponseDto('Logout success'), 200);
       } catch (e) {

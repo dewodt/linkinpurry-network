@@ -39,7 +39,7 @@ export interface CursorPaginationResponseMeta extends BasePaginationResponseMeta
  */
 export interface SuccessResponse<T> extends BaseResponse {
   success: true;
-  data: T;
+  body: T;
 }
 export interface DifferentSuccessPaginationResponse<T, M extends BasePaginationResponseMeta> extends SuccessResponse<T> {
   meta: M;

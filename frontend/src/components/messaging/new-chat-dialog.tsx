@@ -137,7 +137,7 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
     }
   }, 150);
 
-  const allUsers = data?.pages.flatMap((page) => page.data) ?? [];
+  const allUsers = data?.pages.flatMap((page) => page.body) ?? [];
 
   React.useEffect(() => {
     if (inView) {
