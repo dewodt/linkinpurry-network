@@ -200,7 +200,7 @@ After running the backend service, you can go visit [http://localhost:3000/docs]
 
 ### Server-side:
 
-13522009: Connection list, request list endpoint.
+13522009: Connection list, request list endpoint, feed detail endpoint, create feed endpoint, edit feed endpoint, delete feed endpoint.
 13522011: Semua endpoint
 13522015: Request connect endpoint.
 
