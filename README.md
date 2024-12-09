@@ -4,6 +4,35 @@
 
 LinkInPurry is a professional networking platform built for O.W.C.A. (Organisasi Warga Cool Abiez) agents to connect, share updates, and communicate securely. The platform is built as a Single Page Application (SPA) using React for the frontend and Hono.js for the backend, offering real-time features and a seamless user experience.
 
+## Tech Stacks
+
+### Frontend
+
+- React - A JavaScript library for building user interfaces
+- Tanstack Query - Powerful asynchronous state management
+- Tanstack Router - Type-safe file-based routing
+- Shadcn UI - Re-usable components built with Radix UI and Tailwind CSS
+- TailwindCSS - Utility-first CSS framework
+- Socket.io Client - Real-time bidirectional event-based communication
+- Web Push API - Push notifications support
+
+### Backend
+
+- Hono.js - Ultrafast web framework for the Edge
+- Prisma - Next-generation Node.js and TypeScript ORM
+- Socket.io - Real-time WebSocket server
+- Swagger - API documentation
+- Inversify - Inversion of Control container
+- Zod - TypeScript-first schema declaration and validation
+- Winston - Logging library
+- Bcrypt - Password hashing library
+- Web Push - Push notification service
+
+### Infrastructure
+
+- PostgreSQL - Open-source relational database
+- Redis - In-memory data structure store for caching
+
 ## How To Install & Run
 
 1. Clone the repository
@@ -156,6 +185,16 @@ LinkInPurry is a professional networking platform built for O.W.C.A. (Organisasi
 ## API Documentation
 
 After running the backend service, you can go visit [http://localhost:3000/docs](http://localhost:3000/docs) to see the API documentation.
+
+## Stress Test (Local)
+
+### Profile Endpoint
+
+![Profile Endpoint](https://github.com/Labpro-21/if-3310-2024-2-k01-08/blobmain/public/stress-test-profile.png)
+
+### Feed Ednpoint
+
+![Feed Endpoint](https://github.com)
 
 ## Contributors
 
