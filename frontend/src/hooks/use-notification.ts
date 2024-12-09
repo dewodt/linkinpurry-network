@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
+import { toast } from 'sonner';
 
 import { useEffect, useState } from 'react';
 
@@ -9,31 +10,33 @@ export function useNotification() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const navigate = useNavigate();
 
-  // // On mount ask for permission
-  // useEffect(() => {
-  //   if ('Notification' in window) {
-  //     setPermission(Notification.permission);
-  //   }
-  // }, []);
+  // On mount set permission
+  useEffect(() => {
+    if ('Notification' in window) {
+      setPermission(Notification.permission);
+    }
+  }, []);
 
-  // Request notification permission function
+  // Request notification permission function & also register the service worker if granted
   const requestPermission = async () => {
     if (!('Notification' in window)) {
+      toast.error('This browser does not support notifications');
       console.error('This browser does not support notifications');
       return;
     }
 
+    // Request permission
     const permission = await Notification.requestPermission();
     setPermission(permission);
 
-    // if granted, register service worker
+    // If granted, gas
     if (permission === 'granted') {
-      await registerServiceWorker();
+      await subscribeToNotification();
     }
   };
 
   // Register service worker function
-  const registerServiceWorker = async () => {
+  const subscribeToNotification = async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
       const subscription = await registration.pushManager.subscribe({
@@ -44,6 +47,7 @@ export function useNotification() {
       // Send subscription to server
       await subscribeNotification(subscription);
     } catch (error) {
+      toast.error('Error registering service worker');
       console.error('Error registering service worker:', error);
     }
   };
@@ -53,7 +57,7 @@ export function useNotification() {
     if (!navigator.serviceWorker) return;
 
     navigator.serviceWorker.addEventListener('message', (event) => {
-      const { type, url } = event.data;
+      const { url } = event.data;
 
       if (url) {
         navigate({ to: url });
@@ -64,5 +68,6 @@ export function useNotification() {
   return {
     permission,
     requestPermission,
+    subscribeToNotification,
   };
 }

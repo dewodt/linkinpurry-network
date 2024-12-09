@@ -26,7 +26,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     retry: 0,
   });
 
-  const { requestPermission } = useNotification();
+  const { permission, requestPermission, subscribeToNotification } = useNotification();
 
   const queryClient = useQueryClient();
 
@@ -68,8 +68,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       // Everytime session query succeeded, connect to socket
       socket.connect();
 
-      // Prompt notification request
-      requestPermission();
+      if (permission === 'default') {
+        // First time user, request permission
+        requestPermission();
+      } else if (permission === 'granted') {
+        // Resubscribe to notification
+        subscribeToNotification();
+      }
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

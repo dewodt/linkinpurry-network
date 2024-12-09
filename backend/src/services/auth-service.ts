@@ -238,6 +238,27 @@ export class AuthService implements IAuthService {
   }
 
   /**
+   * Logout service
+   * simply set user id to null in the push subscription
+   */
+  async logout(userId: bigint): Promise<void> {
+    try {
+      await this.prisma.pushSubscription.updateMany({
+        where: {
+          userId: userId,
+        },
+        data: {
+          userId: null,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) logger.error(error.message);
+
+      throw ExceptionFactory.internalServerError('Failed to logout');
+    }
+  }
+
+  /**
    * Verify token method
    * @param token
    * @returns boolean

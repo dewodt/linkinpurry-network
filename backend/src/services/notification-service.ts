@@ -41,8 +41,8 @@ export class NotificationService {
         },
         update: {
           // Update keys if they changed
-          keys: subscription.keys,
           userId: currentUserId,
+          keys: subscription.keys,
         },
       });
 

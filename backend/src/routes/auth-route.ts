@@ -4,7 +4,6 @@ import { inject, injectable } from 'inversify';
 
 import type { IGlobalContext } from '@/core/app';
 import { BadRequestException, InternalServerErrorException } from '@/core/exception';
-import { logger } from '@/core/logger';
 import {
   type ILoginResponseBodyDto,
   type IRegisterResponseBodyDto,
@@ -253,17 +252,22 @@ export class AuthRoute implements IRoute {
     });
 
     // Register route
+    app.use(logoutRoute.getRoutingPath(), this.authMiddleware.authorize({ isPublic: false }));
     app.openapi(logoutRoute, async (c) => {
       try {
         // Delete cookie
         deleteCookie(c, 'token');
 
+        // Call service
+        const currentUser = c.get('user')!; // assured by auth middleware
+        await this.authService.logout(currentUser.userId);
+
         return c.json(ResponseDtoFactory.createSuccessResponseDto('Logout success'), 200);
       } catch (e) {
         // Internal server error
-        if (e instanceof Error) logger.error(e.message);
-        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
+        if (e instanceof InternalServerErrorException) return c.json(e.toResponseDto(), 500);
 
+        const responseDto = ResponseDtoFactory.createErrorResponseDto('Internal server error');
         return c.json(responseDto, 500);
       }
     });
