@@ -153,7 +153,7 @@ export default function CardFeed({
       </CardHeader>
 
       <CardContent className="space-y-0 px-6 pb-6 text-sm">
-        <p className="break-words">{content}</p>
+commit        <p className="break-words whitespace-pre-line">{content}</p>
       </CardContent>
     </Card>
   );
