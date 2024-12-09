@@ -50,7 +50,7 @@ function DevTools() {
 
   return (
     <>
-      <TanStackRouterDevtools position="bottom-right" />
+      {/* <TanStackRouterDevtools position="bottom-right" /> */}
     </>
   );
 }
