@@ -141,7 +141,7 @@ export function ChatInbox() {
 
               {hasNextPageInbox && (
                 <li ref={inboxSentinelRef} className="flex items-center justify-center">
-                  <LoadingFill className="py-5" />
+                  <LoadingFill hideHelmet className="py-5" />
                 </li>
               )}
             </ol>

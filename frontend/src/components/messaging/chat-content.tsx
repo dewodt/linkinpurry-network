@@ -223,7 +223,7 @@ export function ChatContent() {
                   {/* Sentinel top */}
                   {hasNextPageChat && (
                     <li ref={chatSentinelRef} className="flex items-center justify-center">
-                      <LoadingFill className="py-5" />
+                      <LoadingFill hideHelmet className="py-5" />
                     </li>
                   )}
 

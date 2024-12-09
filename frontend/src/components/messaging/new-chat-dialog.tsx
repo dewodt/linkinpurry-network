@@ -198,7 +198,7 @@ export const UserList = ({ debouncedSearch, setIsOpen }: UserListProps) => {
 
         {hasNextPage && (
           <li ref={sentinelRef} className="flex items-center justify-center">
-            <LoadingFill className="border-t py-5" />
+            <LoadingFill hideHelmet className="border-t py-5" />
           </li>
         )}
       </ul>

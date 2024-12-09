@@ -134,7 +134,7 @@ function RouteComponent() {
               {/* Sentinel */}
               {hasNextPageMyFeed && (
                 <li ref={feedSentinelRef} className="flex items-center justify-center">
-                  <LoadingFill className="pt-10" />
+                  <LoadingFill hideHelmet className="pt-10" />
                 </li>
               )}
             </ol>

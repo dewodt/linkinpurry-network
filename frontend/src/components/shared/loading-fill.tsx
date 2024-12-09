@@ -4,10 +4,15 @@ import { cn } from '@/lib/utils';
 
 import { HelmetTemplate } from './helmet';
 
-const LoadingFill = ({ className = '' }) => {
+interface LoadingFillProps {
+  className?: string;
+  hideHelmet?: boolean;
+}
+
+const LoadingFill = ({ className = '', hideHelmet = false }: LoadingFillProps) => {
   return (
     <>
-      <HelmetTemplate title="Loading | LinkinPurry" />
+      {!hideHelmet && <HelmetTemplate title="Loading | LinkinPurry" />}
 
       <div className={cn('flex flex-auto items-center justify-center', className)}>
         <div className="flex items-center gap-2.5 text-muted-foreground">
