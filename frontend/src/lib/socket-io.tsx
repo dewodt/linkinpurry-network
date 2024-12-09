@@ -49,9 +49,9 @@ export function SocketIOLayout({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
 
   listenEvent<SendMessageSuccessResponse>('newMessage', (resp) => {
-    updateSendMessageQueryDataInbox(queryClient, resp.data);
+    updateSendMessageQueryDataInbox(queryClient, resp.body);
 
-    updateSendMessageQueryDataMessage(queryClient, resp.data);
+    updateSendMessageQueryDataMessage(queryClient, resp.body);
   });
 
   return <>{children}</>;

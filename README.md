@@ -190,11 +190,11 @@ After running the backend service, you can go visit [http://localhost:3000/docs]
 
 ### Profile Endpoint
 
-![Profile Endpoint](https://github.com/Labpro-21/if-3310-2024-2-k01-08/blobmain/public/stress-test-profile.png)
+![Profile Endpoint](https://github.com/Labpro-21/if-3310-2024-2-k01-08/blob/main/public/stress-test-profile.png?raw=true)
 
 ### Feed Ednpoint
 
-![Feed Endpoint](https://github.com)
+![Feed Endpoint](https://github.com/Labpro-21/if-3310-2024-2-k01-08/blob/main/public/stress-test-feed.png?raw=true)
 
 ## Contributors
 
