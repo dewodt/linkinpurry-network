@@ -1,7 +1,7 @@
 # DOCKER FILE FOR STRESS TEST BACKEND
 # I think from the specs we shouldn't modify much of this file
 
-FROM node:20-alpine
+FROM node:20
 
 RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
 
